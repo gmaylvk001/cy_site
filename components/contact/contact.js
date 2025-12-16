@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FaPhoneAlt, FaEnvelope } from "react-icons/fa";
+import { FaPhoneAlt, FaEnvelope ,FaFacebookF,FaInstagram,FaYoutube,FaLinkedinIn,FaTwitter} from "react-icons/fa";
 
 export default function ContactForm() {
   const [form, setForm] = useState({
@@ -114,15 +114,14 @@ export default function ContactForm() {
     <>
       <section className="relative w-full h-[200px] md:h-[300px] lg:h-[250px] flex items-center justify-center bg-gradient-to-r from-gray-800 to-black text-white">
         <div className="absolute inset-0">
-          <img
-            src="uploads/about-bea.png"
-            alt="Contact Us"
-            className="w-full h-full object-cover opacity-40"
-          />
-        </div>
-        <div className="relative text-left px-4">
-          <h1 className="text-3xl md:text-5xl font-bold">Contact BEA</h1>
-        </div>
+    <iframe
+      src="https://www.google.com/maps?q=Cycle%20World%20Elite%20HAL%20Bangalore&output=embed"
+      className="w-full h-full border-0"
+      allowFullScreen=""
+      loading="lazy"
+      referrerPolicy="no-referrer-when-downgrade"
+    ></iframe>
+  </div>
       </section>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
@@ -132,31 +131,19 @@ export default function ContactForm() {
           <div className="bg-gray-50 p-6 rounded-lg shadow-md">
             <h2 className="text-3xl font-bold mb-6 text-gray-800">Contact Us</h2>
             <p className="font-semibold text-gray-700 mb-4">
-              You may contact us using the information below:
+             Hi, we are always open for cooperation and suggestions, contact us in one of the ways below
             </p>
 
             <div className="space-y-4">
-              {/* Registered Address */}
-              <div className="flex items-start">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7z" />
-                  <circle cx="12" cy="9" r="2.5" fill="currentColor" />
-                </svg>
-                <p>
-                  <b>Registered Address:</b><span className="text-gray-600"> 383, 100 Feet Road, Gandhipuram,
-                  Coimbatore, Tamilnadu 641012</span>
-                </p>
-              </div>
 
-              {/* Operational Address */}
+              {/* Head Address */}
               <div className="flex items-start">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7z" />
                   <circle cx="12" cy="9" r="2.5" fill="currentColor" />
                 </svg>
                 <p>
-                  <b>Operational Address:</b><span className="text-gray-600"> 383, 100 Feet Road, Gandhipuram,
-                  Coimbatore, Tamilnadu 641012</span>
+                  <b>HEAD OFFICE:</b><span className="text-gray-600"> TEAM CYCLE WORLD PVT. LTD, Site No 536, Survey no. 236/3, Cycle World Avenue, Hulimangala Village, Bengaluru, Karnataka - 560105</span>
                 </p>
               </div>
 
@@ -166,9 +153,9 @@ export default function ContactForm() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h2.28a1 1 0 01.95.684l1.518 4.553a1 1 0 01-.272 1.06l-1.2 1.2a16.001 16.001 0 006.586 6.586l1.2-1.2a1 1 0 011.06-.272l4.553 1.518a1 1 0 01.684.95V19a2 2 0 01-2 2h-1C9.163 21 3 14.837 3 7V5z" />
                 </svg>
                 <p>
-                  <b>Telephone No:</b>{" "}
-                  <a href="tel:9842344323" className="hover:underline text-gray-600">
-                    9842344323
+                  <b>Phone number:</b>{" "}
+                  <a href="tel:8749000087" className="hover:underline text-gray-600">
+                    +91 87490 00087
                   </a>
                 </p>
               </div>
@@ -180,12 +167,12 @@ export default function ContactForm() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16v12H4z" />
                 </svg>
                 <p>
-                  <b>E-Mail ID:</b>{" "}
+                  <b>Email address:</b>{" "}
                   <a
-                    href="mailto:customercare@bharathelectronics.in"
+                    href="mailto:info@cycleworld.in"
                     className="hover:underline text-gray-600"
                   >
-                    customercare@bharathelectronics.in
+                    info@cycleworld.in
                   </a>
                 </p>
               </div>
@@ -196,9 +183,37 @@ export default function ContactForm() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h18M3 7a2 2 0 012-2h14a2 2 0 012 2M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7" />
                 </svg>
                 <p>
-                  <b>Merchant Legal Entity Name:</b><span className="text-gray-600"> Bharath Electronics and Appliances</span>
+                  <b>Working hours:</b><span className="text-gray-600"> 10:00 AM - 09:00 PM</span>
                 </p>
               </div>
+
+              <div className="flex flex-col items-center gap-4">
+  <p className="text-gray-600 text-sm">
+    Follow us on social networks
+  </p>
+
+  <div className="flex gap-3">
+    <a href="https://www.facebook.com/cycleworld.in/" className="w-7 h-7 flex items-center justify-center rounded-full bg-[#1877F2] text-white hover:scale-110 transition">
+      <FaFacebookF />
+    </a>
+
+    <a href="https://www.instagram.com/cycleworld_in/" className="w-7 h-7 flex items-center justify-center rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white hover:scale-110 transition">
+      <FaInstagram />
+    </a>
+
+    <a href="https://www.youtube.com/channel/UCHajvqxaqyZ8ie_dUCxqMIw?view_as=subscriber" className="w-7 h-7 flex items-center justify-center rounded-full bg-[#FF0000] text-white hover:scale-110 transition">
+      <FaYoutube />
+    </a>
+
+    <a href="https://www.linkedin.com/company/cycleworldcw/?viewAsMember=true" className="w-7 h-7 flex items-center justify-center rounded-full bg-[#0A66C2] text-white hover:scale-110 transition">
+      <FaLinkedinIn />
+    </a>
+
+    <a href="https://twitter.com/CycleWorld6" className="w-7 h-7 flex items-center justify-center rounded-full bg-[#1DA1F2] text-white hover:scale-110 transition">
+      <FaTwitter />
+    </a>
+  </div>
+</div>
             </div>
           </div>
           {/* Write Us Form (Now on Right) */}
@@ -297,144 +312,7 @@ export default function ContactForm() {
               </div>
             </form>
           </div>
-        </div>
-
-        {/** --- Coimbatore --- */}
-        {storeGroups
-          .filter(group => group.city.toLowerCase() === "coimbatore")
-          .map((group, idx) => (
-            <section key={idx} className="bg-white py-6">
-              <div className="max-w-7xl mx-auto px-4">
-                <h2 className="text-2xl font-bold text-center mb-3">
-                  SHOWROOMS IN {group.city.toUpperCase()}
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {group.stores.map((store) => (
-                    <div key={store._id} className="bg-gray-100 p-6 rounded-lg shadow">
-                      <h3 className="text-lg font-bold text-blue-900 mb-2">
-                        {store.organisation_name}
-                      </h3>
-                      <p className="text-sm text-gray-700">{store.address},</p>
-                      {/* <p className="text-sm text-gray-700">
-                        {store.city} - {store.zipcode}.
-                      </p> */}
-                      <p className="text-sm text-gray-800">{store.phone}</p>
-                      <p className="text-sm text-blue-600 underline mb-4">
-                        <a
-                          href={`mailto:${store.email}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {store.email}
-                        </a>
-                      </p>
-                      {/* <a
-                        href={`https://wa.me/${store.phone}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded"
-                      >
-                        Whatsapp
-                      </a> */}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          ))
-        }
-
-        {/** --- Salem --- */}
-        {storeGroups
-          .filter(group => group.city.toLowerCase() === "salem")
-          .map((group, idx) => (
-            <section key={idx} className="bg-white py-6">
-              <div className="max-w-7xl mx-auto px-4">
-                <h2 className="text-2xl font-bold text-center mb-3">
-                  SHOWROOMS IN {group.city.toUpperCase()}
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {group.stores.map((store) => (
-                    <div key={store._id} className="bg-gray-100 p-6 rounded-lg shadow">
-                      <h3 className="text-lg font-bold text-blue-900 mb-2">
-                        {store.organisation_name}
-                      </h3>
-                      <p className="text-sm text-gray-700">{store.address},</p>
-                      {/* <p className="text-sm text-gray-700">
-                        {store.city} - {store.zipcode}.
-                      </p> */}
-                      <p className="text-sm text-gray-800">{store.phone}</p>
-                      <p className="text-sm text-blue-600 underline mb-4">
-                        <a
-                          href={`mailto:${store.email}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {store.email}
-                        </a>
-                      </p>
-                      {/* <a
-                        href={`https://wa.me/${store.phone}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded"
-                      >
-                        Whatsapp
-                      </a> */}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          ))
-        }
-
-        {/** --- Remaining Cities as "Around Tamilnadu" --- */}
-        <section className="bg-white py-6">
-          <div className="max-w-7xl mx-auto px-4">
-            <h2 className="text-2xl font-bold text-center mb-3">
-              SHOWROOMS AROUND TAMILNADU
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {storeGroups
-                .filter(
-                  group =>
-                    !["coimbatore", "salem"].includes(group.city.toLowerCase())
-                )
-                .flatMap(group => group.stores)
-                .map(store => (
-                  <div key={store._id} className="bg-gray-100 p-6 rounded-lg shadow">
-                    <h3 className="text-lg font-bold text-blue-900 mb-2">
-                      {store.organisation_name}
-                    </h3>
-                    <p className="text-sm text-gray-700">{store.address},</p>
-                    {/* <p className="text-sm text-gray-700">
-                      {store.city} - {store.zipcode}.
-                    </p> */}
-                    <p className="text-sm text-gray-800">{store.phone}</p>
-                    <p className="text-sm text-blue-600 underline mb-4">
-                      <a
-                        href={`mailto:${store.email}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {store.email}
-                      </a>
-                    </p>
-                    {/* <a
-                      href={`https://wa.me/${store.phone}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded"
-                    >
-                      Whatsapp
-                    </a> */}
-                  </div>
-                ))}
-            </div>
-          </div>
-        </section>     
-
+        </div> 
       </div>
     </>
   );

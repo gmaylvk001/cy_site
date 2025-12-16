@@ -47,64 +47,51 @@ const CancellationRefundPolicy = () => {
             {/* Cancellation Policy */}
             <div className="p-8 border-b border-gray-100">
               <h2 className="text-2xl font-bold text-customBlue mb-4 flex items-center gap-2">
-                <MdOutlinePolicy className="text-customBlue" /> Cancellation Policy
+                <MdOutlinePolicy className="text-customBlue" /> TRANSIT RELATED DAMAGES
               </h2>
               <p className="text-gray-600 mb-4">
-                Cancellations will be considered only if the request is made immediately after placing the order: however, the cancellation request may not be entertained if the orders have been communicated to the vendors/merchants and they have initated the process of shipping them.
+                All bicycles/products sold by CycleWorld are subject to thorough quality checks before the order is shipped to the customer. CycleWorld ships original products to maintain complete customer satisfaction for the bicycle/product ordered. Cancellation/refund shall be entertained only based on the circumstances mentioned below.
               </p>
-              <p className="text-gray-600">
-                Bharath Electronics and Appliances does not accept cancellation requests for perishable items etc. However, refund/replacement can be made if the customer establishes that the quality of product delivered is not good.
+              <p>TRANSIT RELATED DAMAGES</p>
+              <p className="text-gray-600 mb-4">
+                In case of any damage that happens to the product during transit, you shall intimate the same to CycleWorld within 24 (Twenty Four) hours of receiving the shipment. For the purpose of verification of the claim, the requirements along with visual (images and videos) proofs shall be mailed to service@cycleworld.in
               </p>
-            </div>
 
-            {/* Damaged/Defective Items */}
-            <div className="p-8 border-b border-gray-100 bg-blue-50/30">
-              <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <FiPackage className="text-2xl" />
-                Damaged or Defective Items
-              </h3>
-              <p className="text-gray-600">
-                In case of receipt of damaged or defective items, please report the same to our Customer Service team. The request will, however, be entertained once the merchant has checked and determined the same at his own end. This should be reported within 7 days of receipt of the products.
+              <p>WARRANTY CLAIMS</p>
+              <p className="text-gray-600 mb-4">
+                For warranty-related claims that may arise with regards to any bicycle/product after the same being delivered to you and being communicated to CW with the following
               </p>
-            </div>
+              <p className="text-gray-600 mb-4">
+                information to service@cycleworld.in:
+              </p>
+              <p className="text-gray-600 mb-4">
+                image/video of the part in question;
+              </p>
+              <p className="text-gray-600 mb-4">
+               invoice copy of the bicycle/product; and
+              </p>
+              <p className="text-gray-600 mb-4">
+                Image of the picture frame number on the bicycle.
+              </p>
+              <p className="text-gray-600 mb-4">
+                Considering the warranty terms set out by each brand, CycleWorld shall liaise with such brands to address the issue on a best-effort basis. The replacement part/product in question shall be shipped to you free of cost. In case, such an issue cannot be rectified, CycleWorld will process the return of the product and replace the bicycle/product (or) refund your payment.
+              </p>
 
-            {/* Product Complaints */}
-            <div className="p-8 border-b border-gray-100">
-              <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <FiCheckCircle className="text-2xl" />
-                Product Complaints
-              </h3>
-              <p className="text-gray-600">
-                In case you feel that the product received is not as shown on the site or as per your expectations, you must bring it to the notice of our customer service within 7 days of receiving the product. The Customer Service Team, after looking into your complaint will take an appropirate decision.
-              </p>
-            </div>
 
-            {/* Warranty Items */}
-            <div className="p-8 border-b border-gray-100 bg-blue-50/30">
-              <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <FiPackage className="text-2xl" />
-                Warranty Products
-              </h3>
-              <p className="text-gray-600">
-                In case of complaints regarding products that come with a warranty from manufacturers, please refer the issue to them.
+              <p>FURTHER STIPULATIONS</p>
+              <p className="text-gray-600 mb-4">
+                In case, you would like to proceed with the cancellation of your order, a nominal cancellation charge of Rs. 1,200/- (Rupees One Thousand Two Hundred only) coupled with a transaction reversal fee of 2% (Two Percent) of the amount paid will be deducted before the processing of your refund. This shall be at the discretion of the CW Customer Support Team. In the event of the product being shipped either from the brand’s warehouse or from CycleWorld’s warehouse prior to raising a cancellation request, the request will not be considered.
               </p>
-            </div>
-
-            {/* Refund Processing */}
-            <div className="p-8">
-              <h3 className="text-xl font-semibold text-customBlue mb-3 flex items-center gap-2">
-                <FiClock className="text-customBlue" />
-                Refund Processing Time
-              </h3>
-              <p className="text-gray-600 mb-6">
-                In case of any Refunds approved by Bharath Electronics and Appliances, it'll take 9-15 days for the refund to be processed to the end customer.
+              <p>REFUND PROCESS</p>
+              <p className="text-gray-600 mb-4">
+                In case a refund is approved by CycleWorld, the mode of refund will depend on your original payment method. If paid by credit/debit card/internet banking, refunds will be sent to the respective bank within 5 (Five) to 7 (Seven) business days of receipt of the returned item or cancellation request. Please contact your bank with queries regarding the refund credit to your account. For further questions, you can reach out to service@cycleworld.in.
               </p>
-              <a 
-                href="mailto:customercare@bharathelectronics.in" 
-                className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-300"
-              >
-                Contact Customer Care
-              </a>
+              <p className="text-gray-600 mb-4">
+               If the product ordered is unavailable due to any unforeseen circumstances, CycleWorld would offer a 100% refund to the customer through the Original Mode of Payment.
+              </p>
+              <p className="text-gray-600 mb-4">
+               For information about how to contact us, please visit our <a href="/contact" className="hover:text-customBlue text-customBlue">contact page.</a>
+              </p>
             </div>
           </div>
         </div>

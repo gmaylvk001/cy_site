@@ -14,10 +14,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Bharath Electronics & Appliances",
-  description: "Barath Electronics",
+  title: "Cycle World - Bicycle Dealers in India | Cycle shop near me | cycles",
+  description: "Cycle World is a leading bicycle dealer in India with 90+ stores. recognized as the best cycle shop in Tamil Nadu, Bangalore, and Hyderabad.",
   icons: {
-    icon: "/images/logo/bea-favi.png",
+    icon: "/images/logo/cropped-cw-logo-192x192.webp",
   },
 };
 

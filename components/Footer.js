@@ -278,24 +278,32 @@ const capitalizeFirstLetter = (str) =>
               <div className="space-y-3">
                 <h3 className="text-white font-semibold text-lg mb-4">Corporate Office</h3>
                 <p>
-                  26/1 Dr. Alagappa Chettiyar Rd, Tatabad, Near Kovai Scan Centre,
-                  Coimbatore-641012
+                  Hi, we are always open for cooperation and suggestions, contact us in one of the ways below:
                 </p>
                 <hr className="border-gray-600 my-3" />
-                <div className="flex items-center gap-2">
-                  <FiPhone />
-                  <a href="tel:9842344323" className="text-blue-600 hover:underline">
-                    9842344323
-                  </a>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <FiPhone />
+                    <a href="tel:8152908888" className="text-blue-600 hover:underline">
+                      +91 81529 08888
+                    </a>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <FiPhone />
+                    <a href="tel:8749000087" className="text-blue-600 hover:underline">
+                      +91 87490 00087
+                    </a>
+                  </div>
                 </div>
                 <hr className="border-gray-600 my-3" />
                 <div className="flex items-center gap-2">
                   <FiMail />
                   <a
-                    href="mailto:customercare@bharatelectronics.in"
+                    href="mailto:info@cycleworld.in"
                     className="text-blue-600 hover:underline"
                   >
-                    customercare@bharatelectronics.in
+                    info@cycleworld.in
                   </a>
                 </div>
                 <hr className="border-gray-600 my-3" />
@@ -337,12 +345,16 @@ const capitalizeFirstLetter = (str) =>
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold text-lg mb-4">Policy</h3>
+                  <h3 className="text-white font-semibold text-lg mb-4">Information</h3>
                   <ul className="space-y-2">
+                    
                     <li><Link href="/privacypolicy" className="hover:underline hover:text-white">Privacy Policy</Link></li>
+                    <li><Link href="/return-policy" className="hover:underline hover:text-white">Return Policy</Link></li>
                     <li><Link href="/shipping" className="hover:underline hover:text-white">Shipping Policy</Link></li>
                     <li><Link href="/terms-and-condition" className="hover:underline hover:text-white">Terms and Conditions</Link></li>
+                    <li><Link href="/warranty-policy" className="hover:underline hover:text-white">Warranty Policy</Link></li>
                     <li><Link href="/cancellation-refund-policy" className="hover:underline hover:text-white">Cancellation and Refund Policy</Link></li>
+                    <li><Link href="/lending-partners" className="hover:underline hover:text-white">Lending Partners</Link></li>
                   </ul>
                 </div>
               </div>
@@ -354,29 +366,28 @@ const capitalizeFirstLetter = (str) =>
                     <li><Link href="/aboutus" className="hover:underline hover:text-white">About Us</Link></li>
                     <li><Link href="/contact" className="hover:underline hover:text-white">Contact Us</Link></li>
                     <li><Link href="/blog" className="hover:underline hover:text-white">Blogs</Link></li>
-                    <li><Link href="/careers" className="hover:underline hover:text-white">Careers</Link></li>
-                    <li><Link href="/feedback" className="hover:underline hover:text-white">Feedback</Link></li> 
+                    <li><Link href="/faq" className="hover:underline hover:text-white">FAQ</Link></li>
                   </ul>
                 </div>
               <div>
                   <h3 className="text-white font-semibold text-lg mb-4">Connect With Us</h3>
                   <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                    <Link href="https://web.whatsapp.com/send?phone=919842344323&amp;text=Hi">
+                    <Link href="https://web.whatsapp.com/send?phone=918749000087&amp;text=Hi">
                       <FaWhatsapp className="text-xl text-green-500" />
                     </Link>
-                    <Link href="https://www.facebook.com/BharathElectronics/">
+                    <Link href="https://www.facebook.com/cycleworld.in/">
                       <FaFacebookF className="text-xl text-customBlue" />
                     </Link>
-                    <Link href="https://www.instagram.com/bharathelectronics/">
+                    <Link href="https://www.instagram.com/cycleworld_in/">
                       <FaInstagram className="text-xl text-pink-500" />
                     </Link>
-                    <Link href="https://www.youtube.com/@bharathelectronicsandappli3074">
+                    <Link href="https://www.youtube.com/channel/UCHajvqxaqyZ8ie_dUCxqMIw?view_as=subscriber">
                       <FaYoutube className="text-xl text-red-500" />
                     </Link>
-                    <Link href="https://twitter.com/bharath_bea">
+                    <Link href="https://x.com/CycleWorld6">
                       <FaXTwitter className="text-xl text-black" />
                     </Link>
-                    <Link href="https://in.linkedin.com/company/bharath-electronics-and-appliances">
+                    <Link href="linkedin.com/company/cycleworldcw/?viewAsMember=true">
                       <FaLinkedinIn className="text-xl text-customBlue" />
                     </Link>
                   </div>
@@ -564,49 +575,6 @@ const capitalizeFirstLetter = (str) =>
             ))}
           </div>
         </div>
-      </div>
-      <div className="bg-[#2e2a2a] text-gray-400 mt-10 pt-5">
-        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-[70%_30%] gap-8">
-          {/* LEFT SECTION */}
-            <div className="space-y-8">
-              {/* SEO Content */}
-                <div className="space-y-8">
-                  <div>
-                    <h2 className="text-white font-semibold">
-                      Buy Best Laptops & Gadgets Online
-                    </h2>
-                    <p className="text-gray-400 py-2">
-                      Unleash the Power of Technology with{" "}
-                      <span className="font-semibold text-white">
-                        Bharath Electronics' Laptop & Computers Collection
-                      </span>
-                      . Find the Perfect Device for Your Computing Needs, including Gaming
-                      Laptops, Everyday Laptops, and Business Laptops. We Offer a Wide
-                      Selection from Top Brands such as Samsung, Asus, Apple, HP, Lenovo, and
-                      More. Our Laptops and Computers Boast Premium Design, High-Capacity RAM,
-                      Latest Processors, Quality Graphics Cards, Excellent Battery Life, and
-                      Incredible Display & Sound Features. Don’t Forget to Check Out our Range
-                      of Smart Watches, Chargers, Power Banks, Headphones, and Bluetooth
-                      Speakers for a Complete Tech Experience.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h2 className="text-white font-semibold">
-                      Buy Kitchen Appliances at Best Prices Online – Shop Now
-                    </h2>
-                    <p className="text-gray-400 py-2">
-                      Revolutionize Your Kitchen with Bharath Electronics' Kitchen Appliances Collection. 
-                      Explore a Wide Range of Colours, Sizes, Manufacturers, and Types to Find the Perfect 
-                      Appliances for Your Culinary Needs. From Multi-Functional Mixer Juicer Grinders to 
-                      Energy-Efficient Electric Cookers, Kitchen Chimneys, Gas Stoves, Induction Stoves, 
-                      Water Purifiers, Microwave Ovens, and Pressure Cookers, we Offer a Diverse Selection. 
-                      Upgrade Your Cooking Experience Today with our Affordable and High-Quality Kitchen Appliances.
-                    </p>
-                  </div>
-                </div>
-            </div>
-          </div>
       </div>
       </footer>
       {/* Auth Modal */}
