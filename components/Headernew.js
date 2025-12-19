@@ -1,8 +1,8 @@
 // 'use client';
 import Link from "next/link";
 import Image from 'next/image';
-import { FiSearch, FiMapPin, FiHeart, FiShoppingCart, FiUser, FiMenu, FiX, FiPhoneCall, FiMessageSquare, FiChevronRight } from "react-icons/fi";
-import { FaBars, FaShoppingBag, FaUserShield, FaSearch } from "react-icons/fa";
+import { FiMenu, FiX, FiPhoneCall, FiMessageSquare, FiChevronRight } from "react-icons/fi";
+import { FaBars, FaShoppingBag, FaUserShield, FaSearch,FaUser,FaShoppingCart,FaHeart } from "react-icons/fa";
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import { IoLogOut } from "react-icons/io5";
 import { useCart } from '@/context/CartContext';
@@ -94,6 +94,7 @@ const Header = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { wishlistCount } = useWishlist();
     const { cartCount, updateCartCount } = useCart();
+    const [openMenu, setOpenMenu] = useState(null);
 
     // ADD: Cross-tab cart sync helpers
     const CART_COUNT_KEY = 'cartCount';
@@ -251,23 +252,18 @@ const Header = () => {
       window.addEventListener('storage', onStorage);
       return () => window.removeEventListener('storage', onStorage);
     }, [updateCartCount]);
-
-    const handleCategoryClick = useCallback((categorySlug, categoryName) => {
-        const path = `/category/${categorySlug}`;
-        setSelectedCategory(categoryName);
-        setIsMobileMenuOpen(false);
-        router.push(path);
-    }, [router]);
+    
     const dropdownRef = useRef(null);
     const [activeTab, setActiveTab] = useState('login');
     // const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
     // const [userData, setUserData] = useState(null);
     const [hasMounted, setHasMounted] = useState(false);
+
     const { userData, isLoggedIn, setIsLoggedIn, setUserData, isAdmin, setIsAdmin } = useHeaderdetails();
     const [dropdownOpen, setDropdownOpen] = useState(false);
-    const [selectedCategory, setSelectedCategory] = useState("All Category");
     const [searchQuery, setSearchQuery] = useState("");
+      const [selectedCategory, setSelectedCategory] = useState("All Category");
     const [placeholder, setPlaceholder] = useState("Search for");
     const [typedPreview, setTypedPreview] = useState("");
     const [words, setWords] = useState([]);
@@ -327,7 +323,7 @@ const Header = () => {
     const ensureWordsNotEmpty = (names) => {
       const cleaned = (names || []).filter(Boolean);
       if (cleaned.length > 0) return cleaned;
-      return ['Mobiles', 'Laptops', 'Television', 'Air Conditioner', 'Refrigerator'];
+      return ['Bicycles','Mountain Bike','Road Bike','Electric Cycle','Kids Cycle','Hybrid Bike'];
     };
 
     useEffect(() => {
@@ -505,6 +501,7 @@ const Header = () => {
     const [searchDropdownLeft, setSearchDropdownLeft] = useState(0);
     const [searchDropdownTop, setSearchDropdownTop] = useState(0);
     const [searchDropdownWidth, setSearchDropdownWidth] = useState(0);
+    const [openCategoryMenu, setOpenCategoryMenu] = useState({});
     // Toggle mobile menu
     const toggleMobileMenu = () => {
         setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -1430,336 +1427,138 @@ const Header = () => {
 
       return `/category/${fullPath}`;
     };
-    // NEW: recursive renderer for unlimited category levels
-    function renderCategoryLevel(nodes, ancestorSlugs = [], level = 0) {
-      if (!Array.isArray(nodes) || nodes.length === 0) return null;
-      return (
-        <div className="divide-y divide-gray-100">
-         {nodes
-  .slice() // make a shallow copy to avoid mutating original
-  .sort((a, b) => {
-    const nameA = (a.category_name || "").toLowerCase();
-    const nameB = (b.category_name || "").toLowerCase();
-    return nameA.localeCompare(nameB);
-  })
-  .map((node) => {
-    const hasChildren =
-      Array.isArray(node.subcategories) && node.subcategories.length > 0;
-    const isOpen = !!openCategories[node._id];
-    const nodeSlug = getCategorySlug(node);
-    const slugs = [...ancestorSlugs, nodeSlug];
-    const href = getNodeHref(ancestorSlugs, nodeSlug, level);
-    const rowJustify = hasChildren ? "justify-between" : "justify-start";
+    // Sidebar Menu
+    const toggleMenu = (menu) => {
+      setOpenMenu(openMenu === menu ? null : menu);
+     };
 
-    return (
-      <div
-        key={node._id}
-        className={`${isOpen ? "bg-blue-50/40" : "bg-white"} hover:bg-[#f2f2f2]`}
-      >
-        <div
-          className={`w-full flex items-center ${rowJustify} ${
-            level === 0 ? "px-3 py-3 text-sm" : "pl-5 pr-3 py-2 text-[13px]"
-          } ${isOpen ? "text-blue-700 bg-[#f2f2f2]" : "text-gray-800 hover:bg-[#f2f2f2]"}`}
-        >
-          <Link
-            href={href}
-            onClick={async (e) => {
-              if (level === 0 || hasChildren) {
-                e.preventDefault();
-                e.stopPropagation();
-                await ensureSubcategories(node._id);
-                setOpenCategories((prev) => {
-                  const next = { ...prev };
-                  const willOpen = !prev[node._id];
-                  if (level === 0) {
-                    Object.keys(next).forEach((k) => delete next[k]);
-                    if (willOpen) next[node._id] = true;
-                    return next;
-                  }
-                  next[node._id] = willOpen;
-                  return next;
-                });
-                setIsMobileMenuOpen(true);
-                return;
-              }
-              setIsMobileMenuOpen(false);
-            }}
-            className="flex-1 text-left truncate"
-            style={{ paddingLeft: level > 0 ? Math.min(level * 8, 24) : 0 }}
-          >
-            {node.category_name || "Category"}
-          </Link>
+     const toggleCategory = (id) => {
+      setOpenCategoryMenu((prev) => ({
+        ...prev,
+        [id]: !prev[id],
+      }));
+    };
 
-          {hasChildren && (
-            <button
-              type="button"
-              onClick={async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                await ensureSubcategories(node._id);
-                setOpenCategories((prev) => {
-                  const next = { ...prev };
-                  const willOpen = !prev[node._id];
-                  if (level === 0) {
-                    Object.keys(next).forEach((k) => delete next[k]);
-                    if (willOpen) next[node._id] = true;
-                    return next;
-                  }
-                  next[node._id] = willOpen;
-                  return next;
-                });
-              }}
-              aria-label="Toggle"
-              className="ml-2"
+    const renderCategories = (nodes, level = 0, ancestorSlugs = []) => {
+      if (!Array.isArray(nodes) || nodes.length === 0) {
+        return (
+          <li className="text-gray-500 italic py-2 px-3">
+            No categories available.
+          </li>
+        );
+      }
+  
+      return nodes.map((node) => {
+        if (!node || !node._id || !node.category_name || !node.category_slug) {
+          return (
+            <li
+              key={node?._id || Math.random()}
+              className="text-red-500 italic py-2 px-3"
             >
-              <FiChevronRight
-                className={`text-white rounded-full p-1 transition-transform duration-200 bg-[#2453D3] ${
-                  isOpen ? "rotate-90" : "rotate-0"
-                }`}
-                size={18}
-              />
-            </button>
-          )}
-        </div>
-
-        {isOpen && hasChildren && (
-          <div className="pb-2">
-            {renderCategoryLevel(node.subcategories, slugs, level + 1)}
-          </div>
-        )}
-      </div>
-    );
-  })}
-
+              Invalid category data.
+            </li>
+          );
+        }
+  
+        const hasChildren =
+          Array.isArray(node.subcategories) && node.subcategories.length > 0;
+        const isOpen = !!openCategoryMenu[node._id];
+  
+        // Full hierarchical path for category
+        const fullPath = "/category/" + [...ancestorSlugs, node.category_slug].join("/");
+  
+        return (
+          <li key={node._id}>
+            <div
+              className={`flex justify-between items-center border-b ${
+                level === 0 ? "py-2 px-3" : `pl-${level * 4} pr-3 py-1 text-sm`
+              }`}
+            >
+              <Link
+                href={fullPath}
+                className="flex-1 truncate"
+                onClick={() => hasChildren && toggleCategory(node._id)}
+              >
+                {node.category_name}
+              </Link>
+  
+              {hasChildren && (
+                <button
+                  type="button"
+                  onClick={() => toggleCategory(node._id)}
+                  aria-label={isOpen ? "Collapse" : "Expand"}
+                  className="ml-2 text-lg select-none"
+                >
+                  {isOpen ? "−" : "+"}
+                </button>
+              )}
+            </div>
+  
+            {hasChildren && isOpen && (
+              <ul className="pl-4 space-y-1">
+                {renderCategories(node.subcategories, level + 1, [
+                  ...ancestorSlugs,
+                  node.category_slug,
+                ])}
+              </ul>
+            )}
+          </li>
+        );
+      });
+    };
+  
+    // Validate categories prop
+    if (!categories) {
+      return (
+        <div className="p-4 text-red-600 font-semibold">
+          Error: Categories data is missing.
         </div>
       );
     }
-    useEffect(() => {
-      if (!isMobileMenuOpen) return;
-      const ids = (Array.isArray(categories) ? categories : []).slice(0, 5).map(c => c._id);
-      ids.forEach((id) => { ensureSubcategories(id); });
-    }, [isMobileMenuOpen, categories, ensureSubcategories]);
+  
+    if (!Array.isArray(categories)) {
+      return (
+        <div className="p-4 text-red-600 font-semibold">
+          Error: Categories data is not an array.
+        </div>
+      );
+    }
+
     return (
       <>
         <header className="sticky top-0 z-50">
-            <style jsx global>{`
-              :root{--height:38px;--radius:12px;--outline:#e3e3e9;--bg:#ffffff;--accent:#5b46f0;--muted:#6b7280;--shadow:0 8px 18px rgba(36,83,211,0.04)}
-              .search-bar{display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:10px;padding:4px 8px;border:3px solid var(--outline);box-shadow:var(--shadow);transition:box-shadow .25s ease,transform .12s ease,border-color .18s ease;width:100%;max-width:900px;margin:0 auto}
-              .search-bar:focus-within{box-shadow:0 12px 30px rgba(36,83,211,.04);border-color:rgba(36,83,211,.04)}
-              .search-bar-inner{position:relative;display:flex;align-items:center;gap:10px;width:100%;padding:2px;border-radius:8px}
-               /* select */
-               /* default: no visible border, show only when focused or has value */
-               .search-select{height:var(--height);min-width:140px;max-width:234px;border-radius:10px;border:1px solid transparent;padding:0 36px 0 14px;font-size:15px;color:#111;background:#fff;-webkit-appearance:none;appearance:none;cursor:pointer}
-               .select-wrap{position:relative;display:inline-block;max-width:35%;flex:0 0 auto;}
-               .select-wrap::after{content:'';position:absolute;right:12px;top:50%;transform:translateY(-50%);width:10px;height:10px;background-image:linear-gradient(135deg,#6b7280,#6b7280);clip-path:polygon(50% 70%,0 25%,100% 25%);opacity:.85;pointer-events:none}
-               /* input */
-               .search-input{flex:1 1 auto;height:var(--height);padding:8px 12px;border-radius:10px;border:1px solid transparent;background:#fff;color:#0f172a;font-size:15px;width:100%;}
-               /* when user has typed or on focus, show light border */
-               .search-input.has-value, .search-input:focus, .search-select:focus { border-color: #e3e3e9; box-shadow: 0 6px 20px rgba(36,83,211,0.04); }
-               /* remove default browser outline to avoid black focus ring */
-               .search-input:focus, .search-select:focus { outline: none; }
-               @keyframes shimmer{from{left:-120%}to{left:120%}}
-               @media (max-width:900px){:root{--height:36px}.search-btn{width:48px;color:#2453d3;}.search-select{min-width:100px}}
+           <style jsx global>{`
+             .inset-shadow-sm {
+             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
+             }
+              @media(min-width:1200px)
+              {
+                .cat-nav .swiper-wrapper
+              {
+                justify-content: center;
+              }
+              }
             `}</style>
-            {/* Main Header */}
-            <div className={`${isMobileMenuOpen ? "fixed inset-0 mt-0 pt-0 z-50 overflow-y-auto" : "bg-white px-4 sm:px-6 md:px-6 py-1 sticky top-0 z-40"}`}>
-                {/* NEW MOBILE TOP ROW (from reference) */}
-                <div className="sm:hidden flex items-center justify-between w-full relative">
-                    <Link href="/" className="p-1 rounded-lg">
-                      <img src="/user/bea-new.png" alt="Logo" width={70} height={45} className="h-auto" />
-                    </Link>
-                    <div className="flex items-center gap-3 pr-1 text-customBlue">
-                      {/* Feedback Icon */}
-                      <Link href="/feedback" className="relative">
-                          <FiMessageSquare size={16} />
-                      </Link>
-
-                      {/* Contact Icon */}
-                      <Link href="/contact" className="relative">
-                          <FiPhoneCall size={16}  />
-                      </Link>
-                      <Link href="/location">
-                        <FiMapPin size={16} />
-                      </Link>
-                        <Link href="/wishlist" className="relative">
-                          <FiHeart size={16} />
-                          <span className="absolute -top-2 -right-2 text-[10px] bg-customBlue text-white rounded-full w-4 h-4 flex items-center justify-center">
-                            {wishlistCount}
-                          </span>
-                        </Link>
-                        <Link href="/cart" className="relative">
-                          <FiShoppingCart size={16} />
-                          <span className="absolute -top-2 -right-2 text-[10px] bg-customBlue text-white rounded-full w-4 h-4 flex items-center justify-center">
-                            {cartCount}
-                          </span>
-                        </Link>
-                        <div className="relative">
-                          {isLoggedIn ? (
-                            <button onClick={() => setDropdownOpen(!dropdownOpen)}>
-                              <FiUser size={16} />
-                            </button>
-                          ) : (
-                            <button onClick={() => setShowAuthModal(true)}>
-                              <FiUser size={16} />
-                            </button>
-                          )}
-                          {dropdownOpen && isLoggedIn && (
-                            <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-50">
-                              {isAdmin && (
-                                <Link href="/admin/dashboard" className="block px-3 py-2 text-xs hover:bg-blue-50">
-                                  Admin Panel
-                                </Link>
-                              )}
-                              <Link href="/orders" className="block px-3 py-2 text-xs hover:bg-blue-50">
-                                My Orders
-                              </Link>
-                              <button onClick={handleLogout} className="w-full text-left px-3 py-2 text-xs hover:bg-red-50">
-                                Logout
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        <button onClick={toggleMobileMenu} aria-label="Menu" className="relative">
-                          {isMobileMenuOpen ? <FiX size={16} /> : <FaBars size={16} />}
-                        </button>
-                    </div>
-                </div>
-                {/* NEW MOBILE SEARCH BAR */}
-                <div className="sm:hidden mt-2 -mx-4 px-0">
-                  <div className="bg-[#2453D3] w-full px-3 py-3">
-                    <div className="flex items-center bg-white h-12 rounded-xl border border-gray-300 shadow-sm overflow-hidden w-full transition-all duration-150 focus-within:border-[#2453d3] focus-within:shadow-[0_0_0_2px_rgba(36,83,211,0.15)] flex-nowrap">
-                      
-                      {/* Category select */}
-                      <select
-                        value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="h-full text-[11px] xs:text-xs bg-white  border-r border-gray-300 outline-none flex-shrink-0 min-w-[120px] w-auto"
-                        aria-label="Category"
-                      >
-                        <option value="All Category">All Category</option>
-                        {categories.map((cat) => (
-                          <option key={cat._id} value={cat.category_name} title={cat.category_name}>
-                            {cat.category_name}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="flex-1 relative h-full flex items-center">
-                        <input
-                          type="search"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          onKeyDown={handleKeyPress}
-                          placeholder=" "
-                          className="w-full h-full text-sm outline-none bg-transparent px-1 focus:text-[#111] placeholder-transparent"
-                          ref={searchInputRef}
-                          onFocus={() => {
-                            setSearchContext('mobileTop'); // ADDED
-                            if (searchInputRef.current) {
-                              const rect = searchInputRef.current.getBoundingClientRect();
-                              setSearchDropdownLeft(rect.left);
-                              setSearchDropdownTop(rect.bottom + window.scrollY);
-                              setSearchDropdownWidth(rect.width);
-                            }
-                            if (searchQuery.trim().length >= 1) fetchSuggestions(searchQuery);
-                            setSearchDropdownVisible(true);
-                          }}
-                        />
-                        {searchQuery.trim() === "" && (
-                          <div className="absolute left-1 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[11px] pointer-events-none z-10">
-                            <span className="text-gray-400">Search for</span>
-                            <span className="text-gray-900">"{typedPreview }"</span>
-                          </div>
-                        )}
-                      </div>
-                  
-                      <button
-                        onClick={handleSearch}
-                        aria-label="Search"
-                        className="h-full px-4 bg-[#2453D3] text-white flex items-center justify-center active:scale-[0.97] transition"
-                      >
-                        <FaSearch size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                {/* MOBILE TOP SUGGESTIONS (outside menu) */}
-                {searchDropdownVisible && searchContext === 'mobileTop' && !isMobileMenuOpen && (
-                  <div ref={searchDropdownRef} className="sm:hidden absolute z-[70] left-0 right-0 px-3 mt-1">
-                    <div className="bg-white rounded-lg shadow-lg border max-h-72 overflow-y-auto">
-                      <div className="px-3 pt-2 pb-1 text-[11px] font-semibold tracking-wide text-gray-500">
-                        PRODUCTS
-                      </div>
-                      <div className="px-3 pb-2">
-                        {suggestions.length > 0
-                          ? suggestions.map(renderSuggestionItem)
-                          : (searchQuery.trim() && (
-                              <div className="py-10 flex flex-col items-center justify-center text-gray-500">
-                                {/* Icon */}
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="w-12 h-12 mb-3 text-gray-400"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                  strokeWidth={1.5}
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M9 13h6m-3-3v6m9-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                  />
-                                </svg>
-
-                                {/* Message */}
-                                <p className="text-sm font-medium">No products found</p>
-                                <p className="text-xs text-gray-400 mt-1">Try a different keyword</p>
-                              </div>
-
-                            ))
-                        }
-                      </div>
-                    </div>
-                  </div>
-                )}
+          <div className="bg-white shadow-md">
+              {/* Main Header */}
+               {/* NEW MOBILE TOP ROW (from reference) */}
                 {/* DESKTOP ROW (unchanged original content) */}
-                <div className="hidden sm:flex justify-between items-center gap-4">
+                <div className="flex flex-wrap items-center justify-between py-1 px-4 max-w-7xl mx-auto space-x-6">
+
                     {/* Logo (Hidden on mobile) */}
-                    <div className="hidden sm:block bg-white py-2 rounded-lg">
+                    <div className="flex flex-shrink-0 items-center space-x-4">
+                       {/*Toggle Menu */}
+                     <button onClick={toggleMobileMenu} aria-label="Menu" className="relative">
+                        {isMobileMenuOpen ? <FiX size={22} /> : <FaBars size={22} />}
+                      </button>
+
                         <Link href="/index" className="mx-auto">
-                            <img src="/user/bea-new.png" alt="Logo" className="h-auto" width={80} height={45} />
+                            <img src="/user/cw-logo.jpg" alt="Logo" width={83} />
                         </Link>
                     </div>
 
                     {/* Search Bar (Hidden on mobile - will show in mobile menu) */}
-                    <div className="search-bar relative hidden sm:flex flex-1 w-full max-w-[900px] mx-auto items-center bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200" role="search" style={{minHeight: '40px', display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        background: 'var(--bg)',
-                        borderRadius: '10px',
-                        padding: '4px 8px',
-                        border: '3px solid var(--outline)',
-                        boxShadow: 'var(--shadow)',
-                        transition:
-                          'box-shadow .25s ease, transform .12s ease, border-color .18s ease',
-                        width: '100%',
-                        maxWidth: '900px',
-                        margin: '0 auto',}}>
-                      <div className="search-bar-inner" style={{ position: 'relative', width: '100%' }}>
-                        <div className="select-wrap">
-                          <select
-                            value={selectedCategory}
-                            onChange={(e) => setSelectedCategory(e.target.value)}
-                            className="search-select"
-                            aria-label="Search category"
-                          >
-                            <option value="All Category">All Category</option>
-                            {categories.map((cat) => (
-                              <option key={cat._id} value={cat.category_name}>
-                                {cat.category_name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                    <div className="hidden md:flex items-center flex-1 max-w-md bg-[#F5F5F5] rounded-full inset-shadow-sm overflow-hidden" role="search">
                         {/* input wrapper with absolute overlay */}
                         <div className="relative flex-1">
                           <input
@@ -1768,20 +1567,24 @@ const Header = () => {
                             id="q"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            ref={searchInputRef}
+                            ref={searchContext === 'desktop' ? searchInputRef : null}
                             onFocus={() => {
-                              setSearchContext('desktop'); // ADDED
-                              if (searchInputRef.current) {
-                                const rect = searchInputRef.current.getBoundingClientRect();
-                                setSearchDropdownLeft(rect.left);
-                                setSearchDropdownTop(rect.bottom + window.scrollY);
-                                setSearchDropdownWidth(rect.width);
-                              }
-                              if (searchQuery.trim().length >= 2) fetchSuggestions(searchQuery);
+                              setSearchContext('desktop');
                               setSearchDropdownVisible(true);
+
+                              setTimeout(() => {
+                                if (searchInputRef.current) {
+                                  const rect = searchInputRef.current.getBoundingClientRect();
+                                  setSearchDropdownLeft(rect.left);
+                                  setSearchDropdownTop(rect.bottom + window.scrollY);
+                                  setSearchDropdownWidth(rect.width);
+                                }
+                              }, 0);
+
+                              if (searchQuery.trim().length >= 2) fetchSuggestions(searchQuery);
                             }}
                             onKeyDown={handleDesktopKeyDown}  // correct usage
-                            className={`search-input ${searchQuery.trim() ? 'has-value' : ''}`}
+                            className={`w-full px-3 py-3 text-sm text-gray-700 placeholder-gray-500 outline-none bg-transparent ${searchQuery.trim() ? 'has-value' : ''}`}
                             placeholder=" "
                             aria-label="Search query"
                           />
@@ -1796,8 +1599,7 @@ const Header = () => {
                         {/* CHANGE: wire desktop .search-btn to immediate redirect handler */}
                         <button
                           type="button"
-                          className="search-btn"
-                          style={{color:'#2453d3'}}
+                          className="search-btns p-3 border-l-2"
                           onClick={handleSearchBtnClick}
                           aria-label="Search"
                         >
@@ -1805,132 +1607,250 @@ const Header = () => {
                         </button>
                         <div className="shimmer" aria-hidden="true"></div>
                         {/* DROPDOWN MOVED OUTSIDE TO SUPPORT MOBILE */ }
-                        {/* (was here previously) */}
-                      </div>                    
+                        {/* (was here previously) */}                   
                     </div>
-                    {/* Icons Group */}
-                    <div className="flex items-center gap-[2rem] sm:gap-4">
-                        {/* Mobile Search Button (Hidden on desktop) */}
-                        <button onClick={toggleMobileMenu} className="sm:hidden text-customBlue">
-                            <FiSearch size={20} />
-                        </button>
 
-                        {/* Feedback Icon */}
-                        <Link href="/feedback" className="hidden sm:flex items-center relative">
-                            <FiMessageSquare size={18} className="text-customBlue" />
-                        </Link>
+                    {/* Text and Icons Group */}
+                    <div className="flex items-center text-gray-700">
+                      
+                       {/* TEXT MENU (DESKTOP ONLY) */}
+                      <div className="hidden lg:flex items-center space-x-6 pr-3 border-r-2 border-r-[#333333]">
+                        <Link href="/" className="text-md hover:text-[#A3CA43]">Support</Link>
+                        <Link href="/" className="text-md hover:text-[#A3CA43]">Track Order</Link>
+                        <Link href="/" className="text-md hover:text-[#A3CA43]">Store</Link>
+                        <Link href="/" className="text-md hover:text-[#A3CA43]">Franchise</Link>
+                      </div>
 
-                        {/* Contact Icon */}
-                        <Link href="/contact" className="hidden sm:flex items-center relative">
-                            <FiPhoneCall size={18} className="text-customBlue" />
-                        </Link>
+                      {/* Icons Group */}
+                      <div className="flex items-center space-x-6 pl-3">
+                          {/* Wishlist */}
+                          <Link href="/wishlist" className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#333333] hover:bg-[#A3CA43] transition ">
+                              <FaHeart size={18} className="text-white m-1" />
+                              {/* {wishlistCount > 0 && ( */}
+                                  <span className="absolute -top-2 -right-1 text-[10px] bg-[#A3CA43] text-white rounded-full w-4 h-4 flex items-center justify-center">
+                                      {wishlistCount}
+                                  </span>
+                              {/* )} */}
+                              {/* <span className="ml-1 text-xs sm:text-sm text-customBlue hidden lg:inline">Wishlist</span> */}
+                          </Link>
 
-                        {/* Location (Hidden on mobile) */}
-                        <Link href="/location" className="hidden sm:flex items-center relative">
-                            <FiMapPin size={18} className="text-customBlue" />
-                                {/* <span className="ml-1 text-xs sm:text-sm text-customBlue hidden lg:inline">Location</span> */}
-                        </Link>
+                          {/* Cart */}
+                          <Link href="/cart" className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#333333] hover:bg-[#A3CA43] transition">
+                              <FaShoppingCart size={18} className="text-white" />
+                              <span className="absolute -top-2 -right-2 text-[10px] bg-[#A3CA43] text-white rounded-full w-4 h-4 flex items-center justify-center">
+                                  {cartCount}
+                              </span>
+                              {/* <span className="ml-1 text-xs sm:text-sm text-customBlue hidden lg:inline">Cart</span> */}
+                          </Link>
 
-                        {/* Wishlist */}
-                        <Link href="/wishlist" className="flex items-center relative p-1 sm:p-0">
-                            <FiHeart size={18} className="text-customBlue" />
-                            {/* {wishlistCount > 0 && ( */}
-                                <span className="absolute -top-2 -right-2 text-[10px] bg-customBlue text-white rounded-full w-4 h-4 flex items-center justify-center">
-                                    {wishlistCount}
-                                </span>
-                            {/* )} */}
-                            {/* <span className="ml-1 text-xs sm:text-sm text-customBlue hidden lg:inline">Wishlist</span> */}
-                        </Link>
+                          {/* User Account */}
+                          <div className="relative" >
+                              {isLoggedIn ? (
+                                  <>
+                                    <div className="flex items-center justify-center">
+                                      <button onClick={() => setDropdownOpen(!dropdownOpen)} className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#333333] hover:bg-[#A3CA43] transition">
+                                          <FaUser size={18} className="text-white" />
+                                      </button>
+                                     <span className="ml-1 font-bold text-xs sm:text-sm text-[#333333] hidden lg:inline pl-1 max-w-[80px] truncate">
+                                      Hi, {(userData?.name || userData?.username || "User").slice(0, 6)}
+                                    </span>
 
-                        {/* Cart */}
-                        <Link href="/cart" className="flex items-center relative p-1 sm:p-0 ">
-                            <FiShoppingCart size={18} className="text-customBlue" />
-                            <span className="absolute -top-2 -right-2 text-[10px] bg-customBlue text-white rounded-full w-4 h-4 flex items-center justify-center">
-                                {cartCount}
-                            </span>
-                            {/* <span className="ml-1 text-xs sm:text-sm text-customBlue hidden lg:inline">Cart</span> */}
-                        </Link>
-
-                        {/* User Account */}
-                        <div className="relative" >
-                            {isLoggedIn ? (
-                                <>
-                                    <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center text-black focus:outline-none p-1 sm:p-0">
-                                        <FiUser size={18} className="text-customBlue" />
-                                        <span className="ml-1 font-bold text-xs sm:text-sm text-customBlue hidden lg:inline">
-                                            Hi, {userData?.name || userData?.username || "User"}
-                                        </span>
-                                    </button>
-                                    {dropdownOpen && (
-                                        <div ref={dropdownRef} className="absolute right-0 mt-3 w-48 sm:w-56 bg-white rounded-xl shadow-xl z-50 transition-all">
-                                            <div className="py-2 px-2">
-                                                {isAdmin && (
-                                                    <>
-                                                        <Link href="/admin/dashboard" className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm text-gray-700 hover:bg-blue-50 transition-colors">
-                                                            <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-customBlue text-white">
-                                                                <FaUserShield className="w-3 h-3 sm:w-4 sm:h-4" />
-                                                            </span>
-                                                            Admin Panel
-                                                        </Link>
-                                                    </>
-                                                )}
-                                                <Link href="/orders" className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm text-gray-700 hover:bg-blue-50 transition-colors">
-                                                    <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-customBlue text-white">
-                                                        <FaShoppingBag className="w-3 h-3 sm:w-4 sm:h-4" />
-                                                    </span>My Orders</Link>
-                                                <hr className="my-2 border-gray-200" />
-                                                <button onClick={handleLogout} className="flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm text-gray-700 hover:bg-red-50 transition-colors">
-                                                    <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-customBlue text-white">
-                                                        <IoLogOut className="w-3 h-3 sm:w-4 sm:h-4" />
-                                                    </span>Logout
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </>
-                            ) : (
-                                <button onClick={() => setShowAuthModal(true)} className="flex items-center text-black p-1 sm:p-0">
-                                    <FiUser size={18} className="text-customBlue" />
-                                    {/* <span className="ml-1 font-bold text-xs sm:text-sm text-customBlue hidden lg:inline">Sign In</span> */}
-                                </button>
-                            )}
-                        </div>
+                                    </div>
+                                      {dropdownOpen && (
+                                          <div ref={dropdownRef} className="absolute right-0 mt-3 w-48 sm:w-56 bg-white rounded-xl shadow-xl z-50 transition-all">
+                                              <div className="py-2 px-2">
+                                                <div className="block lg:hidden px-4 py-2 mb-2 bg-gray-50 rounded-md">
+                                                  <p className="text-xs text-gray-500">Signed in as</p>
+                                                  <p className="text-sm font-semibold text-[#A3CA43] truncate">
+                                                    {userData?.name || userData?.username || "User"}
+                                                  </p>
+                                                </div>
+                                                  {isAdmin && (
+                                                      <>
+                                                          <Link href="/admin/dashboard" className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm text-gray-700 hover:bg-[#a3ca4363] transition-colors">
+                                                              <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-[#333333] text-white">
+                                                                  <FaUserShield className="w-3 h-3 sm:w-4 sm:h-4" />
+                                                              </span>
+                                                              Admin Panel
+                                                          </Link>
+                                                      </>
+                                                  )}
+                                                  <Link href="/orders" className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm text-gray-700 hover:bg-[#a3ca4363] transition-colors">
+                                                      <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-[#333333] text-white">
+                                                          <FaShoppingBag className="w-3 h-3 sm:w-4 sm:h-4" />
+                                                      </span>My Orders</Link>
+                                                  <hr className="my-2 border-gray-200" />
+                                                  <button onClick={handleLogout} className="flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm text-gray-700 hover:bg-red-50 transition-colors">
+                                                      <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-[#333333] text-white">
+                                                          <IoLogOut className="w-3 h-3 sm:w-4 sm:h-4" />
+                                                      </span>Logout
+                                                  </button>
+                                              </div>
+                                          </div>
+                                      )}
+                                  </>
+                              ) : (
+                                  <button onClick={() => setShowAuthModal(true)} className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#333333] hover:bg-[#A3CA43] transition">
+                                      <FaUser size={18} className="text-white" />
+                                      {/* <span className="ml-1 font-bold text-xs sm:text-sm text-customBlue hidden lg:inline">Sign In</span> */}
+                                  </button>
+                              )}
+                          </div>
+                      </div>
                     </div>
-                </div>
+                </div> 
                 {/* Mobile Menu (Hidden on desktop) */}
                 {isMobileMenuOpen && (
-                  <div className="sm:hidden bg-white fixed inset-0 z-50 p-4 pt-3 rounded-lg shadow-lg overflow-y-auto transition-all duration-300"
+                  <div className={`fixed inset-0 z-50 transition-opacity duration-300 ${isMobileMenuOpen ? "bg-black/40 opacity-100" : "pointer-events-none opacity-0"}`}>
+                  <div className={`fixed top-0 left-0 z-50 h-full w-[300px] bg-white p-5 transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
                     style={{ touchAction: 'auto', userSelect: 'auto', WebkitUserSelect: 'auto' }}
                   >
                     {/* Internal sticky header */}
                     <div className="flex items-center justify-between mb-3 sticky top-0 bg-white pb-2 border-b">
                       <div className="flex items-center gap-2 text-customBlue font-semibold text-sm">
-                        <FiMenu size={18} />
-                        <span>Menu</span>
+                         <Link href="/index" className="mx-auto">
+                            <img src="/user/cw-logo.jpg" alt="Logo" className="h-auto" width={80} />
+                        </Link>
                       </div>
                       <button
                         onClick={() => setIsMobileMenuOpen(false)}
                         aria-label="Close menu"
-                        className="p-2 rounded-full text-customBlue hover:bg-blue-50 active:bg-blue-100 focus:outline-none focus:ring focus:ring-blue-200"
+                        className="p-2 rounded-full text-[#333333] hover:bg-[#a3ca4363] active:bg-[#a3ca4363]focus:outline-none"
                       >
                         <FiX size={22} />
                       </button>
                     </div>
+
+                   {/*Login Details*/}
+                   <div className="border-b pb-3">
+                      <p className="text-sm text-gray-500">Hi{isLoggedIn ? "," : ""}</p>
+
+                      {isLoggedIn ? (
+                        <p className="font-semibold text-[#3333333] truncate">
+                          {userData?.name || userData?.username || "User"}
+                        </p>
+                      ) : (
+                        <button
+                          onClick={() => setShowAuthModal(true)}
+                          className="font-semibold hover:text-[#A3CA43] hover:underline"
+                        >
+                          Login / Register
+                        </button>
+                      )}
+                    </div>
         
+                  <div className="overflow-y-scroll scrollbar-hide  max-h-[calc(100vh-64px)]">
                     {/* Mobile Category Block (accordion) */}
-                      <div className=" bg-white rounded-md border border-gray-200 overflow-hidden">
-                          <div className="px-3 py-4 text-[14px] font-semibold tracking-wide text-white  bg-[#2453D3]">
-                            Browse Category
-                          </div>
-                          {/* Use unified nodes (categories + hoveredCategory subcategories when available) */}
-                          {Array.isArray(nodes) && nodes.length > 0 ? (
-                            renderCategoryLevel(nodes, [], 0)
-                          ) : (
-                            <div className="px-3 py-4 text-sm text-gray-500">
-                              Loading categories…
-                            </div>
-                          )}
+                    <ul className="space-y-4 border-b">
+                      <li>
+                        <button
+                          onClick={() => toggleMenu("bike")}
+                          className="flex justify-between w-full items-center py-2"
+                        >
+                          <span>Bicycle categories</span>
+                          <span className="text-lg">{openMenu === "bike" ? "−" : "+"}</span>
+                        </button>
+
+                        {/* Collapsible content */}
+                        <div
+                        className={`transition-all duration-300  ${
+                          openMenu === "bike"
+                            ? "max-h-64 overflow-y-auto bg-[#f5f5f5] rounded-md scrollbar-hide"
+                            : "max-h-0 overflow-hidden"
+                        }`}
+                        >
+                          {/* Wrap categories in a ul here */}
+                          <ul className="p-2 space-y-1 my-2">
+                          {renderCategories(categories, 0, [])}
+                          </ul>
                         </div>
+                      </li>
+                    </ul>
+
+                    {/*Medium Device Page Links */}
+                    <ul className="lg:hidden space-y-2">
+                       <li className="border-b">
+                        <Link
+                          href="/"
+                          className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
+                        >
+                          Support
+                        </Link>
+                      </li>
+                      <li className="border-b">
+                        <Link
+                          href="/"
+                          className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
+                        >
+                          Track Order
+                        </Link>
+                      </li>
+                      <li className="border-b">
+                        <Link
+                          href="/"
+                          className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
+                        >
+                          Stores
+                        </Link>
+                      </li>
+                      <li className="border-b">
+                        <Link
+                          href="/"
+                          className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
+                        >
+                          Franschise
+                        </Link>
+                      </li>
+                    </ul>
+
+                    {/*Page Links */}
+                    <ul className="space-y-2">
+                       <li className="border-b">
+                        <Link
+                          href="/aboutus"
+                          className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
+                        >
+                          About Us
+                        </Link>
+                      </li>
+                      <li className="border-b">
+                        <Link
+                          href="/contact"
+                          className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
+                        >
+                          Contact
+                        </Link>
+                      </li>
+                      <li className="border-b">
+                        <Link
+                          href="/blog"
+                          className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
+                        >
+                          Blogs
+                        </Link>
+                      </li>
+                      <li className="border-b">
+                        <Link
+                          href="/faq"
+                          className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
+                        >
+                          Faq
+                        </Link>
+                      </li>
+                    </ul>
+
+                    {/* Logout button */}
+                    <div className="mb-4 border-b py-2">
+                      <button
+                      onClick={handleLogout} // your logout function
+                      className="text-sm font-semibold text-red-600 hover:text-red-700"
+                    >
+                      Logout
+                    </button>
+                    </div>
+                  </div>
+
+                  </div>
                   </div>
                 )}
                 {/* Auth Modal */}
@@ -1941,10 +1861,10 @@ const Header = () => {
                                 &times;
                             </button>
                             <div className="flex gap-4 mb-6 border-b">
-                                <button className={`pb-2 px-1 ${activeTab === 'login' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setActiveTab('login')}>
+                                <button className={`pb-2 px-1 ${activeTab === 'login' ? ' border-b-2 border-[#A3CA43] text-[#333333]' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setActiveTab('login')}>
                                     Login
                                 </button>
-                                <button className={`pb-2 px-1 ${activeTab === 'register' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setActiveTab('register')}>
+                                <button className={`pb-2 px-1 ${activeTab === 'register' ? 'border-b-2 border-[#A3CA43] text-[#333333]' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setActiveTab('register')}>
                                     Register
                                 </button>
                             </div>
@@ -2039,7 +1959,7 @@ const Header = () => {
                               <button
                                 type="submit"
                                 disabled={loadingAuth}
-                                className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:bg-gray-400 transition-colors duration-200"
+                                className="w-full bg-[#A3CA43] text-[#333333] hover:text-[#A3CA43] py-2 px-4 rounded hover:bg-[#333333] disabled:bg-gray-400 transition-colors duration-200"
                               >
                                 {loadingAuth
                                   ? "Processing..."
@@ -2064,7 +1984,7 @@ const Header = () => {
                                       setForgotPasswordMessage("");
                                       setForgotPasswordError("");
                                     }}
-                                    className="text-sm text-blue-500 hover:underline"
+                                    className="text-sm text-[#a3ca43] hover:underline"
                                   >
                                     Forgot Password?
                                   </button>
@@ -2229,165 +2149,132 @@ const Header = () => {
                         </div>
                     </div>
                 )}
-            </div>
-            <div className="hidden sm:flex relative p-2 mt-0 px-1 bg-[#2453D3] min-h-[64px] border-gray-200 shadow items-center">
-                <div className="w-full  relative">
-                    <div className="relative">
-                        <div className="flex justify-center overflow-x-auto scrollbar-hide">
-                            <Swiper modules={[Navigation]} navigation={{ prevEl: ".custom-swiper-prev", nextEl: ".custom-swiper-next", }} spaceBetween={20} slidesPerView="auto" watchOverflow={true} className="pl-10 pr-14">
-                                {categories.map((category) => (
-                                    <SwiperSlide key={category._id} className="!w-auto">
-                                        <div ref={(el) => (slideRefs.current[category._id] = el)} onMouseEnter={() => handleMouseEnter(category._id)} onMouseLeave={() => startHide(120)} className="px-5 py-2 flex flex-col items-center text-center" >
-                                            <Link href={`/category/${category.category_slug}`} className="text-sm text-base text-white hover:text-orange-500 whitespace-nowrap" >
-                                                {category.category_name}
-                                            </Link>
-                                        </div>
-                                    </SwiperSlide>
-                                ))}
-                            </Swiper>
-                        </div>
-                    </div>
-                </div>
-              
-                {/* DROPDOWN OUTSIDE SWIPER (fixed so it won't be clipped) */}
-                {hoveredCategory && hoveredCategory.subcategories?.length > 0 && (() => {
-                  // 1) Strict alphabetical sort for hovered subcategories
-                  const sortedSubcategories = [...hoveredCategory.subcategories]
-                    .filter(Boolean)
-                    .sort((a, b) => alphaSortString(a?.category_name, b?.category_name));
+          </div>
+          
+        </header>
+         <div className={`border-t-2 border-t-[#333333] py-2 shadow-md ${categories && categories.length > 0 ? "block" : "block md:hidden"}`}>
+          <div className="block md:hidden px-4">
+             {/* NEW MOBILE SEARCH BAR */}
+                <div className="flex items-center bg-[#f5f5f5] h-12 rounded-full border border-gray-300 shadow-sm overflow-hidden w-full transition-all duration-150 focus-within:border-[#a3ca43] focus-within:shadow-[0_0_0_2px_rgba(36,83,211,0.15)] flex-nowrap">
+                  
 
-                  // 2) Flatten (existing logic) then alphabetize the final list
-                  const flatAll = flattenAllCategories(
-                    sortedSubcategories,
-                    hoveredCategory.category_slug
-                  );
+                  <div className="flex-1 relative h-full flex items-center">
+                    <input
+                      type="search"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={handleKeyPress}
+                      placeholder=" "
+                      className="w-full h-full text-sm outline-none bg-transparent px-1 focus:text-[#111] placeholder-transparent"
+                      ref={searchContext === 'mobileTop' ? searchInputRef : null}
+                      onFocus={() => {
+                        setSearchContext('mobileTop');
+                        setSearchDropdownVisible(true);
 
-                  // Remove items missing display names
-                  const sanitizedFlat = (flatAll || []).filter((item) =>
-                    item?.type === "brand"
-                      ? !!item?.brand_name
-                      : !!item?.category_name
-                  );
+                        setTimeout(() => {
+                          if (searchInputRef.current) {
+                            const rect = searchInputRef.current.getBoundingClientRect();
+                            setSearchDropdownLeft(rect.left);
+                            setSearchDropdownTop(rect.bottom + window.scrollY);
+                            setSearchDropdownWidth(rect.width);
+                          }
+                        }, 0);
 
-                  // New: level-aware alphabetical output
-                  const flatAlpha = prepareFlatListAlpha(sanitizedFlat);
-
-                  // 3) Chunk and drop empty chunks to avoid gaps
-                  let dropdownChunksLocal = chunkFlatList(flatAlpha, 11);
-                  const filteredChunks = dropdownChunksLocal.filter(
-                    (chunk) =>
-                      Array.isArray(chunk) &&
-                      chunk.length > 0 &&
-                      chunk.some(Boolean)
-                  );
-
-                  // --- Image columns logic (unchanged) ---
-                  let navImages = [];
-                  if (hoveredCategory?.navImage) {
-                    if (typeof hoveredCategory.navImage === "string") {
-                      navImages = hoveredCategory.navImage
-                        .split(",")
-                        .map((s) => s.trim())
-                        .filter(Boolean);
-                    } else if (Array.isArray(hoveredCategory.navImage)) {
-                      navImages = hoveredCategory.navImage.filter(Boolean);
-                    }
-                  }
-                  const imageCols = navImages.length;
-
-                  // Layout constraints
-                  const maxCols = 6;
-                  const columnWidth = 220;
-                  const screenWidth =
-                    typeof window !== "undefined" ? window.innerWidth : 1200;
-                  const maxAllowedWidth = Math.max(300, screenWidth - 20);
-
-                  // Fit non-empty columns without gaps
-                  const maxDataBySlots = Math.max(0, maxCols - imageCols);
-                  const maxDataByViewport = Math.max(
-                    0,
-                    Math.floor(maxAllowedWidth / columnWidth) - imageCols
-                  );
-                  const allowedDataCols = Math.max(
-                    0,
-                    Math.min(filteredChunks.length, maxDataBySlots, maxDataByViewport)
-                  );
-
-                  const columns = filteredChunks.slice(0, allowedDataCols);
-
-                  let computedWidth = (columns.length + imageCols) * columnWidth;
-                  if (computedWidth > maxAllowedWidth) computedWidth = maxAllowedWidth;
-
-                  const styleLeft =
-                    dropdownUseTranslate && dropdownCenterX
-                      ? `${dropdownCenterX + 15}px`
-                      : `${dropdownLeft + 15}px`;
-                  const styleTransform =
-                    dropdownUseTranslate && dropdownCenterX ? "translateX(-50%)" : "none";
-
-                  if (columns.length === 0 && imageCols === 0) return null;
-
-                  return (
-                    <div
-                      ref={dropdownRef}
-                      className="fixed z-50 border-t border-gray-200 shadow-xl"
-                      style={{
-                        top: `${dropdownTop}px`,
-                        left: styleLeft,
-                        transform: styleTransform,
-                        width: `${computedWidth}px`,
-                        maxWidth: "calc(100% - 20px)",
+                        if (searchQuery.trim().length >= 1) fetchSuggestions(searchQuery);
                       }}
-                      onMouseEnter={cancelHide}
-                      onMouseLeave={() => startHide(120)}
-                    >
-                      <div className="flex flex-wrap bg-white h-[390px]" style={{ width: "100%" }}>
-                        {/* Render only non-empty columns in order (gap-free) */}
-                        {columns.map((chunk, index) => {
-                          const bgClass = index % 2 === 0 ? "bg-[#f2f2f2]" : "bg-white";
-                          return (
-                            <div
-                              key={`col-${index}`}
-                              className={`min-w-[220px] max-w-[250px] p-3 flex flex-col justify-start self-start ${bgClass}`}
-                              style={{ height: "100%" }}
-                            >
-                              {chunk.map((item) => renderFlatItem(item, hoveredCategory))}
-                            </div>
-                          );
-                        })}
+                    />
+                    {searchQuery.trim() === "" && (
+                      <div className="absolute left-1 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[11px] pointer-events-none z-10">
+                        <span className="text-gray-400">Search for</span>
+                        <span className="text-gray-900">"{typedPreview }"</span>
+                      </div>
+                    )}
+                  </div>
+              
+                  <button
+                    onClick={handleSearch}
+                    aria-label="Search"
+                    className="h-full text-white flex items-center justify-center active:scale-[0.97] transition p-2 border-l-2"
+                  >
+                    <FaSearch size={16} className="text-[#333333]"/>
+                  </button>
+                </div>
+                {/* MOBILE TOP SUGGESTIONS (outside menu) */}
+                {searchDropdownVisible && searchContext === 'mobileTop' && !isMobileMenuOpen && (
+                  <div ref={searchDropdownRef} className="sm:hidden absolute z-[70] left-0 right-0 px-3 mt-1">
+                    <div className="bg-white rounded-lg shadow-lg border max-h-72 overflow-y-auto">
+                      <div className="px-3 pt-2 pb-1 text-[11px] font-semibold tracking-wide text-gray-500">
+                        PRODUCTS
+                      </div>
+                      <div className="px-3 pb-2">
+                        {suggestions.length > 0
+                          ? suggestions.map(renderSuggestionItem)
+                          : (searchQuery.trim() && (
+                              <div className="py-10 flex flex-col items-center justify-center text-gray-500">
+                                {/* Icon */}
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="w-12 h-12 mb-3 text-gray-400"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                  strokeWidth={1.5}
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M9 13h6m-3-3v6m9-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
+                                </svg>
 
-                        {/* Image columns (unchanged) */}
-                        {Array.isArray(navImages) &&
-                          navImages.length > 0 &&
-                          navImages.map((img, idx) => (
-                            <div
-                              key={`nav-image-panel-${idx}`}
-                              className={`w-[220px] h-[390px] flex items-center justify-center ${
-                                ((columns.length + idx) % 2 === 0) ? "bg-gray-50" : "bg-white"
-                              }`}
-                            >
-                              <Link
-                                href={`/category/${hoveredCategory?.category_slug || ""}`}
-                                className="block w-full h-full"
-                              >
-                                <Image
-                                  src={img}
-                                  alt={hoveredCategory.category_name || "Category Image"}
-                                  width={220}
-                                  height={390}
-                                  className="object-cover w-full h-full"
-                                  style={{ boxShadow: "0px -1px 0px #2453d3" }}
-                                />
-                              </Link>
-                            </div>
-                          ))}
+                                {/* Message */}
+                                <p className="text-sm font-medium">No products found</p>
+                                <p className="text-xs text-gray-400 mt-1">Try a different keyword</p>
+                              </div>
+
+                            ))
+                        }
                       </div>
                     </div>
-                  );
-                })()}
-            </div>
-        </header>
-        {/* DESKTOP SUGGESTIONS DROPDOWN */}
+                  </div>
+                )}
+          </div>
+          <div className="hidden md:block">
+            <Swiper
+              modules={[Navigation]}
+              slidesPerView="auto"
+              spaceBetween={25}
+              className={`max-w-7xl mx-auto px-5 ${
+                categories.length >= 1 && categories.length <= 10 ? "cat-nav" : ""
+              }`}
+            >
+              {categories.map((category) => (
+                <SwiperSlide key={category._id} className="!w-auto">
+                  <Link
+                    href={`/category/${category.category_slug}`}
+                    className="flex flex-col items-center justify-center gap-2 text-[#333333] hover:text-[#A3CA43] transition cursor-pointer"
+                  >
+                    {/* Category image */}
+                   {category.navImage && (
+                      <img
+                        src={category.navImage}
+                        alt={category.category_name}
+                        className="lg:w-16 lg:h-16 md:w-12 md:h-12 rounded bg-white object-contain"
+                      />
+                    )}
+                    {/* Category name */}
+                    <span className="text-sm md:text-xs whitespace-nowrap">
+                      {category.category_name}
+                    </span>
+                  </Link>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+
+          </div>
+         </div>
+    
+         {/* DESKTOP SUGGESTIONS DROPDOWN */}
         {searchDropdownVisible && searchContext === 'desktop' && (
           <div
             ref={searchDropdownRef}
@@ -2434,6 +2321,7 @@ const Header = () => {
             </div>
           </div>
         )}
+      
       </>
     );
 };
