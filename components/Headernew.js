@@ -1452,7 +1452,7 @@ const Header = () => {
         if (!node || !node._id || !node.category_name || !node.category_slug) {
           return (
             <li
-              key={node?._id || Math.random()}
+              key={node?._id || Math.random()} 
               className="text-red-500 italic py-2 px-3"
             >
               Invalid category data.
@@ -1477,7 +1477,13 @@ const Header = () => {
               <Link
                 href={fullPath}
                 className="flex-1 truncate"
-                onClick={() => hasChildren && toggleCategory(node._id)}
+                onClick={() => {
+                  if (hasChildren) {
+                    toggleCategory(node._id); 
+                  } else {
+                    closeMobileMenu();        
+                  }
+                }}
               >
                 {node.category_name}
               </Link>
@@ -1523,6 +1529,10 @@ const Header = () => {
         </div>
       );
     }
+
+    const closeMobileMenu = () => {
+      setIsMobileMenuOpen(false);
+    };
 
     return (
       <>
@@ -1615,7 +1625,7 @@ const Header = () => {
                       
                        {/* TEXT MENU (DESKTOP ONLY) */}
                       <div className="hidden lg:flex items-center space-x-6 pr-3 border-r-2 border-r-[#333333]">
-                        <Link href="/" className="text-md hover:text-[#A3CA43]">Support</Link>
+                        <Link href="/"  className="text-md hover:text-[#A3CA43]">Support</Link>
                         <Link href="/" className="text-md hover:text-[#A3CA43]">Track Order</Link>
                         <Link href="/" className="text-md hover:text-[#A3CA43]">Store</Link>
                         <Link href="/" className="text-md hover:text-[#A3CA43]">Franchise</Link>
@@ -1659,7 +1669,7 @@ const Header = () => {
                                       {dropdownOpen && (
                                           <div ref={dropdownRef} className="absolute right-0 mt-3 w-48 sm:w-56 bg-white rounded-xl shadow-xl z-50 transition-all">
                                               <div className="py-2 px-2">
-                                                <div className="block lg:hidden px-4 py-2 mb-2 bg-gray-50 rounded-md">
+                                                <div className="block px-4 py-2 mb-2 bg-gray-50 rounded-md">
                                                   <p className="text-xs text-gray-500">Signed in as</p>
                                                   <p className="text-sm font-semibold text-[#A3CA43] truncate">
                                                     {userData?.name || userData?.username || "User"}
@@ -1701,14 +1711,14 @@ const Header = () => {
                 </div> 
                 {/* Mobile Menu (Hidden on desktop) */}
                 {isMobileMenuOpen && (
-                  <div className={`fixed inset-0 z-50 transition-opacity duration-300 ${isMobileMenuOpen ? "bg-black/40 opacity-100" : "pointer-events-none opacity-0"}`}>
-                  <div className={`fixed top-0 left-0 z-50 h-full w-[300px] bg-white p-5 transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
-                    style={{ touchAction: 'auto', userSelect: 'auto', WebkitUserSelect: 'auto' }}
+                  <div className={`fixed inset-0 z-50 transition-opacity duration-300 ${isMobileMenuOpen ? "bg-black/40 opacity-100" : "pointer-events-none opacity-0"}`}  >
+                  <div className={`fixed top-0 left-0 z-50 h-full w-[300px] bg-white p-5 transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}` }
+                    style={{ touchAction: 'auto', userSelect: 'auto', WebkitUserSelect: 'auto' }} 
                   >
                     {/* Internal sticky header */}
                     <div className="flex items-center justify-between mb-3 sticky top-0 bg-white pb-2 border-b">
                       <div className="flex items-center gap-2 text-customBlue font-semibold text-sm">
-                         <Link href="/index" className="mx-auto">
+                         <Link href="/index" className="mx-auto" onClick={closeMobileMenu}>
                             <img src="/user/cw-logo.jpg" alt="Logo" className="h-auto" width={80} />
                         </Link>
                       </div>
@@ -1731,7 +1741,10 @@ const Header = () => {
                         </p>
                       ) : (
                         <button
-                          onClick={() => setShowAuthModal(true)}
+                        onClick={() => {
+                          setShowAuthModal(true);  // open the login/register modal
+                          closeMobileMenu();       // close the mobile sidebar
+                        }}
                           className="font-semibold hover:text-[#A3CA43] hover:underline"
                         >
                           Login / Register
@@ -1771,7 +1784,7 @@ const Header = () => {
                     <ul className="lg:hidden space-y-2">
                        <li className="border-b">
                         <Link
-                          href="/"
+                          href="/" onClick={closeMobileMenu}
                           className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
                         >
                           Support
@@ -1779,7 +1792,7 @@ const Header = () => {
                       </li>
                       <li className="border-b">
                         <Link
-                          href="/"
+                          href="/" onClick={closeMobileMenu}
                           className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
                         >
                           Track Order
@@ -1787,7 +1800,7 @@ const Header = () => {
                       </li>
                       <li className="border-b">
                         <Link
-                          href="/"
+                          href="/" onClick={closeMobileMenu}
                           className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
                         >
                           Stores
@@ -1795,7 +1808,7 @@ const Header = () => {
                       </li>
                       <li className="border-b">
                         <Link
-                          href="/"
+                          href="/" onClick={closeMobileMenu}
                           className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
                         >
                           Franschise
@@ -1807,7 +1820,7 @@ const Header = () => {
                     <ul className="space-y-2">
                        <li className="border-b">
                         <Link
-                          href="/aboutus"
+                          href="/aboutus"  onClick={closeMobileMenu}
                           className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
                         >
                           About Us
@@ -1815,7 +1828,7 @@ const Header = () => {
                       </li>
                       <li className="border-b">
                         <Link
-                          href="/contact"
+                          href="/contact" onClick={closeMobileMenu}
                           className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
                         >
                           Contact
@@ -1823,7 +1836,7 @@ const Header = () => {
                       </li>
                       <li className="border-b">
                         <Link
-                          href="/blog"
+                          href="/blog" onClick={closeMobileMenu}
                           className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
                         >
                           Blogs
@@ -1831,7 +1844,7 @@ const Header = () => {
                       </li>
                       <li className="border-b">
                         <Link
-                          href="/faq"
+                          href="/faq" onClick={closeMobileMenu}
                           className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
                         >
                           Faq
@@ -1842,7 +1855,10 @@ const Header = () => {
                     {/* Logout button */}
                     <div className="mb-4 border-b py-2">
                       <button
-                      onClick={handleLogout} // your logout function
+                       onClick={() => {
+                        handleLogout();      // your existing logout logic
+                        closeMobileMenu();   // close the sidebar
+                      }}  // your logout function
                       className="text-sm font-semibold text-red-600 hover:text-red-700"
                     >
                       Logout
@@ -2155,7 +2171,7 @@ const Header = () => {
          <div className={`border-t-2 border-t-[#333333] py-2 shadow-md ${categories && categories.length > 0 ? "block" : "block md:hidden"}`}>
           <div className="block md:hidden px-4">
              {/* NEW MOBILE SEARCH BAR */}
-                <div className="flex items-center bg-[#f5f5f5] h-12 rounded-full border border-gray-300 shadow-sm overflow-hidden w-full transition-all duration-150 focus-within:border-[#a3ca43] focus-within:shadow-[0_0_0_2px_rgba(36,83,211,0.15)] flex-nowrap">
+                <div className="flex items-center bg-[#f5f5f5] h-12 rounded-full border border-gray-300 shadow-sm overflow-hidden w-full transition-all duration-150 focus-within:border-[#a3ca43] focus-within:shadow-[0_0_0_2px_rgba(36,83,211,0.15)] flex-nowrap inset-shadow-sm">
                   
 
                   <div className="flex-1 relative h-full flex items-center">
