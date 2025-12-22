@@ -179,7 +179,7 @@ const RecentlyViewedProducts = () => {
     <>
       {navigating && (
         <div className="fixed inset-0 z-[9999] flex justify-center items-center bg-black bg-opacity-30">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#a3ca43]"></div>
         </div>
       )}
       
@@ -221,14 +221,14 @@ const RecentlyViewedProducts = () => {
                     <button
                       onClick={prev}
                       disabled={startIndex === 0}
-                      className="p-2 border border-gray-300 rounded-full hover:bg-blue-600 hover:text-white transition disabled:opacity-50"
+                      className="p-2 border border-gray-300 rounded-full hover:bg-[#a3ca43] hover:text-white transition disabled:opacity-50"
                     >
                       <ChevronLeft size={20} />
                     </button>
                     <button
                       onClick={next}
                       disabled={startIndex + visibleCount >= recentProducts.length}
-                      className="p-2 border border-gray-300 rounded-full hover:bg-blue-600 hover:text-white transition disabled:opacity-50"
+                      className="p-2 border border-gray-300 rounded-full hover:bg-[#a3ca43] hover:text-white transition disabled:opacity-50"
                     >
                       <ChevronRight size={20} />
                     </button>
@@ -241,7 +241,7 @@ const RecentlyViewedProducts = () => {
                   {visibleProducts.map((product) => (
                     <div
                       key={product._id}
-                      className="group border border-gray-200 hover:border-[#0069c1] hover:shadow-md transition-all duration-300 rounded-lg min-w-[230px]"
+                      className="group border border-gray-200 hover:border-[#a3ca43] hover:shadow-md transition-all duration-300 rounded-lg min-w-[230px]"
 
                     >
                       
@@ -319,7 +319,7 @@ const RecentlyViewedProducts = () => {
                          <h4 className="text-xs text-gray-500 mb-2 uppercase">
                             <Link
                               href={`/brand/${product.brand.toLowerCase().replace(/\s+/g, "-")}`}
-                              className="hover:text-blue-600"
+                              className="hover:text-[#a3ca43]"
                             >
                               {product.brand}
                             </Link>
@@ -331,7 +331,7 @@ const RecentlyViewedProducts = () => {
                           className="block mb-2"
                           onClick={() => handleProductClick(product)}
                         >
-                          <h3 className="text-xs sm:text-sm font-medium text-[#0069c6] hover:text-[#00badb] line-clamp-2 min-h-[40px]">
+                          <h3 className="text-xs sm:text-sm font-medium text-[#333333] hover:text-[#a3ca43] line-clamp-2 min-h-[40px]">
                             {product.name}
                           </h3>
                         </Link>
@@ -397,11 +397,11 @@ const RecentlyViewedProducts = () => {
                   {clickElement === "next" ? (
                     <>
                       <span className="w-2.5 h-2.5 bg-gray-300 rounded-full"></span>
-                      <span className="w-2.5 h-2.5 bg-blue-600 rounded-full"></span>
+                      <span className="w-2.5 h-2.5 bg-[#a3ca43] rounded-full"></span>
                     </>
                   ) : (
                     <>
-                      <span className="w-2.5 h-2.5 bg-blue-600 rounded-full"></span>
+                      <span className="w-2.5 h-2.5 bg-[#a3ca43] rounded-full"></span>
                       <span className="w-2.5 h-2.5 bg-gray-300 rounded-full"></span>
                     </>
                   )}

@@ -1853,6 +1853,7 @@ const Header = () => {
                     </ul>
 
                     {/* Logout button */}
+                    {isLoggedIn && (
                     <div className="mb-4 border-b py-2">
                       <button
                        onClick={() => {
@@ -1864,6 +1865,7 @@ const Header = () => {
                       Logout
                     </button>
                     </div>
+                    )}
                   </div>
 
                   </div>

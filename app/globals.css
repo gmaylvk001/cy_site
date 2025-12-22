@@ -335,3 +335,50 @@ body::-webkit-scrollbar {
     aspect-ratio: 2;
   }
 }
+
+/* ===== Top Selling Swiper ONLY ===== */
+.top-selling-swiper {
+  position: relative;
+}
+
+/* Arrow buttons */
+.top-selling-swiper .swiper-prev,
+.top-selling-swiper .swiper-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  background: #fff;
+  border-radius: 9999px;
+  border:1px solid #00000038;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.top-selling-swiper .swiper-prev {
+  left: -100px;
+}
+
+.top-selling-swiper .swiper-next {
+  right: 0px;
+}
+
+.top-selling-swiper .swiper-prev:hover,
+.top-selling-swiper .swiper-next:hover {
+  background: #a3ca43;
+  color: #fff;
+}
+
+/* Mobile: hide arrows */
+@media (max-width: 640px) {
+  .top-selling-swiper .swiper-prev,
+  .top-selling-swiper .swiper-next {
+    display: none;
+  }
+}
+
