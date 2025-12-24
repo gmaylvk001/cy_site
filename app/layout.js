@@ -38,6 +38,8 @@ export default function RootLayout({ children }) {
               ajs.parentNode.insertBefore(js, ajs);
           }(document, 'script', 'adtarbo-js-v2'));`}
         </Script>
+         {/*insta_video */}
+        <Script async src="https://www.instagram.com/embed.js"></Script>
       </body>
     </html>
   );
