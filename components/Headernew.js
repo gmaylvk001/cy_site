@@ -1562,7 +1562,7 @@ const Header = () => {
                         {isMobileMenuOpen ? <FiX size={22} /> : <FaBars size={22} />}
                       </button>
 
-                        <Link href="/index" className="mx-auto">
+                        <Link href="/" className="mx-auto">
                             <img src="/user/cw-logo.jpg" alt="Logo" width={83} />
                         </Link>
                     </div>
@@ -1718,7 +1718,7 @@ const Header = () => {
                     {/* Internal sticky header */}
                     <div className="flex items-center justify-between mb-3 sticky top-0 bg-white pb-2 border-b">
                       <div className="flex items-center gap-2 text-customBlue font-semibold text-sm">
-                         <Link href="/index" className="mx-auto" onClick={closeMobileMenu}>
+                         <Link href="/" className="mx-auto" onClick={closeMobileMenu}>
                             <img src="/user/cw-logo.jpg" alt="Logo" className="h-auto" width={80} />
                         </Link>
                       </div>
