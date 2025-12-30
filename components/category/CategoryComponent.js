@@ -105,14 +105,14 @@ export default function CategoryPage(params) {
 const fetchInitialData = async () => {
   try {
     setLoading(true);
-    console.log('🔍 Fetching category data for slug:', slug);
+   // console.log('🔍 Fetching category data for slug:', slug);
     
     const categoryRes = await fetch(`/api/categories/${slug}`);
     const categoryData = await categoryRes.json();
     
-    console.log('📦 Raw API Response:', categoryData);
-    console.log('🎯 Filters from API:', categoryData.filters);
-    console.log('📊 Number of filters:', categoryData.filters?.length || 0);
+    //console.log('📦 Raw API Response:', categoryData);
+    //console.log('🎯 Filters from API:', categoryData.filters);
+   // console.log('📊 Number of filters:', categoryData.filters?.length || 0);
 
     setCategoryData({
       ...categoryData,
@@ -141,12 +141,12 @@ const fetchInitialData = async () => {
 
     // IMPROVED FILTER GROUPING LOGIC
     if (categoryData.filters && categoryData.filters.length > 0) {
-      console.log('🔄 Processing filters...');
+      //console.log('🔄 Processing filters...');
       
       const groups = {};
       
       categoryData.filters.forEach((filter, index) => {
-        console.log(`📋 Filter ${index + 1}:`, filter);
+       // console.log(`📋 Filter ${index + 1}:`, filter);
         
         // Use filter_group_id as the primary key, fallback to filter_group_name
         const groupId = filter.filter_group_id || filter.filter_group_name;
@@ -159,7 +159,7 @@ const fetchInitialData = async () => {
               slug: (filter.filter_group_name || 'unnamed').toLowerCase().replace(/\s+/g, '-'),
               filters: []
             };
-            console.log(`✅ Created new group: ${filter.filter_group_name}`);
+            //console.log(`✅ Created new group: ${filter.filter_group_name}`);
           }
           
           // Add filter to group
@@ -168,13 +168,13 @@ const fetchInitialData = async () => {
             filter_name: filter.filter_name,
             count: filter.count || 0
           });
-          console.log(`✅ Added filter "${filter.filter_name}" to group "${filter.filter_group_name}"`);
+          //console.log(`✅ Added filter "${filter.filter_name}" to group "${filter.filter_group_name}"`);
         } else {
           console.log('❌ Filter missing group ID:', filter);
         }
       });
       
-      console.log('🏷️ Final filter groups:', groups);
+      //console.log('🏷️ Final filter groups:', groups);
       setFilterGroups(groups);
 
       // Initialize expanded state
@@ -234,7 +234,9 @@ const fetchInitialData = async () => {
         ? selectedFilters.categories
         : categoryData.allCategoryIds;
 
-      query.set('categoryIds', categoryIds.join(','));
+        query.set('sub_category_new',  categoryData.main_category.md5_cat_name);
+      
+      //query.set('categoryIds', categoryIds.join(','));
       query.set('page', pageNum);
       query.set('limit', itemsPerPage);
 
@@ -547,7 +549,7 @@ const fetchInitialData = async () => {
     );
   }
 
-  console.log("📌 Category Data:", categoryData);
+  //console.log("📌 Category Data:", categoryData);
 
   return (
 

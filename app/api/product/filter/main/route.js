@@ -128,7 +128,7 @@ if (sub_category_new && typeof sub_category_new === "string") {
           filter_id: { $in: filterIds }
         });
         
-        console.log('🎛️ Product filters found:', productFilters.length);
+       // console.log('🎛️ Product filters found:', productFilters.length);
         
         const filtersByProduct = productFilters.reduce((acc, pf) => {
           const productId = pf.product_id.toString();
@@ -144,7 +144,7 @@ if (sub_category_new && typeof sub_category_new === "string") {
           return filterIds.some(fid => productFilterIds.has(fid));
         });
         
-        console.log('✅ Products after filter application:', filteredProductIds.length);
+       // console.log('✅ Products after filter application:', filteredProductIds.length);
         
         // Update the query to only include filtered products
         query._id = { $in: filteredProductIds };
