@@ -17,12 +17,12 @@ const ReturnPolicy = () => {
     return (
         <div>
             {/* 🟠 About us Header Bar */}
-            <div className="bg-blue-50 py-6 px-8 flex justify-between items-center">
+            <div className="bg-green-50 py-6 px-8 flex justify-between items-center">
                 <h2 className="text-xl font-bold text-gray-800">Return Policy</h2>
                 <div className="flex items-center space-x-2">
                     <Link href="/" className="text-gray-600 hover:text-blue-600">🏠 Home</Link>
                     <span className="text-gray-500">›</span>
-                    <span className="text-blue-600 font-semibold">Return policy</span>
+                    <span className="text-green-600 font-semibold">Return policy</span>
                 </div>
             </div>
             <div className="bg-gray-50 min-h-screen py-16 px-4 sm:px-6 lg:px-8 animate-fade-in">
@@ -30,7 +30,7 @@ const ReturnPolicy = () => {
                     {/* Header Section */}
                     <div className="text-center mb-16 animate-fade-in-up">
                         <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><FiShield className="text-blue-600 text-3xl" /></div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-customBlue mb-4">Return Policy</h1>
+                        <h1 className="text-3xl md:text-4xl font-bold text-green-800 mb-4">Return Policy</h1>
                         {currentDate && (
                             <p className="text-lg text-gray-600 max-w-3xl mx-auto">Last updated: {currentDate}</p>
                         )}

@@ -18,12 +18,12 @@ const CancellationRefundPolicy = () => {
   return (
     <div>
       {/* Header Bar */}
-      <div className="bg-blue-50 py-6 px-8 flex justify-between items-center">
+      <div className="bg-green-50 py-6 px-8 flex justify-between items-center">
         <h2 className="text-xl font-bold text-gray-800">Cancellation & Refund Policy</h2>
         <div className="flex items-center space-x-2">
           <Link href="/" className="text-gray-600 hover:text-blue-600">🏠 Home</Link>
           <span className="text-gray-500">›</span>
-          <span className="text-blue-600 font-semibold">Cancellation & Refund</span>
+          <span className="text-green-600 font-semibold">Cancellation & Refund</span>
         </div>
       </div>
 

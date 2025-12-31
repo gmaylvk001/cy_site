@@ -17,12 +17,12 @@ const PrivacyPolicy = () => {
     return (
         <div>
             {/* 🟠 About us Header Bar */}
-            <div className="bg-blue-50 py-6 px-8 flex justify-between items-center">
+            <div className="bg-green-50 py-6 px-8 flex justify-between items-center">
                 <h2 className="text-xl font-bold text-gray-800">Privacy Policy</h2>
                 <div className="flex items-center space-x-2">
                     <Link href="/" className="text-gray-600 hover:text-blue-600">🏠 Home</Link>
                     <span className="text-gray-500">›</span>
-                    <span className="text-blue-600 font-semibold">Privacy policy</span>
+                    <span className="text-green-600 font-semibold">Privacy policy</span>
                 </div>
             </div>
             <div className="bg-gray-50 min-h-screen py-16 px-4 sm:px-6 lg:px-8 animate-fade-in">
@@ -30,7 +30,7 @@ const PrivacyPolicy = () => {
                     {/* Header Section */}
                     <div className="text-center mb-16 animate-fade-in-up">
                         <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><FiShield className="text-blue-600 text-3xl" /></div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-customBlue mb-4">Privacy Policy</h1>
+                        <h1 className="text-3xl md:text-4xl font-bold text-green-800 mb-4">Privacy Policy</h1>
                         {currentDate && (
                             <p className="text-lg text-gray-600 max-w-3xl mx-auto">Last updated: {currentDate}</p>
                         )}
@@ -40,8 +40,8 @@ const PrivacyPolicy = () => {
                     <div className=" rounded-xl shadow-md overflow-hidden animate-fade-in-up delay-100  bg-gradient-to-br from-blue-50 to-indigo-50">
                         {/* Introduction */}
                         <div className="p-8 border-b border-gray-100">
-                            <h2 className="text-2xl font-bold text-customBlue mb-4 flex items-center gap-2">
-                                <FiLock className="text-customBlue" />Your Privacy Matters
+                            <h2 className="text-2xl font-bold text-green-500 mb-4 flex items-center gap-2">
+                                <FiLock className="text-green-500" />Your Privacy Matters
                             </h2>
                             <p className="text-gray-600 mb-4">The privacy of your personal information is very important to us. We do not disclose your personal information to third parties for their marketing purposes without your explicit consent. Read this privacy policy to learn more about the ways in which we use and protect your personal information. The privacy practices of this statement apply to our services available under the domain and sub-domains of www.cycleworld.in and apply generally to our parent, affiliates, subsidiaries of our website and our subsidiaries/franchisees. By logging in to the portal, you agree to be bound by the terms and conditions of this privacy policy. This privacy policy describes the information, as part of the normal operation of our services; we collect from you and what may happen to that information.</p>
                             <p className="text-gray-600">By accepting the Privacy Policy and the User Agreement at registration, you expressly consent to </p>
@@ -51,19 +51,19 @@ const PrivacyPolicy = () => {
 
                         {/* YOUR PRIVACY – OUR COMMITMENT */}
                         <div className="p-8 border-b border-gray-100 bg-blue-50/30">
-                            <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2"><MdPolicy className="text-2xl" />YOUR PRIVACY – OUR COMMITMENT</h3>
+                            <h3 className="text-xl font-semibold text-green-500 mb-3 flex items-center gap-2"><MdPolicy className="text-2xl text-green-500" />YOUR PRIVACY – OUR COMMITMENT</h3>
                             <p className="text-gray-600">At Cycleworld.com, we are extremely proud of our commitment to protect your privacy and the personal information you disclose on the Site. We value your trust in us. Please read the following policy to understand how your personal information will be treated as you make full use of our portal.</p>
                         </div>
 
                         {/* CYCLEWORLD’S PRIVACY GUARANTEE */}
                         <div className="p-8 border-b border-gray-100 bg-blue-50/30">
-                            <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">CYCLEWORLD’S PRIVACY GUARANTEE</h3>
+                            <h3 className="text-xl font-semibold text-green-500 mb-3 flex items-center gap-2">CYCLEWORLD’S PRIVACY GUARANTEE</h3>
                             <p className="text-gray-600">At Cycleworld.com, we are extremely proud of our commitment to We at Cycleworld.com promise that we will not disclose your personal information to third parties for their marketing purposes. Your trust and confidence are our highest priority.</p>
                         </div>
 
                         {/* Information Collection */}
                         <div className="p-8 border-b border-gray-100">
-                            <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2"><IoIosInformationCircle className="text-2xl" />Information We Collect</h3>
+                            <h3 className="text-xl font-semibold text-green-500 mb-3 flex items-center gap-2"><IoIosInformationCircle className="text-2xl text-green-500" />Information We Collect</h3>
                             <p className="text-gray-600 mb-4">We may collect the following information:</p>
                             <ul className="list-disc pl-5 space-y-2 text-gray-600">
                                 <li className="animate-fade-in-right delay-200">Name and job title</li>
@@ -76,7 +76,7 @@ const PrivacyPolicy = () => {
 
                         {/* Use of Information */}
                         <div className="p-8 border-b border-gray-100 bg-blue-50/30">
-                            <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2"><MdOutlineCollectionsBookmark className="text-2xl"/>How We Use Your Information</h3>
+                            <h3 className="text-xl font-semibold text-green-500 mb-3 flex items-center gap-2"><MdOutlineCollectionsBookmark className="text-2xl text-green-500"/>How We Use Your Information</h3>
                             <p className="text-gray-600 mb-4">
                                 We require this information to understand your needs and provide better service, 
                                 and in particular for:
@@ -108,7 +108,7 @@ const PrivacyPolicy = () => {
                         <p className="text-gray-600 mb-6">
                             For any questions about our privacy policy, please contact:
                         </p>
-                        <a href="mailto:info@cycleworld.in" className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-300">info@cycleworld.in</a>
+                        <a href="mailto:info@cycleworld.in" className="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-300">info@cycleworld.in</a>
                     </div>
                 </div>
             </div>

@@ -55,12 +55,12 @@ const TermsAndConditions = ({faqs = null}) => {
     return (
         <div>
             {/* Header Bar */}
-            <div className="bg-red-100 py-6 px-8 flex justify-between items-center">
+            <div className="bg-green-50 py-6 px-8 flex justify-between items-center">
                 <h2 className="text-xl font-bold text-gray-800">FAQ</h2>
                 <div className="flex items-center space-x-2">
                     <Link href="/" className="text-gray-600 hover:text-red-600">🏠 Home</Link>
                     <span className="text-gray-500">›</span>
-                    <span className="text-red-600 font-semibold">Faq</span>
+                    <span className="text-green-600 font-semibold">Faq</span>
                 </div>
             </div>
 

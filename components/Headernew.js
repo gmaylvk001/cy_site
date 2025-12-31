@@ -1565,7 +1565,7 @@ const Header = () => {
                         <Link href="/" className="mx-auto">
                             <img src="/user/cw-logo.jpg" alt="Logo" width={83} />
                         </Link>
-                        <Link href="/"  className="text-md hover:text-[#A3CA43]">Support</Link>
+                        <Link href="https://supportcycleworld.zohodesk.in/portal/en/signin"  className="text-md hover:text-[#A3CA43]">Support</Link>
                         <Link href="/track-orders" className="text-md hover:text-[#A3CA43]">Track Order</Link>
                     </div>
 
