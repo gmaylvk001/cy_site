@@ -448,7 +448,7 @@ const Header = () => {
         // Count words in updatedText
         const wordCount = updatedText.trim().split(/\s+/).filter(Boolean).length;
 
-        if (wordCount <= 2) {
+        if (wordCount <= 4) {
           setTypedPreview(updatedText || "");
         }
 
@@ -1565,6 +1565,8 @@ const Header = () => {
                         <Link href="/" className="mx-auto">
                             <img src="/user/cw-logo.jpg" alt="Logo" width={83} />
                         </Link>
+                        <Link href="/"  className="text-md hover:text-[#A3CA43]">Support</Link>
+                        <Link href="/" className="text-md hover:text-[#A3CA43]">Track Order</Link>
                     </div>
 
                     {/* Search Bar (Hidden on mobile - will show in mobile menu) */}
@@ -1625,8 +1627,7 @@ const Header = () => {
                       
                        {/* TEXT MENU (DESKTOP ONLY) */}
                       <div className="hidden lg:flex items-center space-x-6 pr-3 border-r-2 border-r-[#333333]">
-                        <Link href="/"  className="text-md hover:text-[#A3CA43]">Support</Link>
-                        <Link href="/" className="text-md hover:text-[#A3CA43]">Track Order</Link>
+                        
                         <Link href="/" className="text-md hover:text-[#A3CA43]">Store</Link>
                         <Link href="/" className="text-md hover:text-[#A3CA43]">Franchise</Link>
                       </div>
