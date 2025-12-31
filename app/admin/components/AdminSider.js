@@ -118,11 +118,11 @@ export default function AdminSider({ collapsed }) {
         >
           {!collapsed ? (
             <a href="/" className="flex items-center space-x-2">
-              <img src="/admin/assets/images/bea.png" alt="Site Logo" className="h-9" />
-              <span className="text-sm font-bold text-gray-700">Bharath Electronics</span>
+              <img src="/admin/assets/images/cw-logo.jpg" alt="Site Logo" className="h-9" />
+              <span className="text-sm font-bold text-gray-700">Cycle World</span>
             </a>
           ) : (
-            <img src="/admin/assets/images/bea.png" alt="Site Logo" className="h-9" />
+            <img src="/admin/assets/images/cw-logo.jpg" alt="Site Logo" className="h-9" />
           )}
         </div>
 
