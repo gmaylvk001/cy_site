@@ -46,7 +46,7 @@ const TermsAndConditions = () => {
           <div className="rounded-xl shadow-md overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50">
             {/* Introduction */}
             <div className="p-8 border-b border-gray-100">
-              <h2 className="text-2xl font-bold text-customBlue mb-4 flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-green-600 mb-4 flex items-center gap-2">
                 <FiBook className="text-green-600" /> Website Terms
               </h2>
               <p className="text-gray-600 mb-4">
