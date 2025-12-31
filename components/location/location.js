@@ -34,14 +34,14 @@ const [branches, setBranches] = useState([]);
   return (
     <div className="min-h-screen bg-white py-12 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-customBlue mb-10">Our Branches</h1>
+        <h1 className="text-3xl font-bold text-green-800 mb-10">Our Branches</h1>
 
         {/* Branch Grid */}
          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
       {branches.map((branch, idx) => (
         <div
   key={branch._id || idx}
-  className="border border-blue-300 rounded-lg shadow-sm p-4 hover:shadow-md transition"
+  className="border border-green-300 rounded-lg shadow-sm p-4 hover:shadow-md transition"
 >
   <h2 className="text-md font-semibold text-gray-800 mb-2">
     {branch.title}
