@@ -405,7 +405,7 @@ const capitalizeFirstLetter = (str) =>
               <div className="text-center md:text-left ml-1 mb-1">
                 <p>
                   <a href="#" className="hover:underline text-white">
-                    Bharath Electronics ©
+                    Cycle World ©
                   </a>{" "}
                   2025 All rights reserved.
                 </p>
@@ -563,9 +563,7 @@ const capitalizeFirstLetter = (str) =>
                 );
               })}
             </div>
-
-          </div>
-          {/* RIGHT SECTION (Our Location) */}
+{/* RIGHT SECTION (Our Location) */}
           <div className="space-y-4">
             <h3 className="text-white font-semibold text-lg mb-4">Our Location</h3>
             {Object.entries(groupedStores).map(([city, orgs], index) => (
@@ -574,6 +572,8 @@ const capitalizeFirstLetter = (str) =>
               </div>
             ))}
           </div>
+          </div>
+          
         </div>
       </div>
       </footer>
