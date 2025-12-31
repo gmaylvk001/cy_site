@@ -832,13 +832,13 @@ const fetchBrand = async () => {
 {/* <h4><b>Available offers</b></h4> */}
                   
                            
-                           <RazorpayOffers amount={product.special_price} />
+                           {/* <RazorpayOffers amount={product.special_price} /> */}
  
  
 
 
 {/* EMI Modal */}
-{showEMIModal && (
+{/* {showEMIModal && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div className="bg-white rounded-lg w-full max-w-md mx-4">
       <div className="p-4 border-b flex justify-between items-center">
@@ -902,7 +902,7 @@ const fetchBrand = async () => {
       </div>
     </div>
   </div>
-)}
+)} */}
 
             {/* Product More Info */}
 
