@@ -1397,9 +1397,9 @@ const fetchInitialData = async () => {
             <div className="flex-1">
   {products.length > 0 ? (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-3">
         {getSortedProducts().map(product => (
-          <div key={product._id} className="group relative bg-white rounded-lg border hover:border-blue-200 transition-all shadow-sm hover:shadow-md flex flex-col h-full">
+          <div key={product._id} className="group relative bg-white rounded-lg border hover:border-green-100 transition-all shadow-sm hover:shadow-md flex flex-col h-full">
             {/* Product Image */}
             <div className="relative aspect-square bg-white">
               <Link
@@ -1423,13 +1423,7 @@ const fetchInitialData = async () => {
                 )}
               </Link>
 
-              {/* Discount Badge */}
-              {Number(product.special_price) > 0 &&
-                Number(product.special_price) < Number(product.price) && (
-                  <span className="absolute top-3 left-2 bg-orange-500 text-white tracking-wider text-xs font-bold px-2 py-0.5 rounded z-10">
-                    -{Math.round(100 - (Number(product.special_price) / Number(product.price)) * 100)}%
-                  </span>
-              )}
+              
 
               {/* Wishlist */}
               <div className="absolute top-2 right-2">
@@ -1438,7 +1432,7 @@ const fetchInitialData = async () => {
             </div>
 
             {/* Product Info and Buttons */}
-            <div className="p-2 md:p-4 flex flex-col h-full">
+            <div className="p-2 md:p-4 flex flex-col h-full border-t">
               <h4 className="text-xs text-gray-500 mb-2 uppercase">
                 <Link
                   href={`/brand/${brandMap[product.brand] ? brandMap[product.brand].toLowerCase().replace(/\s+/g, "-") : ""}`}
@@ -1463,7 +1457,7 @@ const fetchInitialData = async () => {
   className="block mb-2 flex-1"
   onClick={() => handleProductClick(product)}
 >
-  <h3 className="text-xs sm:text-sm font-medium text-[#0069c6] hover:text-[#00badb] min-h-[32px] sm:min-h-[40px]">
+  <h3 className="text-xs sm:text-sm font-medium text-[#333333] hover:text-[#a3ca43] line-clamp-2 min-h-[40px]">
                                             {(() => {
                                               const model = product.model_number ? `(${product.model_number.trim()})` : "";
                                               const name = product.name ? product.name.trim() : "";
@@ -1491,8 +1485,11 @@ const fetchInitialData = async () => {
                     </span>
                   </div>
                 )} */}
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-base font-semibold text-red-600">
+                {/* <div className="flex items-center gap-2 mt-1"> */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+<span className="text-base font-semibold">
                     ₹ {(
                       product.special_price &&
                       product.special_price > 0 &&
@@ -1510,14 +1507,38 @@ const fetchInitialData = async () => {
                         ₹ {Math.round(product.price).toLocaleString()}
                       </span>
                   )}
-                </div>
-              </div>
 
-              <h4 className={`text-xs mb-3 ${product.quantity > 0 ? "text-green-600" : "text-red-600"}`}>
+                  {/* Discount Badge */}
+              {Number(product.special_price) > 0 &&
+                Number(product.special_price) < Number(product.price) && (
+                  <span className="text-[#a3ca43] text-sm font-semibold">
+                    -{Math.round(100 - (Number(product.special_price) / Number(product.price)) * 100)}%
+                  </span>
+              )}
+                  </div>
+                        </div>
+                  
+
+                  <div className="sm:text-right">
+
+<h4 className={` inline-block text-xs font-semibold px-3 py-1 rounded-full ${product.quantity > 0 ? "bg-green-100 text-[#a3ca43]" : "bg-red-100 text-red-600"}`}>
                 {product.quantity > 0
                   ? `In Stock, ${product.quantity} units`
                   : "Out Of Stock"}
               </h4>
+                  </div>
+
+                  
+
+              
+                </div>
+              </div>
+
+              {/* <h4 className={`text-xs mb-3 ${product.quantity > 0 ? "text-green-600" : "text-red-600"}`}>
+                {product.quantity > 0
+                  ? `In Stock, ${product.quantity} units`
+                  : "Out Of Stock"}
+              </h4> */}
 
               {/* Bottom Buttons */}
               <div className="mt-auto flex items-center justify-between gap-2">
@@ -1528,7 +1549,7 @@ const fetchInitialData = async () => {
                   className="w-full text-xs sm:text-sm py-1.5"
                 />
                 <a
-                  href={`https://wa.me/919865555000?text=${encodeURIComponent(`Check Out This Product: ${apiUrl}/product/${product.slug}`)}`} 
+                  href={`https://wa.me/918749000087?text=${encodeURIComponent(`Check Out This Product: ${apiUrl}/product/${product.slug}`)}`} 
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-green-500 hover:bg-green-600 text-white p-1 rounded-full transition-colors duration-300 flex items-center justify-center"

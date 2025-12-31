@@ -1868,7 +1868,7 @@ const fetchBrand = async () => {
 {relatedProducts.filter((item) => item.quantity > 0 && item.status === "Active").length > 0 && (
   <div className="border border-gray-300 rounded-lg shadow-md bg-white max-h-[500px] overflow-y-scroll scrollbar-hide">
     <div className="px-4 py-4">
-      <h2 className="text-sm font-bold text-customBlue underline mb-2">
+      <h2 className="text-sm font-bold text-green-500 underline mb-2">
         Similar Products
       </h2>
 
@@ -1905,13 +1905,13 @@ const fetchBrand = async () => {
                   className="block mb-1"
                   onClick={() => handleProductClick(item)}
                 >
-                  <h3 className="text-xs sm:text-sm font-medium text-[#0069c6] hover:text-[#00badb] line-clamp-2 min-h-[40px]">
+                  <h3 className="text-xs sm:text-sm font-medium text-green-800 hover:text-[#a3ca43] line-clamp-2 min-h-[40px]">
                     {item.name}
                   </h3>
                 </Link>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-base font-semibold text-red-600">
+                  <span className="text-base font-semibold">
                     ₹ {(
                       item.special_price &&
                       item.special_price > 0 &&
