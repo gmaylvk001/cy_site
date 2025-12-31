@@ -63,7 +63,7 @@ const LebdingPartners = () => {
                 </div>
             </div>
     <div className="bg-gray-50 py-16 px-4">
-      <div className="max-w-md mx-auto">
+      <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-8">
           
           <h2 className="text-2xl font-semibold text-center mb-4">
