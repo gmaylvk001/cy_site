@@ -185,14 +185,30 @@ const Footer = () => {
     setIsLoggedIn(false);
     setUserData(null);
   };
-  const groupedStores = stores.reduce((acc, store) => {
+  /* const groupedStores = stores.reduce((acc, store) => {
   const city = store.city; // or store.store_city based on your API
   if (!acc[city]) {
     acc[city] = [];
   }
   acc[city].push(store.organisation_name);
   return acc;
+}, {}); */
+
+const groupedStores = stores.reduce((acc, store) => {
+  // ✅ status Active check
+  if (store.status !== "Active") return acc;
+
+  const city = store.city; // or store.store_city
+
+  if (!acc[city]) {
+    acc[city] = [];
+  }
+
+  acc[city].push(store.organisation_name);
+  return acc;
 }, {});
+
+
 const capitalizeFirstLetter = (str) =>
   str.charAt(0).toUpperCase() + str.slice(1);
   // Case-insensitive membership helper
