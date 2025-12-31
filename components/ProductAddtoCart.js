@@ -238,7 +238,7 @@ const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts
         ? 'bg-blue-700 cursor-not-allowed opacity-75 text-white'
         : cartSuccess
           ? 'bg-green-500 text-white hover:bg-green-600'
-          : 'bg-white hover:bg-customBlue hover:text-white text-customBlue border border-blue-200'
+          : 'bg-white hover:bg-gray-100 hover:text-black text-black border border-blue-200'
     }
     active:scale-95 disabled:active:scale-100`}
 >

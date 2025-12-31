@@ -2064,7 +2064,7 @@ const fetchBrand = async () => {
  {product.stock_status === "In Stock" && product.quantity > 0 && (
   <button
     onClick={handleBuyNow}
-    className="w-full bg-white hover:bg-customBlue hover:text-white text-customBlue border border-blue-200 font-semibold py-3 rounded-md shadow-md flex items-center justify-center gap-3"
+    className="w-full w-1/2 bg-[#a3ca43] py-3 border border-blue-200 font-semibold py-3 rounded-md shadow-md flex items-center justify-center gap-3"
   >
     <FaStore className="h-5 w-5" />
     <span>Buy Now</span>
