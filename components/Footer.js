@@ -299,25 +299,25 @@ const capitalizeFirstLetter = (str) =>
                 <hr className="border-gray-600 my-3" />
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">
-                    <FiPhone />
-                    <a href="tel:8152908888" className="text-blue-600 hover:underline">
+                    <FiPhone className="text-[#a3ca43]" />
+                    <a href="tel:8152908888" className="text-[#a3ca43] hover:underline">
                       +91 81529 08888
                     </a>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <FiPhone />
-                    <a href="tel:8749000087" className="text-blue-600 hover:underline">
+                    <FiPhone className="text-[#a3ca43]" />
+                    <a href="tel:8749000087" className="text-[#a3ca43] hover:underline">
                       +91 87490 00087
                     </a>
                   </div>
                 </div>
                 <hr className="border-gray-600 my-3" />
                 <div className="flex items-center gap-2">
-                  <FiMail />
+                  <FiMail className="text-[#a3ca43]" />
                   <a
                     href="mailto:info@cycleworld.in"
-                    className="text-blue-600 hover:underline"
+                    className="text-[#a3ca43] hover:underline"
                   >
                     info@cycleworld.in
                   </a>
