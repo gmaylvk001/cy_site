@@ -34,7 +34,7 @@ const CancellationRefundPolicy = () => {
             <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
               <FiRotateCcw className="text-blue-600 text-3xl" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-customBlue mb-4">Cancellation & Refund Policy</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-green-800 mb-4">Cancellation & Refund Policy</h1>
             {currentDate && (
               <p className="text-lg text-gray-600 max-w-3xl mx-auto">
                 Last updated: {currentDate}
@@ -47,7 +47,7 @@ const CancellationRefundPolicy = () => {
             {/* Cancellation Policy */}
             <div className="p-8 border-b border-gray-100">
               <h2 className="text-2xl font-bold text-customBlue mb-4 flex items-center gap-2">
-                <MdOutlinePolicy className="text-customBlue" /> TRANSIT RELATED DAMAGES
+                <MdOutlinePolicy className="text-green-800" /> TRANSIT RELATED DAMAGES
               </h2>
               <p className="text-gray-600 mb-4">
                 All bicycles/products sold by CycleWorld are subject to thorough quality checks before the order is shipped to the customer. CycleWorld ships original products to maintain complete customer satisfaction for the bicycle/product ordered. Cancellation/refund shall be entertained only based on the circumstances mentioned below.
@@ -90,7 +90,7 @@ const CancellationRefundPolicy = () => {
                If the product ordered is unavailable due to any unforeseen circumstances, CycleWorld would offer a 100% refund to the customer through the Original Mode of Payment.
               </p>
               <p className="text-gray-600 mb-4">
-               For information about how to contact us, please visit our <a href="/contact" className="hover:text-customBlue text-customBlue">contact page.</a>
+               For information about how to contact us, please visit our <a href="/contact" className="hover:text-green-800 text-green-600">contact page.</a>
               </p>
             </div>
           </div>

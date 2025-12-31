@@ -34,7 +34,7 @@ const TermsAndConditions = () => {
             <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
               <FiFileText className="text-blue-600 text-3xl" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-customBlue mb-4">TERMS & CONDITIONS</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-green-800 mb-4">TERMS & CONDITIONS</h1>
             {currentDate && (
               <p className="text-lg text-gray-600 max-w-3xl mx-auto">
                 Last updated: {currentDate}
@@ -47,7 +47,7 @@ const TermsAndConditions = () => {
             {/* Introduction */}
             <div className="p-8 border-b border-gray-100">
               <h2 className="text-2xl font-bold text-customBlue mb-4 flex items-center gap-2">
-                <FiBook className="text-customBlue" /> Website Terms
+                <FiBook className="text-green-600" /> Website Terms
               </h2>
               <p className="text-gray-600 mb-4">
                 Cycleworld shall provide you (“User”) bicycles of various brands, related products/accessories & information. These products/services may be availed by the User in South India at any time.
@@ -153,16 +153,16 @@ const TermsAndConditions = () => {
 
             {/* Contact Info */}
             <div className="p-8">
-              <h3 className="text-xl font-semibold text-customBlue mb-3 flex items-center gap-2">
-                <FiMail className="text-customBlue" />
+              <h3 className="text-xl font-semibold text-green-600 mb-3 flex items-center gap-2">
+                <FiMail className="text-green-600" />
                 Contact Information
               </h3>
               <p className="text-gray-600 mb-6">
-                For information about how to contact us, please visit our <a href="/contact" className="hover:text-customBlue text-customBlue">contact page.</a>
+                For information about how to contact us, please visit our <a href="/contact" className="hover:text-green-800 text-green-600">contact page.</a>
               </p>
               <a 
                 href="mailto:info@cycleworld.in" 
-                className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-300"
+                className="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-300"
               >
                 info@cycleworld.in
               </a>

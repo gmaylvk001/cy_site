@@ -30,7 +30,7 @@ const WarrantyPolicy = () => {
                     {/* Header Section */}
                     <div className="text-center mb-16 animate-fade-in-up">
                         <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><FiShield className="text-blue-600 text-3xl" /></div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-customBlue mb-4">Warranty Policy</h1>
+                        <h1 className="text-3xl md:text-4xl font-bold text-green-800 mb-4">Warranty Policy</h1>
                         {currentDate && (
                             <p className="text-lg text-gray-600 max-w-3xl mx-auto">Last updated: {currentDate}</p>
                         )}
