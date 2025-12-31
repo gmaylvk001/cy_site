@@ -398,8 +398,8 @@ const capitalizeFirstLetter = (str) =>
         </div>
       {/* Bottom Section */}
       <div className="bg-[#2e2a2a] text-gray-400 mt-10 pt-5 border-t border-white">
-        <div className="container mx-auto px-2 grid grid-cols-1 md:grid-cols-[55%_45%] gap-8">
-          {/* LEFT SECTION (Categories + Brands) */}
+        <div className="container mx-auto px-2">
+          {/* LEFT SECTION (Categories + Brands) grid grid-cols-1 md:grid-cols-[55%_45%] gap-8 */}
           <div>
             <div className="mb-2  flex flex-col md:flex-row justify-between items-center gap-6">
               <div className="text-center md:text-left ml-1 mb-1">
@@ -412,7 +412,7 @@ const capitalizeFirstLetter = (str) =>
               </div>
             </div>
 
-          <div className="space-y-4 mt-4 ml-1 mb-1">
+            <div className="space-y-4 mt-4 ml-1 mb-1">
               {preparedSections.map((section) => {
                 if (section.type === "la") {
                   const { main, la, children, brands } = section;
@@ -563,15 +563,15 @@ const capitalizeFirstLetter = (str) =>
                 );
               })}
             </div>
-{/* RIGHT SECTION (Our Location) */}
-          <div className="space-y-4">
-            <h3 className="text-white font-semibold text-lg mb-4">Our Location</h3>
-            {Object.entries(groupedStores).map(([city, orgs], index) => (
-              <div key={index}>
-                <p className="text-sm text-gray-400">{orgs.join(", ")}</p>
-              </div>
-            ))}
-          </div>
+            {/* RIGHT SECTION (Our Location) */}
+            <div className="space-y-4">
+              <h3 className="text-white font-semibold text-lg mb-4">Our Location</h3>
+              {Object.entries(groupedStores).map(([city, orgs], index) => (
+                <div key={index}>
+                  <p className="text-sm text-gray-400">{orgs.join(", ")}</p>
+                </div>
+              ))}
+            </div>
           </div>
           
         </div>
