@@ -1565,12 +1565,16 @@ const Header = () => {
                         <Link href="/" className="mx-auto">
                             <img src="/user/cw-logo.jpg" alt="Logo" width={83} />
                         </Link>
+                    </div>
+                     <div className="flex items-center text-gray-700">
+                       <div className="hidden lg:flex items-center space-x-6">
                         <Link href="https://supportcycleworld.zohodesk.in/portal/en/signin"  className="text-md hover:text-[#A3CA43]">Support</Link>
                         <Link href="/track-orders" className="text-md hover:text-[#A3CA43]">Track Order</Link>
-                    </div>
+                       </div>
+                     </div>
 
                     {/* Search Bar (Hidden on mobile - will show in mobile menu) */}
-                    <div className="hidden md:flex items-center flex-1 max-w-md bg-[#F5F5F5] rounded-full inset-shadow-sm overflow-hidden" role="search">
+                    <div className="hidden md:flex items-center flex-1 max-w-lg bg-[#F5F5F5] rounded-full inset-shadow-sm overflow-hidden" role="search">
                         {/* input wrapper with absolute overlay */}
                         <div className="relative flex-1">
                           <input
@@ -1626,7 +1630,7 @@ const Header = () => {
                     <div className="flex items-center text-gray-700">
                       
                        {/* TEXT MENU (DESKTOP ONLY) */}
-                      <div className="hidden lg:flex items-center space-x-6 pr-3 border-r-2 border-r-[#333333]">
+                      <div className="hidden lg:flex items-center space-x-6 pr-3">
                         
                         <Link href="/location" className="text-md hover:text-[#A3CA43]">Store</Link>
                         <Link href="/franchise" className="text-md hover:text-[#A3CA43]">Franchise</Link>
@@ -1710,168 +1714,170 @@ const Header = () => {
                       </div>
                     </div>
                 </div> 
-                {/* Mobile Menu (Hidden on desktop) */}
-                {isMobileMenuOpen && (
-                  <div className={`fixed inset-0 z-50 transition-opacity duration-300 ${isMobileMenuOpen ? "bg-black/40 opacity-100" : "pointer-events-none opacity-0"}`}  >
-                  <div className={`fixed top-0 left-0 z-50 h-full w-[300px] bg-white p-5 transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}` }
-                    style={{ touchAction: 'auto', userSelect: 'auto', WebkitUserSelect: 'auto' }} 
+                {/* ================= MOBILE MENU (WhatsApp-style) ================= */}
+                <div
+                  className={`fixed inset-0 z-50 bg-black/40
+                    transition-opacity duration-300
+                    ${isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
+                  `}
+                  onClick={closeMobileMenu}
+                >
+                  {/* Drawer */}
+                  <div
+                    className={`fixed top-0 left-0 h-full w-[300px] bg-white p-5
+                      transform transition-[transform] duration-400
+                      ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
+                    `}
+                    style={{
+                      transitionTimingFunction: "cubic-bezier(0.4, 0.0, 0.2, 1)", // WhatsApp easing
+                      willChange: "transform",
+                    }}
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    {/* Internal sticky header */}
+
+                    {/* ===== HEADER ===== */}
                     <div className="flex items-center justify-between mb-3 sticky top-0 bg-white pb-2 border-b">
-                      <div className="flex items-center gap-2 text-customBlue font-semibold text-sm">
-                         <Link href="/" className="mx-auto" onClick={closeMobileMenu}>
-                            <img src="/user/cw-logo.jpg" alt="Logo" className="h-auto" width={80} />
-                        </Link>
-                      </div>
+                      <Link href="/index" onClick={closeMobileMenu}>
+                        <img src="/user/cw-logo.jpg" alt="Logo" width={80} />
+                      </Link>
+
                       <button
-                        onClick={() => setIsMobileMenuOpen(false)}
+                        onClick={closeMobileMenu}
                         aria-label="Close menu"
-                        className="p-2 rounded-full text-[#333333] hover:bg-[#a3ca4363] active:bg-[#a3ca4363]focus:outline-none"
+                        className="p-2 rounded-full hover:bg-[#a3ca4363]"
                       >
                         <FiX size={22} />
                       </button>
                     </div>
 
-                   {/*Login Details*/}
-                   <div className="border-b pb-3">
-                      <p className="text-sm text-gray-500">Hi{isLoggedIn ? "," : ""}</p>
+                    {/* ===== LOGIN INFO ===== */}
+                    <div className="border-b pb-3">
+                      <p className="text-sm text-gray-500">
+                        Hi{isLoggedIn ? "," : ""}
+                      </p>
 
                       {isLoggedIn ? (
-                        <p className="font-semibold text-[#3333333] truncate">
+                        <p className="font-semibold truncate">
                           {userData?.name || userData?.username || "User"}
                         </p>
                       ) : (
                         <button
-                        onClick={() => {
-                          setShowAuthModal(true);  // open the login/register modal
-                          closeMobileMenu();       // close the mobile sidebar
-                        }}
-                          className="font-semibold hover:text-[#A3CA43] hover:underline"
+                          onClick={() => {
+                            setShowAuthModal(true);
+                            closeMobileMenu();
+                          }}
+                          className="font-semibold hover:text-[#A3CA43]"
                         >
                           Login / Register
                         </button>
                       )}
                     </div>
-        
-                  <div className="overflow-y-scroll scrollbar-hide  max-h-[calc(100vh-64px)]">
-                    {/* Mobile Category Block (accordion) */}
-                    <ul className="space-y-4 border-b">
-                      <li>
-                        <button
-                          onClick={() => toggleMenu("bike")}
-                          className="flex justify-between w-full items-center py-2"
-                        >
-                          <span>Bicycle categories</span>
-                          <span className="text-lg">{openMenu === "bike" ? "−" : "+"}</span>
-                        </button>
 
-                        {/* Collapsible content */}
-                        <div
-                        className={`transition-all duration-300  ${
-                          openMenu === "bike"
-                            ? "max-h-64 overflow-y-auto bg-[#f5f5f5] rounded-md scrollbar-hide"
-                            : "max-h-0 overflow-hidden"
-                        }`}
-                        >
-                          {/* Wrap categories in a ul here */}
-                          <ul className="p-2 space-y-1 my-2">
-                          {renderCategories(categories, 0, [])}
-                          </ul>
+                    {/* ===== CONTENT ===== */}
+                    <div className="overflow-y-auto max-h-[calc(100vh-120px)] scrollbar-hide">
+
+                      {/* Categories */}
+                      <ul className="space-y-4 border-b">
+                        <li>
+                          <button
+                            onClick={() => toggleMenu("bike")}
+                            className="flex justify-between w-full items-center py-2"
+                          >
+                            <span>Bicycle categories</span>
+                            <span>{openMenu === "bike" ? "−" : "+"}</span>
+                          </button>
+
+                          <div
+                            className={`transition-all duration-300 scrollbar-hide ${
+                              openMenu === "bike"
+                                ? "max-h-64 overflow-y-auto bg-[#f5f5f5] rounded-md"
+                                : "max-h-0 overflow-hidden"
+                            }`}
+                          >
+                            <ul className="p-2 space-y-1 my-2">
+                              {renderCategories(categories, 0, [])}
+                            </ul>
+                          </div>
+                        </li>
+                      </ul>
+
+                       {/*Medium Device Page Links */}
+                        <ul className="lg:hidden space-y-2">
+                            <li className="border-b">
+                            <Link
+                              href="https://supportcycleworld.zohodesk.in/portal/en/signin" onClick={closeMobileMenu}
+                              className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
+                            >
+                              Support
+                            </Link>
+                          </li>
+                          <li className="border-b">
+                            <Link
+                              href="/track-orders" onClick={closeMobileMenu}
+                              className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
+                            >
+                              Track Order
+                            </Link>
+                          </li>
+                          <li className="border-b">
+                            <Link
+                              href="/location" onClick={closeMobileMenu}
+                              className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
+                            >
+                              Stores
+                            </Link>
+                          </li>
+                          <li className="border-b">
+                            <Link
+                              href="/franchise" onClick={closeMobileMenu}
+                              className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
+                            >
+                              Franschise
+                            </Link>
+                          </li>
+                        </ul>
+
+                      {/* Links */}
+                      <ul className="space-y-2 mt-3">
+                        <li className="border-b">
+                          <Link href="/aboutus" onClick={closeMobileMenu} className="block py-1 hover:text-[#A3CA43]">
+                            About Us
+                          </Link>
+                        </li>
+                        <li className="border-b">
+                          <Link href="/contact" onClick={closeMobileMenu} className="block py-1 hover:text-[#A3CA43]">
+                            Contact
+                          </Link>
+                        </li>
+                        <li className="border-b">
+                          <Link href="/blog" onClick={closeMobileMenu} className="block py-1 hover:text-[#A3CA43]">
+                            Blogs
+                          </Link>
+                        </li>
+                        <li className="border-b">
+                          <Link href="/faq" onClick={closeMobileMenu} className="block py-1 hover:text-[#A3CA43]">
+                            FAQ
+                          </Link>
+                        </li>
+                      </ul>
+
+                      {/* Logout */}
+                      {isLoggedIn && (
+                        <div className="text-center border rounded-full p-2 bg-red-100 mt-3 cursor-pointer">
+                          <button
+                            onClick={() => {
+                              handleLogout();
+                              closeMobileMenu();
+                            }}
+                            className="text-sm font-semibold text-red-600"
+                          >
+                            Logout
+                          </button>
                         </div>
-                      </li>
-                    </ul>
-
-                    {/*Medium Device Page Links */}
-                    <ul className="lg:hidden space-y-2">
-                       <li className="border-b">
-                        <Link
-                          href="/" onClick={closeMobileMenu}
-                          className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
-                        >
-                          Support
-                        </Link>
-                      </li>
-                      <li className="border-b">
-                        <Link
-                          href="/" onClick={closeMobileMenu}
-                          className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
-                        >
-                          Track Order
-                        </Link>
-                      </li>
-                      <li className="border-b">
-                        <Link
-                          href="/" onClick={closeMobileMenu}
-                          className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
-                        >
-                          Stores
-                        </Link>
-                      </li>
-                      <li className="border-b">
-                        <Link
-                          href="/" onClick={closeMobileMenu}
-                          className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
-                        >
-                          Franschise
-                        </Link>
-                      </li>
-                    </ul>
-
-                    {/*Page Links */}
-                    <ul className="space-y-2">
-                       <li className="border-b">
-                        <Link
-                          href="/aboutus"  onClick={closeMobileMenu}
-                          className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
-                        >
-                          About Us
-                        </Link>
-                      </li>
-                      <li className="border-b">
-                        <Link
-                          href="/contact" onClick={closeMobileMenu}
-                          className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
-                        >
-                          Contact
-                        </Link>
-                      </li>
-                      <li className="border-b">
-                        <Link
-                          href="/blog" onClick={closeMobileMenu}
-                          className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
-                        >
-                          Blogs
-                        </Link>
-                      </li>
-                      <li className="border-b">
-                        <Link
-                          href="/faq" onClick={closeMobileMenu}
-                          className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
-                        >
-                          Faq
-                        </Link>
-                      </li>
-                    </ul>
-
-                    {/* Logout button */}
-                    {isLoggedIn && (
-                    <div className="mb-4 border-b py-2">
-                      <button
-                       onClick={() => {
-                        handleLogout();      // your existing logout logic
-                        closeMobileMenu();   // close the sidebar
-                      }}  // your logout function
-                      className="text-sm font-semibold text-red-600 hover:text-red-700"
-                    >
-                      Logout
-                    </button>
+                      )}
                     </div>
-                    )}
                   </div>
-
-                  </div>
-                  </div>
-                )}
+                </div>
                 {/* Auth Modal */}
                 {showAuthModal && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

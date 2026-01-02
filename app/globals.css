@@ -382,3 +382,10 @@ body::-webkit-scrollbar {
   }
 }
 
+.inset-shadow-sm {
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
+  }
+
+:root {
+  --swiper-theme-color: #a3e635 !important; /* Replace with your desired color */
+}

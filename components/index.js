@@ -242,6 +242,15 @@ function PurposeSelect({ value, setValue }) {
   );
 }
 export default function HomeComponent() {
+  function slugify(text) {
+    return text
+      ?.toString()
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-") 
+      .replace(/[^\w\-]+/g, "")
+      .replace(/\-\-+/g, "-");
+  }
   const features = [
     {
       icon: <FaBicycle className="w-9 h-9 text-[#a3ca43]" />,
@@ -272,7 +281,7 @@ export default function HomeComponent() {
     "https://www.instagram.com/p/DSJt6wICEaw/?hl=en",
     "https://www.instagram.com/p/DRWJpAfk1wx/?hl=en",
   ];
-  const products = [
+  const newArrivalProducts = [
     {
       name: "FANTOM 27.5 TYPHOON M/S",
       type: "MTB",
@@ -284,6 +293,7 @@ export default function HomeComponent() {
       price: "27,950",
       discount: "6% OFF",
       oldPrice: "19,699",
+      inStock: "Instock"
     },
     {
       name: "G SPORTS 24 STG MS",
@@ -296,6 +306,7 @@ export default function HomeComponent() {
       price: "16,000",
       discount: "6% OFF",
       oldPrice: "18,499",
+      inStock: "Instock"
     },
     {
       name: "G SPORTS 26 CIVIC PRO M/S",
@@ -308,6 +319,7 @@ export default function HomeComponent() {
       price: "13,500",
       discount: "6% OFF",
       oldPrice: "14,499",
+      inStock: "Instock"
     },
     {
       name: "G SPORTS 26 GHOST MS",
@@ -320,6 +332,18 @@ export default function HomeComponent() {
       price: "16,000",
       discount: "6% OFF",
       oldPrice: "14,499",
+    },
+    {
+    name: "G SPORTS 26 GHOST MS",
+    type: "MTB",
+    typeColor: "bg-indigo-700",
+    age: "14+ Yrs",
+    height: "5'4\"–6\"1'",
+    wheel: "700C / 71cm",
+    image: "/images/gsports-ghost.jpg",
+    price: "16,000",
+    discount: "6% OFF",
+    oldPrice: "14,499",
     },
   ];
   const scrollContainerRef = useRef(null);
@@ -341,11 +365,13 @@ export default function HomeComponent() {
   const [userData, setUserData] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [brands, setBrands] = useState([]);
+  const [isBrandsLoading, setIsBrandsLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
   const [scrollDirection, setScrollDirection] = useState("down");
   //const [products, setProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
-  const [homeSectionData, setHomeSectionData] = useState({ sections: [] });
   const [isSectionLoading, setIsSectionLoading] = useState(false);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const scroll = (direction) => {
@@ -397,69 +423,63 @@ export default function HomeComponent() {
         setIsBannerLoading(false);
       }
     };
-    const fetchHomeSections = async () => {
-      setIsSectionLoading(true);
+    const fetchBrands = async () => {
+          setIsBrandsLoading(true);
+          try {
+              const response = await fetch('/api/brand/get');
+              if (!response.ok) {
+                  throw new Error('Network response was not ok');
+              }
+              const data = await response.json();
+              if (data.success) {
+                  setBrands(data.brands || []);
+              }
+          } catch (error) {
+              console.error("Error fetching brands:", error);
+              setBrands([]);
+          } finally {
+              setIsBrandsLoading(false);
+          }
+    };
+    const fetchCategories = async () => {
       try {
-        const response = await fetch("/api/home-sections");
-        const data = await response.json();
+        const res = await fetch("/api/categories/get");
+        if (!res.ok) throw new Error("Network response not ok");
 
-        if (data.success && data.data?.length > 0) {
-          const sectionItems = data.data
-            .filter((section) => section.status === "active") // ✅ only active
-            .map((section) => ({
-              id: section._id,
-              name: section.name,
-              position: section.position,
-            }));
+        const data = await res.json();
 
-          setHomeSectionData({
-            sections: sectionItems,
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching home sections:", error);
-        setHomeSectionData({
-          sections: [],
+        // Ensure it's an array
+        const categoriesArray = Array.isArray(data) ? data : [];
+
+        // Filter active categories with images
+        const activeCategories = categoriesArray.filter((cat) => {
+          const isActive = cat.status === "Active";
+          const hasImage = 
+            cat.navImage || 
+            cat.image || 
+            cat.banner || 
+            cat.thumbnail || 
+            cat.category_image ||
+            cat.imageUrl;
+          return isActive && hasImage;
         });
+
+        setCategories(activeCategories);
+      } catch (error) {
+        console.error("Failed to load categories", error);
+        setCategories([]);
       } finally {
-        setIsSectionLoading(false);
+        setLoading(false);
       }
     };
     fetchBannerData();
+    fetchBrands();
+    fetchCategories();
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, []);
-  const fetchHomeSections = async () => {
-    setIsSectionLoading(true);
-    try {
-      const response = await fetch("/api/home-sections");
-      const data = await response.json();
-
-      if (data.success && data.data?.length > 0) {
-        const sectionItems = data.data
-          .filter((section) => section.status === "active") // only active
-          .map((section) => ({
-            id: section._id,
-            name: section.name,
-            position: section.position,
-          }));
-
-        setHomeSectionData({ sections: sectionItems });
-      } else {
-        setHomeSectionData({ sections: [] });
-      }
-    } catch (error) {
-      console.error("Error fetching home sections:", error);
-      setHomeSectionData({ sections: [] });
-    } finally {
-      setIsSectionLoading(false);
-    }
-  };
-  useEffect(() => {
-    fetchHomeSections();
   }, []);
   useEffect(() => {
     setHasMounted(true);
@@ -509,20 +529,24 @@ export default function HomeComponent() {
     <button
       onClick={onClick}
       className="
+         group
          absolute left-0 top-1/2 transform -translate-y-1/2 bg-[#ffffff70] text-white py-1 md:pl-[0.25rem] md:pr-[0.50rem] md:py-2 lg:pl-1 lg:pr-2 lg:py-2 rounded-r-lg shadow-md z-10 hover:bg-[#000000] flex items-center justify-center
        "
     >
-      <FiChevronLeft size={20} md={22} />
+      <FiChevronLeft size={20} md={22} className="text-[#000000] group-hover:text-white
+        transition-colors" />
     </button>
   );
   const CustomNextArrow = ({ onClick }) => (
     <button
       onClick={onClick}
       className="
-         absolute right-0 top-1/2 transform -translate-y-1/2 bg-[#ffffff70] py-1 text-white md:pl-[0.50rem] md:pr-[0.25rem] md:py-2 lg:pl-2 lg:pr-1 lg:py-2 rounded-l-lg shadow-md z-10 hover:bg-[#000000] flex items-center justify-center
+         group
+         absolute right-0 top-1/2 transform -translate-y-1/2 bg-[#ffffff70] py-1 text-white  md:pl-[0.50rem] md:pr-[0.25rem] md:py-2 lg:pl-2 lg:pr-1 lg:py-2 rounded-l-lg shadow-md z-10 hover:bg-[#000000] flex items-center justify-center
        "
     >
-      <FiChevronRight size={20} md={22} />
+      <FiChevronRight size={20} md={22} className="text-[#000000] group-hover:text-white
+        transition-colors" />
     </button>
   );
   const settings = {
@@ -536,6 +560,14 @@ export default function HomeComponent() {
     arrows: true,
     prevArrow: <CustomPrevArrow />,
     nextArrow: <CustomNextArrow />,
+    responsive: [
+      {
+        breakpoint: 768, 
+        settings: {
+          dots: false,
+        },
+      },
+    ],
   };
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -570,6 +602,7 @@ export default function HomeComponent() {
     const limited = updated.slice(0, 10);
     localStorage.setItem("recentlyViewed", JSON.stringify(limited));
   };
+
   const handleCategoryClick = useCallback(
     (category) => (e) => {
       if (navigating) {
@@ -581,6 +614,7 @@ export default function HomeComponent() {
     },
     [navigating, router],
   );
+
   useEffect(() => {
     const handleRouteChange = () => setNavigating(false);
 
@@ -594,124 +628,20 @@ export default function HomeComponent() {
       router.events.off("routeChangeError", handleRouteChange);
     };
   }, [router]);
-  const renderSection = (sectionName) => {
-    switch (sectionName) {
-      case "topbanner":
-        return (
-          <motion.section
-            id="topbanner"
-            ref={refs.banner}
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
-            className="overflow-hidden pt-0 m-0"
-          >
-            <div className="relative">
-              {isBannerLoading ? (
-                <div className="p-6 flex justify-center items-center h-64">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-                </div>
-              ) : bannerData.banner.items.length > 0 ? (
-                bannerData.banner.items.length > 1 ? (
-                  <Slider {...settings} className="relative">
-                    {bannerData.banner.items.map((banner) => (
-                      <motion.div
-                        key={banner.id}
-                        className="relative w-full aspect-[2000/667] max-h-auto"
-                        variants={itemVariants}
-                      >
-                        <div className="absolute inset-0 overflow-hidden">
-                          <Image
-                            src={banner.bgImageUrl}
-                            alt="Banner"
-                            fill
-                            quality={100}
-                            className="object-fill w-full h-full"
-                            style={{ objectPosition: "center 30%" }}
-                            priority
-                          />
-                        </div>
-                        {/* Clickable accessible banner - REMOVED HOVER EFFECT */}
-                        <div
-                          className="absolute inset-0 overflow-hidden cursor-pointer"
-                          role="link"
-                          tabIndex={0}
-                          aria-label={
-                            banner?.alt || banner?.redirectUrl || "Banner"
-                          }
-                          onClick={() => {
-                            const href = banner?.redirectUrl;
-                            if (!href) return;
-                            if (href.startsWith("/")) {
-                              router.push(href);
-                            } else {
-                              window.location.href = href;
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            const href = banner?.redirectUrl;
-                            if (!href) return;
-                            if (
-                              e.key === "Enter" ||
-                              e.key === " " ||
-                              e.key === "Spacebar"
-                            ) {
-                              e.preventDefault();
-                              if (href.startsWith("/")) {
-                                router.push(href);
-                              } else {
-                                window.location.href = href;
-                              }
-                            }
-                          }}
-                        >
-                          <Image
-                            src={banner.bgImageUrl}
-                            alt={banner?.alt || "Banner"}
-                            fill
-                            quality={100}
-                            className="object-fill w-full h-full"
-                            style={{ objectPosition: "center 30%" }}
-                            priority
-                          />
-                        </div>
-                      </motion.div>
-                    ))}
-                  </Slider>
-                ) : (
-                  <motion.div
-                    className="p-4 md:p-6 relative aspect-[2000/667] max-h-auto"
-                    variants={itemVariants}
-                  >
-                    <div className="absolute inset-0 flex justify-center items-center bg-white">
-                      <Image
-                        src={bannerData.banner.items[0].bgImageUrl}
-                        alt="Banner"
-                        fill
-                        className="object-fill w-full h-full"
-                        priority
-                      />
-                    </div>
-                  </motion.div>
-                )
-              ) : (
-                <div></div>
-              )}
-            </div>
-          </motion.section>
-        );
-      default:
-        return null;
-    }
-  };
-  const getSectionComponentName = (sectionName) => {
-    const mapping = {
-      topbanner: "topbanner",
-      // Add more mappings as needed
-    };
 
-    return mapping[sectionName] || sectionName.toLowerCase();
+  // Get image from possible fields
+  const getCategoryImage = (category) => {
+    return (
+      category.navImage ||
+      category.image ||
+      "/images/placeholder-category-image.jpg"
+    );
   };
+  // Get URL for category
+  const getCategoryUrl = (category) => {
+    return category.category_slug ? `/category/${category.category_slug}`: "#";
+  };
+
   return (
     <>
       {navigating && (
@@ -732,28 +662,101 @@ export default function HomeComponent() {
         ref={containerRef}
       >
         {/* Banner Section start */}
-        <div className="home-container">
-          {isSectionLoading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-            </div>
-          ) : homeSectionData.sections.length > 0 ? (
-            // Render sections in the order specified by homeSectionData
-            homeSectionData.sections
-              .sort((a, b) => a.position - b.position)
-              .map((section) => (
-                <div key={section.id}>
-                  {renderSection(getSectionComponentName(section.name))}
-                </div>
-              ))
-          ) : (
-            // Fallback order if no sections are configured
-            <>
-              {renderSection("topbanner")}
-              {renderSection("features")}
-            </>
-          )}
-        </div>
+        <motion.section 
+                id="topbanner"
+                ref={refs.banner}
+                initial="hidden"
+                animate="visible"
+                variants={containerVariants}
+                className="overflow-hidden pt-0 m-0"
+              >
+          <div className="relative">
+            {isBannerLoading ? (
+              <div className="p-6 flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+              </div>
+            ) : bannerData.banner.items.length > 0 ? (
+              bannerData.banner.items.length > 1 ? (
+                <Slider {...settings} className="relative">
+                  {bannerData.banner.items.map((banner) => (
+                    <motion.div
+                      key={banner.id}
+                      className="relative w-full aspect-[2000/667] max-h-auto"
+                      variants={itemVariants}
+                    >
+                      <div className="absolute inset-0 overflow-hidden">
+                        <Image
+                          src={banner.bgImageUrl}
+                          alt="Banner"
+                          fill
+                          quality={100}
+                          className="object-fill w-full h-full"
+                          style={{ objectPosition: "center 30%" }}
+                          priority
+                        />
+                      </div>
+                      {/* Clickable accessible banner - REMOVED HOVER EFFECT */}
+                      <div
+                        className="absolute inset-0 overflow-hidden cursor-pointer"
+                        role="link"
+                        tabIndex={0}
+                        aria-label={banner?.alt || banner?.redirectUrl || "Banner"}
+                        onClick={() => {
+                          const href = banner?.redirectUrl;
+                          if (!href) return;
+                          if (href.startsWith("/")) {
+                            router.push(href);
+                          } else {
+                            window.location.href = href;
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          const href = banner?.redirectUrl;
+                          if (!href) return;
+                          if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+                            e.preventDefault();
+                            if (href.startsWith("/")) {
+                              router.push(href);
+                            } else {
+                              window.location.href = href;
+                            }
+                          }
+                        }}
+                      >
+                        <Image
+                          src={banner.bgImageUrl}
+                          alt={banner?.alt || "Banner"}
+                          fill
+                          quality={100}
+                          className="object-fill w-full h-full"
+                          style={{ objectPosition: "center 30%" }}
+                          priority
+                        />
+                      </div>
+                    </motion.div>
+                  ))}
+                </Slider>
+              ) : (
+                <motion.div
+                  className="p-4 md:p-6 relative aspect-[2000/667] max-h-auto"
+                  variants={itemVariants}
+                >
+                  <div className="absolute inset-0 flex justify-center items-center bg-white">
+                    <Image
+                      src={bannerData.banner.items[0].bgImageUrl}
+                      alt="Banner"
+                      fill
+                      className="object-fill w-full h-full"
+                      priority
+                    />
+                  </div>
+                </motion.div>
+              )
+            ) : (
+              <div></div>
+            )}
+          </div>
+        </motion.section>
         {/* find perfect bicycle */}
         <section className="py-10">
           <div className=" px-5 max-w-7xl mx-auto space-x-6">
@@ -779,85 +782,80 @@ export default function HomeComponent() {
             </div>
           </div>
         </section>
-        {/* products-card */}
-        <section className="max-w-7xl mx-auto px-4 py-10">
+        {/* product card */}
+        <section className="max-w-7xl mx-auto px-4 pt-6">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold">Top Selling Bicycles</h2>
-
-            {/* Navigation Arrows */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-3xl font-bold">New Arrivals</h2>
+            {/* Navigation */}
             <div className="flex gap-3 top-selling-swiper">
-              <button
-                className="swiper-prev w-10 h-10 rounded-full bg-white shadow-md 
-        flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition"
-              >
-                <FiChevronLeft size={20} />
+              <button className="swiper-prev w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition">
+                <FiChevronLeft />
               </button>
-
-              <button
-                className="swiper-next w-10 h-10 rounded-full bg-white shadow-md 
-        flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition"
-              >
-                <FiChevronRight size={20} />
+              <button className="swiper-next w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition">
+                <FiChevronRight />
               </button>
             </div>
           </div>
 
           {/* Swiper */}
-          <Swiper
-            modules={[Navigation, Autoplay]}
-            navigation={{
-              prevEl: ".top-selling-swiper .swiper-prev",
-              nextEl: ".top-selling-swiper .swiper-next",
-            }}
-            // autoplay={{ delay: 3000, disableOnInteraction: false }}
-            // loop
-            spaceBetween={20}
-            slidesPerView={1.1}
-            breakpoints={{
-              640: { slidesPerView: 2 },
-              1024: { slidesPerView: 3 },
-            }}
-            className="customSwiper-product"
-          >
-            {products.map((item, i) => (
-              <SwiperSlide key={i}>
-                <div className="bg-white rounded-xl border shadow-md overflow-hidden h-full flex flex-col">
-                  {/* Badge */}
-                  <div
-                    className={`absolute top-3 right-3 ${item.typeColor} text-white text-xs px-3 py-1 rounded-md`}
-                  >
-                    {item.type}
-                  </div>
+          <div className="top-selling-swiper pb-10">
+            <div className="swiper-pagination mt-4 text-center" />
 
-                  {/* Image */}
-                  <div className="relative h-56">
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
+            <Swiper
+              modules={[Navigation, Autoplay, Pagination]}
+              navigation={{
+                prevEl: ".top-selling-swiper .swiper-prev",
+                nextEl: ".top-selling-swiper .swiper-next",
+              }}
+              pagination={{
+                el: ".top-selling-swiper .swiper-pagination",
+                clickable: true,
+              }}
+              spaceBetween={20}
+              slidesPerView={1}
+              breakpoints={{
+                640: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
+                1280: { slidesPerView: 4 },
+              }}
+              className="customSwiper-product"
+            >
+              {newArrivalProducts.map((item, i) => (
+                <SwiperSlide key={i} className="min-h-[450px] flex">
+                  <div className="bg-white rounded-xl border shadow-md overflow-hidden flex flex-col h-full w-full relative">
+                    {/* Badge */}
+                    <div
+                      className={`absolute top-3 right-3 ${item.typeColor} text-white text-xs px-3 py-1 rounded-md z-10`}
+                    >
+                      {item.type}
+                    </div>
 
-                  {/* Price */}
-                  <div className="px-4 py-2 border-t">
-                    <h4 className="text-xs text-gray-500 mb-2 uppercase">
-                      <Link href="#" className="hover:text-[#a3ca43]">
-                        GSports
-                      </Link>
-                    </h4>
-                    <h3 className="text-xs sm:text-sm font-medium text-[#333333] hover:text-[#a3ca43] line-clamp-2 min-h-[40px]">
-                      {item.name}
-                    </h3>
+                    {/* Image */}
+                    <div className="relative h-56">
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        className="object-contain p-4"
+                      />
+                    </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      {/* Price + Offer */}
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-lg font-bold">
-                            ₹ {item.price}
-                          </span>
+                    {/* Info */}
+                    <div className="px-4 py-2 border-t flex-grow">
+                      <h4 className="text-xs text-gray-500 mb-2 uppercase">
+                        <a href="#" className="hover:text-[#a3ca43]">
+                          GSports
+                        </a>
+                      </h4>
+
+                      <h3 className="text-sm font-medium text-[#333] hover:text-[#a3ca43] line-clamp-2">
+                        {item.name}
+                      </h3>
+
+                      <div className="flex justify-between items-center mt-2 gap-2 flex-wrap">
+                        <div className="flex gap-2 items-center">
+                          <span className="text-lg font-bold">₹ {item.price}</span>
                           <span className="line-through text-sm text-gray-400">
                             ₹ {item.oldPrice}
                           </span>
@@ -865,35 +863,105 @@ export default function HomeComponent() {
                             {item.discount}
                           </span>
                         </div>
-                      </div>
 
-                      {/* Stock Status */}
-                      <div className="sm:text-right">
                         <span
-                          className={`inline-block text-xs font-semibold px-3 py-1 rounded-full
-      ${
-        item.inStock ? "bg-green-100 text-[#a3ca43]" : "bg-red-100 text-red-600"
-      }`}
+                          className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                            item.inStock
+                              ? "bg-green-100 text-green-500"
+                              : "bg-red-100 text-red-600"
+                          }`}
                         >
                           {item.inStock ? "In Stock" : "Out of Stock"}
                         </span>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Buttons */}
-                  <div className="mt-auto flex text-sm font-semibold">
-                    <button className="w-1/2 bg-white border-t border-r hover:bg-gray-100 py-3">
-                      ADD TO CART
-                    </button>
-                    <button className="w-1/2 bg-[#a3ca43] py-3">BUY NOW</button>
+                    {/* Buttons */}
+                    <div className="mt-auto flex text-sm font-semibold border-t">
+                      <a
+                          href={`https://wa.me/918749000087?text=hi`} 
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-white  text-[#a3ca43] p-1 transition-colors duration-300 flex items-center justify-center px-2 border-r"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            viewBox="0 0 32 32"
+                            fill="currentColor"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path d="M16.003 2.667C8.64 2.667 2.667 8.64 2.667 16c0 2.773.736 5.368 2.009 7.629L2 30l6.565-2.643A13.254 13.254 0 0016.003 29.333C23.36 29.333 29.333 23.36 29.333 16c0-7.36-5.973-13.333-13.33-13.333zm7.608 18.565c-.32.894-1.87 1.749-2.574 1.865-.657.104-1.479.148-2.385-.148-.55-.175-1.256-.412-2.162-.812-3.8-1.648-6.294-5.77-6.49-6.04-.192-.269-1.55-2.066-1.55-3.943 0-1.878.982-2.801 1.33-3.168.346-.364.75-.456 1.001-.456.25 0 .5.002.719.013.231.01.539-.088.845.643.32.768 1.085 2.669 1.18 2.863.096.192.16.423.03.683-.134.26-.2.423-.39.65-.192.231-.413.512-.589.689-.192.192-.391.401-.173.788.222.392.986 1.625 2.116 2.636 1.454 1.298 2.682 1.7 3.075 1.894.393.192.618.173.845-.096.23-.27.975-1.136 1.237-1.527.262-.392.524-.32.894-.192.375.13 2.35 1.107 2.75 1.308.393.205.656.308.75.48.096.173.096 1.003-.224 1.897z" />
+                          </svg>
+                        </a>
+                      <button className="w-1/2 bg-white border-r hover:bg-gray-100 py-3">
+                        ADD TO CART
+                      </button>
+                      <button className="w-1/2 bg-[#a3ca43] py-3 hover:bg-lime-500">
+                        BUY NOW
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
         </section>
+        {/* category section*/}
+        {!loading && categories.length > 0 && (
+          <section className="bg-[#F5F5F5]">
+            <div className="max-w-7xl mx-auto px-4 py-10 text-center">
 
+              {/* Heading */}
+              <div className="mb-6">
+                <h2 className="text-2xl md:text-3xl font-bold">Shop By Categories</h2>
+                <p className="text-gray-600 mt-1">
+                  Discover tailored selections for every interest
+                </p>
+              </div>
+
+              <div className="top-selling-swiper-1 mx-2">
+                <Swiper
+                  modules={[Navigation, Autoplay, Pagination]}
+                  spaceBetween={20}
+                  slidesPerView={1}
+                  breakpoints={{
+                    640: { slidesPerView: 2 },
+                    768: { slidesPerView: 2 },
+                    1024: { slidesPerView: 4 },
+                  }}
+                >
+                  {categories.map((category) => (
+                    <SwiperSlide key={category._id}>
+                      <Link
+                        href={getCategoryUrl(category)}
+                        className="block relative h-80 rounded-xl overflow-hidden group cursor-pointer
+                                  border-4 border-transparent hover:border-lime-400 transition-colors duration-300"
+                      >
+                        <Image
+                          src={getCategoryImage(category)}
+                          alt={category.category_name}
+                          fill
+                          className="object-cover rounded-xl transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black via-black/70 to-transparent" />
+                        <div className="absolute bottom-0 left-4 right-4 text-center">
+                          <h3 className="text-white text-lg font-semibold mb-2">
+                            {category.category_name}
+                          </h3>
+                          <button className="inline-flex items-center gap-2 bg-lime-400 text-black font-semibold px-2 py-1 rounded-t-md
+                                            opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                            Shop Now
+                          </button>
+                        </div>
+                      </Link>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+              </div>
+
+            </div>
+          </section>
+        )}
         {/* Growth Story */}
         <section className="bg-white py-10">
           <div className="max-w-7xl mx-auto px-4 text-center">
@@ -997,33 +1065,54 @@ export default function HomeComponent() {
         </section>
         {/*insta video section */}
         <section className=" bg-[#f5f5f5]">
-          <div className="max-w-7xl mx-auto px-4 py-10 text-center">
+          <div className="max-w-7xl mx-auto px-4 py-6 text-center">
             {/* Heading */}
             <h2 className="text-3xl font-bold mb-6">Instagram Stories</h2>
             <p className="text-gray-600 my-5">
               Watch our latest bicycle highlights straight from Instagram.
             </p>
-            <Swiper
-              modules={[Autoplay]}
-              spaceBetween={20}
-              slidesPerView={1.1}
-              breakpoints={{
-                640: { slidesPerView: 2 },
-                1024: { slidesPerView: 3 },
-              }}
-              onSwiper={() => window.instgrm?.Embeds.process()} // ensures all slides render
-            >
-              {reels.map((url, i) => (
-                <SwiperSlide key={i}>
-                  <blockquote
-                    className="instagram-media"
-                    data-instgrm-permalink={url}
-                    data-instgrm-version="14"
-                    style={{ maxWidth: 420, margin: "0 auto" }}
-                  />
-                </SwiperSlide>
-              ))}
-            </Swiper>
+           <div className="insta-swiper pb-[40px] mx-2 relative">
+              {/* Navigation & Pagination wrapper above slides */}
+              <div className="flex justify-between items-center mb-4">
+                <div className="swiper-pagination" />
+              </div>
+
+              <Swiper
+                modules={[Navigation, Autoplay, Pagination]}
+                navigation={{
+                  prevEl: ".insta-swiper .swiper-prev",
+                  nextEl: ".insta-swiper .swiper-next",
+                }}
+                pagination={{
+                  el: ".insta-swiper .swiper-pagination",
+                  clickable: true,
+                }}
+                spaceBetween={20}
+                slidesPerView={1}
+                breakpoints={{
+                  640: { slidesPerView: 2, spaceBetween: 20 },
+                  768: { slidesPerView: 2, spaceBetween: 20 },
+                  1024: { slidesPerView: 3, spaceBetween: 20 },
+                }}
+                preventClicks={false} // allows clicks inside slide
+                preventClicksPropagation={false}
+                onSwiper={() => window.instgrm?.Embeds.process()} // ensures Instagram renders
+              >
+                {reels.map((url, i) => (
+                  <SwiperSlide key={i}>
+                    <div className="px-2">
+                      <blockquote
+                      className="instagram-media"
+                      data-instgrm-permalink={url}
+                      data-instgrm-version="14"
+                      style={{ maxWidth: 420, margin: "0 auto" }}
+                    />
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
+
           </div>
         </section>
         {/* Why Choose Cycle World */}
@@ -1170,8 +1259,95 @@ export default function HomeComponent() {
             </div>
           </div>
         </section>
+        {/* shop by brands */}
+        {!isBrandsLoading && brands.length > 0 && (
+          <section id="brands" className="rounded-xl bg-white py-6">
+            <div className="max-w-7xl mx-auto px-4">
+
+              {/* Header */}
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-xl font-semibold md:text-2xl">
+                  Shop by Brands
+                </h2>
+
+                {/* Navigation Buttons */}
+                <div className="flex gap-2">
+                  <button
+                    className="brand-prev flex h-9 w-9 items-center justify-center rounded-full border transition hover:bg-gray-100"
+                    aria-label="Previous"
+                  >
+                    <FiChevronLeft size={20} />
+                  </button>
+
+                  <button
+                    className="brand-next flex h-9 w-9 items-center justify-center rounded-full border transition hover:bg-gray-100"
+                    aria-label="Next"
+                  >
+                    <FiChevronRight size={20} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Swiper */}
+              <Swiper
+                modules={[Navigation, Autoplay]}
+                navigation={{
+                  prevEl: ".brand-prev",
+                  nextEl: ".brand-next",
+                }}
+                autoplay={{
+                  delay: 2000,
+                  disableOnInteraction: false,
+                  pauseOnMouseEnter: true,
+                }}
+                loop
+                spaceBetween={24}
+                breakpoints={{
+                  0: { slidesPerView: 2 },
+                  640: { slidesPerView: 3 },
+                  1024: { slidesPerView: 5 },
+                }}
+                className="bg-white !py-5 rounded-xl border"
+              >
+                {brands.map((brand) => (
+                  <SwiperSlide key={brand.id}>
+                    <Link href={`/brand/${slugify(brand.brand_name)}`}>
+                      <div
+                        className="group flex cursor-pointer flex-col items-center rounded-lg p-4
+                                  my-4 mx-4 border border-gray-300
+                                  hover:bg-white hover:shadow-md hover:border-lime-400
+                                  transition-all duration-300"
+                      >
+                        <div className="w-24 h-14 flex items-center justify-center">
+                          <Image
+                            src={
+                              brand.image
+                                ? `/uploads/Brands/${brand.image}`
+                                : "/images/no-logo-brand-img.png"
+                            }
+                            alt={brand.brand_name}
+                            width={90}
+                            height={90}
+                            className="object-contain grayscale transition-transform duration-300
+                                      group-hover:grayscale-0 group-hover:scale-110"
+                            unoptimized
+                          />
+                        </div>
+
+                        <p className="mt-2 text-sm font-medium text-gray-700 group-hover:text-black">
+                          {brand.brand_name}
+                        </p>
+                      </div>
+                    </Link>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+
+            </div>
+          </section>
+        )}
         {/* Contact Us */}
-        <section className="bg-white py-10">
+        <section className="bg-[#f5f5f5] py-10">
           <div className="max-w-7xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-gray-900">Contact Us</h2>
             <p className="text-gray-500 mt-2">10am – 7pm weekdays</p>
