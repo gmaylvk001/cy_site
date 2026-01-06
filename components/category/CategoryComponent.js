@@ -9,6 +9,7 @@ import ProductCard from "@/components/ProductCard";
 import Addtocart from "@/components/AddToCart";
 import { ToastContainer, toast } from 'react-toastify';
 import { Range as ReactRange } from "react-range";
+import { v4 as uuidv4 } from "uuid";
 //import FlashCategorySlider from "../FlashCategorySlider";
 //import BannerSlider from "../main-cat-banner";
 
@@ -551,6 +552,47 @@ const fetchInitialData = async () => {
 
   //console.log("📌 Category Data:", categoryData);
 
+   // buynow button
+    const handleBuyNow = async (product) => {
+      try {
+        const token = localStorage.getItem("token");
+        let isLoggedIn = false;
+        let guestCartId = null;
+  
+        if (token) {
+          const res = await fetch("/api/auth/check", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+          isLoggedIn = data.loggedIn;
+        }
+  
+        if (!isLoggedIn) {
+          guestCartId = localStorage.getItem("guestCartId") || uuidv4();
+          localStorage.setItem("guestCartId", guestCartId);
+        }
+  
+        // Add main product to cart
+        await fetch("/api/cart", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(isLoggedIn && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify({
+            productId: product._id,
+            quantity: 1, // Home page default quantity
+            ...(guestCartId && { guestCartId }),
+          }),
+        });
+  
+        // Redirect to checkout
+        window.location.href = "/checkout";
+      } catch (err) {
+        console.error("Buy Now error", err);
+      }
+    };
+
   return (
 
 
@@ -564,7 +606,7 @@ const fetchInitialData = async () => {
      {/*  <FlashCategorySlider slug={params.slug} /> */}  
      
      {categoryData.main_category.banners && categoryData.main_category.banners.length > 0 && (
-        <div className="relative w-full mb-8 rounded-lg overflow-hidden shadow-md">
+        <div className="relative w-full my-4 rounded-lg overflow-hidden shadow-md">
           <div className="relative w-full aspect-[16/6] sm:aspect-[16/7] lg:aspect-[16/5] cursor-pointer"
             onClick={() => {
               const redirectUrl = categoryData.main_category.banners[currentCategoryBannerIndex].redirect_url;
@@ -664,6 +706,7 @@ const fetchInitialData = async () => {
       )}
 {/* Categories Circle Section - Dynamic based on subcategories */}
 
+{categoryData?.categoryTree?.length > 2 && (
 <div className="relative my-12 px-6">
   {/* Left arrow */}
   <button
@@ -681,7 +724,7 @@ const fetchInitialData = async () => {
     <span className="text-2xl font-bold text-gray-700">{`›`}</span>
   </button>
 
-  {/* Scroll container */}
+  {/* Scroll container */}   
   <div
     ref={scrollRef}
     className={`flex ${
@@ -775,6 +818,7 @@ const fetchInitialData = async () => {
     )}
   </div>
 </div>
+ )}
 
       
 
@@ -1397,9 +1441,9 @@ const fetchInitialData = async () => {
             <div className="flex-1">
   {products.length > 0 ? (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
         {getSortedProducts().map(product => (
-          <div key={product._id} className="group relative bg-white rounded-lg border hover:border-green-100 transition-all shadow-sm hover:shadow-md flex flex-col h-full">
+          <div key={product._id} className="group relative bg-white  border hover:border-green-100 transition-all shadow-sm hover:shadow-md flex flex-col h-full">
             {/* Product Image */}
             <div className="relative aspect-square bg-white">
               <Link
@@ -1432,7 +1476,7 @@ const fetchInitialData = async () => {
             </div>
 
             {/* Product Info and Buttons */}
-            <div className="p-2 md:p-4 flex flex-col h-full border-t">
+            <div className="px-4 py-2 flex flex-col h-full border-t">
               <h4 className="text-xs text-gray-500 mb-2 uppercase">
                 <Link
                   href={`/brand/${brandMap[product.brand] ? brandMap[product.brand].toLowerCase().replace(/\s+/g, "-") : ""}`}
@@ -1452,28 +1496,28 @@ const fetchInitialData = async () => {
                   {window.innerWidth < 540 && product.name.length > 140 ? product.name.slice(0, 100) + "..." : product.name}
                 </h3>
               </Link> */}
-<Link
-  href={`/product/${product.slug}`}
-  className="block mb-2 flex-1"
-  onClick={() => handleProductClick(product)}
->
-  <h3 className="text-xs sm:text-sm font-medium text-[#333333] hover:text-[#a3ca43] line-clamp-2 min-h-[40px]">
-                                            {(() => {
-                                              const model = product.model_number ? `(${product.model_number.trim()})` : "";
-                                              const name = product.name ? product.name.trim() : "";
-                                              const maxLen = 40;
+              <Link
+                href={`/product/${product.slug}`}
+                className="block mb-2 flex-1"
+                onClick={() => handleProductClick(product)}
+              >
+                <h3 className="text-xs sm:text-sm font-medium text-[#333333] hover:text-[#a3ca43] line-clamp-2 min-h-[40px]">
+                                                          {(() => {
+                                                            const model = product.model_number ? `(${product.model_number.trim()})` : "";
+                                                            const name = product.name ? product.name.trim() : "";
+                                                            const maxLen = 40;
 
-                                              if (model) {
-                                                const remaining = maxLen - model.length - 1; // 1 for space before model
-                                                const truncatedName =
-                                                  name.length > remaining ? name.slice(0, remaining - 3) + `${model}...` : name;
-                                                return `${truncatedName} `;
-                                              } else {
-                                                return name.length > maxLen ? name.slice(0, maxLen - 3) + "..." : name;
-                                              }
-                                            })()}
-                                          </h3>
-</Link>
+                                                            if (model) {
+                                                              const remaining = maxLen - model.length - 1; // 1 for space before model
+                                                              const truncatedName =
+                                                                name.length > remaining ? name.slice(0, remaining - 3) + `${model}...` : name;
+                                                              return `${truncatedName} `;
+                                                            } else {
+                                                              return name.length > maxLen ? name.slice(0, maxLen - 3) + "..." : name;
+                                                            }
+                                                          })()}
+                                                        </h3>
+              </Link>
 
 
               {/* Price Row */}
@@ -1486,10 +1530,9 @@ const fetchInitialData = async () => {
                   </div>
                 )} */}
                 {/* <div className="flex items-center gap-2 mt-1"> */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-<span className="text-base font-semibold">
+                <div className="flex sm:items-center sm:justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                     <span className="text-base font-semibold">
                     ₹ {(
                       product.special_price &&
                       product.special_price > 0 &&
@@ -1516,22 +1559,16 @@ const fetchInitialData = async () => {
                   </span>
               )}
                   </div>
-                        </div>
-                  
-
-                  <div className="sm:text-right">
-
-<h4 className={` inline-block text-xs font-semibold px-3 py-1 rounded-full ${product.quantity > 0 ? "bg-green-100 text-[#a3ca43]" : "bg-red-100 text-red-600"}`}>
-                {product.quantity > 0
-                  ? `In Stock, ${product.quantity} units`
-                  : "Out Of Stock"}
-              </h4>
-                  </div>
-
-                  
-
-              
                 </div>
+               
+                <div className="my-1">
+                <h4 className={` inline-block text-xs font-semibold px-3 py-1 rounded-full ${product.quantity > 0 ? "bg-green-100 text-[#a3ca43]" : "bg-red-100 text-red-600"}`}>
+                  {product.quantity > 0
+                    ? `In Stock, ${product.quantity} units`
+                    : "Out Of Stock"}
+                </h4>
+                </div>
+
               </div>
 
               {/* <h4 className={`text-xs mb-3 ${product.quantity > 0 ? "text-green-600" : "text-red-600"}`}>
@@ -1539,20 +1576,16 @@ const fetchInitialData = async () => {
                   ? `In Stock, ${product.quantity} units`
                   : "Out Of Stock"}
               </h4> */}
+            </div>
 
-              {/* Bottom Buttons */}
-              <div className="mt-auto flex items-center justify-between gap-2">
-                <Addtocart
-                  productId={product._id} 
-                  stockQuantity={product.quantity}  
-                  special_price={product.special_price}
-                  className="w-full text-xs sm:text-sm py-1.5"
-                />
-                <a
+            {/* Action Bottom button */}
+             {/* Bottom Buttons */}
+              <div className="mt-auto flex text-sm font-semibold border-t">
+                <Link
                   href={`https://wa.me/918749000087?text=${encodeURIComponent(`Check Out This Product: ${apiUrl}/product/${product.slug}`)}`} 
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-green-500 hover:bg-green-600 text-white p-1 rounded-full transition-colors duration-300 flex items-center justify-center"
+                  className="bg-white  text-[#a3ca43] p-1 transition-colors duration-300 flex items-center justify-center px-2 border-r"
                 >
                   <svg
                     className="w-5 h-5"
@@ -1562,9 +1595,25 @@ const fetchInitialData = async () => {
                   >
                     <path d="M16.003 2.667C8.64 2.667 2.667 8.64 2.667 16c0 2.773.736 5.368 2.009 7.629L2 30l6.565-2.643A13.254 13.254 0 0016.003 29.333C23.36 29.333 29.333 23.36 29.333 16c0-7.36-5.973-13.333-13.33-13.333zm7.608 18.565c-.32.894-1.87 1.749-2.574 1.865-.657.104-1.479.148-2.385-.148-.55-.175-1.256-.412-2.162-.812-3.8-1.648-6.294-5.77-6.49-6.04-.192-.269-1.55-2.066-1.55-3.943 0-1.878.982-2.801 1.33-3.168.346-.364.75-.456 1.001-.456.25 0 .5.002.719.013.231.01.539-.088.845.643.32.768 1.085 2.669 1.18 2.863.096.192.16.423.03.683-.134.26-.2.423-.39.65-.192.231-.413.512-.589.689-.192.192-.391.401-.173.788.222.392.986 1.625 2.116 2.636 1.454 1.298 2.682 1.7 3.075 1.894.393.192.618.173.845-.096.23-.27.975-1.136 1.237-1.527.262-.392.524-.32.894-.192.375.13 2.35 1.107 2.75 1.308.393.205.656.308.75.48.096.173.096 1.003-.224 1.897z" />
                   </svg>
-                </a>
+                </Link>
+                <Addtocart
+                  productId={product._id} 
+                  stockQuantity={product.quantity}  
+                  special_price={product.special_price}
+                  className="w-full text-xs sm:text-sm py-1.5"
+                />
+                <button
+                  onClick={() => handleBuyNow(product)}
+                  className={`w-1/2 py-3 font-semibold text-white transition-colors duration-300 ${
+                    product.quantity > 0 && product.stock_status === "In Stock"
+                      ? "bg-[#a3ca43] hover:bg-lime-500 cursor-pointer"
+                      : "bg-gray-300 hover:bg-gray-300 cursor-not-allowed"
+                  }`}
+                  disabled={!(product.quantity > 0 && product.stock_status === "In Stock")}
+                >
+                  BUY NOW
+                </button>
               </div>
-            </div>
           </div>
         ))}
       </div>

@@ -1549,7 +1549,9 @@ const Header = () => {
               }
               }
             `}</style>
-          <div className="bg-white shadow-md">
+          {/* <div className="bg-white shadow-md"> */}
+          <div className="shadow-md bg-gradient-to-r from-[#2a7b9b] via-[#57c785] to-[#eddd53]">
+
               {/* Main Header */}
                {/* NEW MOBILE TOP ROW (from reference) */}
                 {/* DESKTOP ROW (unchanged original content) */}

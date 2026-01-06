@@ -719,7 +719,7 @@ const fetchBrand = async () => {
   
 
   return (
-    <div className="bg-white min-h-screen overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden">
       {/* 🟠 Wishlist Header Bar */}
       {/* <div className="bg-blue-50 py-6 px-8 flex justify-between items-center">
         <h2 className="text-xl font-bold text-gray-800">Shop Details</h2>

@@ -835,7 +835,7 @@ const grandTotal = subtotal - totalDiscount;
   }
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="min-h-screen">
       <ToastContainer position="top-right" autoClose={5000} />
       
       {/* Checkout Header Bar */}

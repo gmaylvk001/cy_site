@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
@@ -25,6 +25,8 @@ import { ChevronRight } from "lucide-react";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import { v4 as uuidv4 } from "uuid";
+import ProductCard from "@/components/ProductCard";
 /* ------------------- UTIL: click outside ------------------- */
 function useOutside(ref, cb) {
   useEffect(() => {
@@ -281,71 +283,6 @@ export default function HomeComponent() {
     "https://www.instagram.com/p/DSJt6wICEaw/?hl=en",
     "https://www.instagram.com/p/DRWJpAfk1wx/?hl=en",
   ];
-  const newArrivalProducts = [
-    {
-      name: "FANTOM 27.5 TYPHOON M/S",
-      type: "MTB",
-      typeColor: "bg-red-500",
-      age: "12+ Yrs",
-      height: "5'4\"–6'",
-      wheel: '27.5" / 69cm',
-      image: "/images/fantom.jpg",
-      price: "27,950",
-      discount: "6% OFF",
-      oldPrice: "19,699",
-      inStock: "Instock"
-    },
-    {
-      name: "G SPORTS 24 STG MS",
-      type: "MTB",
-      typeColor: "bg-red-500",
-      age: "12+ Yrs",
-      height: "5'4\"–6'",
-      wheel: '27.5" / 69cm',
-      image: "/images/gsports-img.jpg",
-      price: "16,000",
-      discount: "6% OFF",
-      oldPrice: "18,499",
-      inStock: "Instock"
-    },
-    {
-      name: "G SPORTS 26 CIVIC PRO M/S",
-      type: "MTB",
-      typeColor: "bg-indigo-700",
-      age: "14+ Yrs",
-      height: "5'4\"–6\"1'",
-      wheel: "700C / 71cm",
-      image: "/images/gsports-cvc.jpg",
-      price: "13,500",
-      discount: "6% OFF",
-      oldPrice: "14,499",
-      inStock: "Instock"
-    },
-    {
-      name: "G SPORTS 26 GHOST MS",
-      type: "MTB",
-      typeColor: "bg-indigo-700",
-      age: "14+ Yrs",
-      height: "5'4\"–6\"1'",
-      wheel: "700C / 71cm",
-      image: "/images/gsports-ghost.jpg",
-      price: "16,000",
-      discount: "6% OFF",
-      oldPrice: "14,499",
-    },
-    {
-    name: "G SPORTS 26 GHOST MS",
-    type: "MTB",
-    typeColor: "bg-indigo-700",
-    age: "14+ Yrs",
-    height: "5'4\"–6\"1'",
-    wheel: "700C / 71cm",
-    image: "/images/gsports-ghost.jpg",
-    price: "16,000",
-    discount: "6% OFF",
-    oldPrice: "14,499",
-    },
-  ];
   const scrollContainerRef = useRef(null);
   const containerRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -369,7 +306,7 @@ export default function HomeComponent() {
   const [isBrandsLoading, setIsBrandsLoading] = useState(true);
   const [categories, setCategories] = useState([]);
   const [scrollDirection, setScrollDirection] = useState("down");
-  //const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
   const [isSectionLoading, setIsSectionLoading] = useState(false);
@@ -384,7 +321,7 @@ export default function HomeComponent() {
     }
   };
   useEffect(() => {
-    const fetchBannerData = async () => {
+   const fetchBannerData = async () => {
       setIsBannerLoading(true);
       try {
         const response = await fetch("/api/topbanner");
@@ -431,6 +368,7 @@ export default function HomeComponent() {
                   throw new Error('Network response was not ok');
               }
               const data = await response.json();
+              console.log(data);
               if (data.success) {
                   setBrands(data.brands || []);
               }
@@ -472,9 +410,22 @@ export default function HomeComponent() {
         setLoading(false);
       }
     };
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch("/api/product/get");
+        const data = await res.json();
+        setProducts(data.slice(0, 20)); // top 20 new arrivals
+      } catch (err) {
+        console.error("Error fetching products:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
     fetchBannerData();
     fetchBrands();
     fetchCategories();
+    fetchProducts();
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 2000);
@@ -642,6 +593,63 @@ export default function HomeComponent() {
     return category.category_slug ? `/category/${category.category_slug}`: "#";
   };
 
+   // Map product types to colors if your API doesn't provide typeColor
+  const typeColors = {
+    MTB: "bg-red-500",
+    Road: "bg-indigo-700",
+    Hybrid: "bg-green-500",
+  };
+
+  // Map brand IDs to names
+  const brandMap = useMemo(() => {
+    const map = {};
+    brands.forEach((b) => {
+      map[b.id] = b.brand_name; // use id, not _id
+    });
+    return map;
+  }, [brands]);
+
+  // buynow button
+  const handleBuyNow = async (product) => {
+    try {
+      const token = localStorage.getItem("token");
+      let isLoggedIn = false;
+      let guestCartId = null;
+
+      if (token) {
+        const res = await fetch("/api/auth/check", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        isLoggedIn = data.loggedIn;
+      }
+
+      if (!isLoggedIn) {
+        guestCartId = localStorage.getItem("guestCartId") || uuidv4();
+        localStorage.setItem("guestCartId", guestCartId);
+      }
+
+      // Add main product to cart
+      await fetch("/api/cart", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(isLoggedIn && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          productId: product._id,
+          quantity: 1, // Home page default quantity
+          ...(guestCartId && { guestCartId }),
+        }),
+      });
+
+      // Redirect to checkout
+      window.location.href = "/checkout";
+    } catch (err) {
+      console.error("Buy Now error", err);
+    }
+  };
+
   return (
     <>
       {navigating && (
@@ -783,22 +791,21 @@ export default function HomeComponent() {
           </div>
         </section>
         {/* product card */}
-        <section className="max-w-7xl mx-auto px-4 pt-6">
-          {/* Header */}
+        {!loading && products.length > 0 &&(
+          <section className="max-w-7xl mx-auto px-4 pt-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-3xl font-bold">New Arrivals</h2>
-            {/* Navigation */}
+
             <div className="flex gap-3 top-selling-swiper">
               <button className="swiper-prev w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition">
-                <FiChevronLeft />
+                ‹
               </button>
               <button className="swiper-next w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition">
-                <FiChevronRight />
+                ›
               </button>
             </div>
           </div>
 
-          {/* Swiper */}
           <div className="top-selling-swiper pb-10">
             <div className="swiper-pagination mt-4 text-center" />
 
@@ -821,84 +828,151 @@ export default function HomeComponent() {
               }}
               className="customSwiper-product"
             >
-              {newArrivalProducts.map((item, i) => (
-                <SwiperSlide key={i} className="min-h-[450px] flex">
+              {products.map((product) => (
+
+                <SwiperSlide key={product._id} className="min-h-[450px] flex">
                   <div className="bg-white rounded-xl border shadow-md overflow-hidden flex flex-col h-full w-full relative">
-                    {/* Badge */}
-                    <div
-                      className={`absolute top-3 right-3 ${item.typeColor} text-white text-xs px-3 py-1 rounded-md z-10`}
-                    >
-                      {item.type}
+
+                     {/* Wishlist absolute */}
+                    <div className="absolute top-3 left-3 z-20">
+                      <ProductCard 
+                        productId={product._id} 
+                        isOutOfStock={product.quantity === 0} 
+                      />
                     </div>
 
+                    {/* Category Badge */}
+                   <div className="absolute top-3 right-3 z-30 bg-blue-600 text-white text-xs px-3 py-1 rounded-md">
+                      {product.category?.name || "New"}
+                    </div>
+
+  
                     {/* Image */}
                     <div className="relative h-56">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        className="object-contain p-4"
-                      />
+                      {product.images?.[0] && (
+                        <Link href={`/product/${product.slug}`} passHref>
+                          <Image
+                            src={
+                              product.images[0].startsWith("http")
+                                ? product.images[0]
+                                : `/uploads/products/${product.images[0]}`
+                            }
+                            alt={product.name}
+                            fill
+                            className="object-contain p-4"
+                          />
+                        </Link>
+                      )}
                     </div>
 
                     {/* Info */}
                     <div className="px-4 py-2 border-t flex-grow">
-                      <h4 className="text-xs text-gray-500 mb-2 uppercase">
-                        <a href="#" className="hover:text-[#a3ca43]">
-                          GSports
-                        </a>
+                     <h4 className="text-xs text-gray-500 mb-2 uppercase">
+                        {brandMap[product.brand] ? (
+                          <Link
+                            href={`/brand/${brandMap[product.brand]
+                              .toLowerCase()
+                              .replace(/\s+/g, "-")}`}
+                            className="hover:text-blue-600 cursor-pointer"
+                          >
+                            {brandMap[product.brand]}
+                          </Link>
+                        ) : (
+                          "Unknown Brand"
+                        )}
                       </h4>
 
-                      <h3 className="text-sm font-medium text-[#333] hover:text-[#a3ca43] line-clamp-2">
-                        {item.name}
-                      </h3>
+                      <Link href={`/product/${product.slug}`} passHref>
+                        <h3 className="text-sm font-medium text-[#333] hover:text-[#a3ca43] line-clamp-2 cursor-pointer">
+                          {product.name}{" "}
+                          {product.model_number ? `(${product.model_number})` : ""}
+                        </h3>
+                      </Link>
 
                       <div className="flex justify-between items-center mt-2 gap-2 flex-wrap">
                         <div className="flex gap-2 items-center">
-                          <span className="text-lg font-bold">₹ {item.price}</span>
-                          <span className="line-through text-sm text-gray-400">
-                            ₹ {item.oldPrice}
+                          {/* Selling Price / Special Price */}
+                          <span className="text-lg font-bold">
+                            ₹{" "}
+                            {Number(product.special_price) > 0 &&
+                            Number(product.special_price) < Number(product.price)
+                              ? Number(product.special_price).toLocaleString()
+                              : Number(product.price).toLocaleString()}
                           </span>
-                          <span className="text-[#a3ca43] text-sm font-semibold">
-                            {item.discount}
-                          </span>
-                        </div>
 
-                        <span
-                          className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                            item.inStock
-                              ? "bg-green-100 text-green-500"
-                              : "bg-red-100 text-red-600"
-                          }`}
-                        >
-                          {item.inStock ? "In Stock" : "Out of Stock"}
-                        </span>
+                          {/* Original Price / MRP */}
+                          {Number(product.special_price) > 0 &&
+                            Number(product.special_price) < Number(product.price) && (
+                              <>
+                                <span className="text-sm text-gray-400 line-through">
+                                  ₹ {Number(product.price).toLocaleString()}
+                                </span>
+
+                                {/* Discount Percentage */}
+                                <span className="text-sm text-[#a3ca43] font-semibold">
+                                  {Math.round(100 - (Number(product.special_price) / Number(product.price)) * 100)}% OFF
+                                </span>
+                              </>
+                            )}
+                        </div>
                       </div>
+
+                    <div className="my-1">
+                      <span
+                        className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                          product.quantity > 0 && product.stock_status === "In Stock"
+                            ? "bg-green-100 text-green-600"
+                            : "bg-red-100 text-red-600"
+                        }`}
+                      >
+                        {product.quantity > 0 && product.stock_status === "In Stock"
+                          ? `In Stock, ${product.quantity} units`
+                          : "Out Of Stock"}
+                      </span>
                     </div>
 
-                    {/* Buttons */}
+                    </div>
+
+                    {/* Actions */}
                     <div className="mt-auto flex text-sm font-semibold border-t">
-                      <a
-                          href={`https://wa.me/918749000087?text=hi`} 
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-white  text-[#a3ca43] p-1 transition-colors duration-300 flex items-center justify-center px-2 border-r"
+                      <Link
+                        href={`https://wa.me/919865555000?text=${encodeURIComponent(
+                          `Check Out This Product: ${
+                            typeof window !== "undefined"
+                              ? window.location.origin
+                              : ""
+                          }/product/${product.slug}`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-white  text-[#a3ca43] p-1 transition-colors duration-300 flex items-center justify-center px-2 border-r"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          viewBox="0 0 32 32"
+                          fill="currentColor"
+                          xmlns="http://www.w3.org/2000/svg"
                         >
-                          <svg
-                            className="w-5 h-5"
-                            viewBox="0 0 32 32"
-                            fill="currentColor"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path d="M16.003 2.667C8.64 2.667 2.667 8.64 2.667 16c0 2.773.736 5.368 2.009 7.629L2 30l6.565-2.643A13.254 13.254 0 0016.003 29.333C23.36 29.333 29.333 23.36 29.333 16c0-7.36-5.973-13.333-13.33-13.333zm7.608 18.565c-.32.894-1.87 1.749-2.574 1.865-.657.104-1.479.148-2.385-.148-.55-.175-1.256-.412-2.162-.812-3.8-1.648-6.294-5.77-6.49-6.04-.192-.269-1.55-2.066-1.55-3.943 0-1.878.982-2.801 1.33-3.168.346-.364.75-.456 1.001-.456.25 0 .5.002.719.013.231.01.539-.088.845.643.32.768 1.085 2.669 1.18 2.863.096.192.16.423.03.683-.134.26-.2.423-.39.65-.192.231-.413.512-.589.689-.192.192-.391.401-.173.788.222.392.986 1.625 2.116 2.636 1.454 1.298 2.682 1.7 3.075 1.894.393.192.618.173.845-.096.23-.27.975-1.136 1.237-1.527.262-.392.524-.32.894-.192.375.13 2.35 1.107 2.75 1.308.393.205.656.308.75.48.096.173.096 1.003-.224 1.897z" />
-                          </svg>
-                        </a>
-                      <button className="w-1/2 bg-white border-r hover:bg-gray-100 py-3">
-                        ADD TO CART
-                      </button>
-                      <button className="w-1/2 bg-[#a3ca43] py-3 hover:bg-lime-500">
-                        BUY NOW
-                      </button>
+                          <path d="M16.003 2.667C8.64 2.667 2.667 8.64 2.667 16c0 2.773.736 5.368 2.009 7.629L2 30l6.565-2.643A13.254 13.254 0 0016.003 29.333C23.36 29.333 29.333 23.36 29.333 16c0-7.36-5.973-13.333-13.33-13.333zm7.608 18.565c-.32.894-1.87 1.749-2.574 1.865-.657.104-1.479.148-2.385-.148-.55-.175-1.256-.412-2.162-.812-3.8-1.648-6.294-5.77-6.49-6.04-.192-.269-1.55-2.066-1.55-3.943 0-1.878.982-2.801 1.33-3.168.346-.364.75-.456 1.001-.456.25 0 .5.002.719.013.231.01.539-.088.845.643.32.768 1.085 2.669 1.18 2.863.096.192.16.423.03.683-.134.26-.2.423-.39.65-.192.231-.413.512-.589.689-.192.192-.391.401-.173.788.222.392.986 1.625 2.116 2.636 1.454 1.298 2.682 1.7 3.075 1.894.393.192.618.173.845-.096.23-.27.975-1.136 1.237-1.527.262-.392.524-.32.894-.192.375.13 2.35 1.107 2.75 1.308.393.205.656.308.75.48.096.173.096 1.003-.224 1.897z" />
+                        </svg>
+                      </Link>
+                      <Addtocart
+                        productId={product._id}
+                        stockQuantity={product.quantity}
+                        special_price={product.special_price}
+                        className="flex-1 whitespace-nowrap text-xs sm:text-sm py-1.5 my-2"
+                      />
+                    <button
+                      onClick={() => handleBuyNow(product)}
+                      className={`w-1/2 py-3  font-semibold text-white transition-colors duration-300 ${
+                        product.quantity > 0 && product.stock_status === "In Stock"
+                          ? "bg-[#a3ca43] hover:bg-lime-500 cursor-pointer"
+                          : "bg-gray-300 hover:bg-gray-300 cursor-not-allowed"
+                      }`}
+                      disabled={!(product.quantity > 0 && product.stock_status === "In Stock")}
+                    >
+                      BUY NOW
+                    </button>
                     </div>
                   </div>
                 </SwiperSlide>
@@ -906,8 +980,9 @@ export default function HomeComponent() {
             </Swiper>
           </div>
         </section>
+        )}
         {/* category section*/}
-        {!loading && categories.length > 0 && (
+         {!loading && categories.length > 0 && (
           <section className="bg-[#F5F5F5]">
             <div className="max-w-7xl mx-auto px-4 py-10 text-center">
 
@@ -922,6 +997,14 @@ export default function HomeComponent() {
               <div className="top-selling-swiper-1 mx-2">
                 <Swiper
                   modules={[Navigation, Autoplay, Pagination]}
+                   navigation={{
+                    prevEl: ".top-selling-swiper-1 .swiper-prev-1",
+                    nextEl: ".top-selling-swiper-1 .swiper-next-1",
+                  }}
+                  pagination={{
+                    el: ".top-selling-swiper-1 .swiper-pagination-1",
+                    clickable: true,
+                  }}
                   spaceBetween={20}
                   slidesPerView={1}
                   breakpoints={{
@@ -957,13 +1040,16 @@ export default function HomeComponent() {
                     </SwiperSlide>
                   ))}
                 </Swiper>
+                {/* Navigation & Pagination wrapper above slides */}
+              <div className="flex justify-between items-center mt-4">
+                <div className="swiper-pagination-1" />
               </div>
-
+              </div>
             </div>
           </section>
         )}
         {/* Growth Story */}
-        <section className="bg-white py-10">
+        <section className="py-10">
           <div className="max-w-7xl mx-auto px-4 text-center">
             {/* Heading */}
             <h2 className="text-3xl font-bold text-gray-900">
@@ -1116,12 +1202,12 @@ export default function HomeComponent() {
           </div>
         </section>
         {/* Why Choose Cycle World */}
-        <section className="bg-white py-10">
+        <section className="py-10">
           <div className="max-w-7xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-gray-900">
               Why Choose Cycle World
             </h2>
-            <p className="text-gray-500 mt-2">
+            <p className="text-gray-800 mt-2">
               Choose Cycle World for its trusted nationwide presence, quality
               bicycles and e-mobility products, expert service support, and
               excellent value for money.
@@ -1261,7 +1347,7 @@ export default function HomeComponent() {
         </section>
         {/* shop by brands */}
         {!isBrandsLoading && brands.length > 0 && (
-          <section id="brands" className="rounded-xl bg-white py-6">
+          <section id="brands" className="rounded-xl py-6">
             <div className="max-w-7xl mx-auto px-4">
 
               {/* Header */}
@@ -1307,15 +1393,15 @@ export default function HomeComponent() {
                   640: { slidesPerView: 3 },
                   1024: { slidesPerView: 5 },
                 }}
-                className="bg-white !py-5 rounded-xl border"
+                className=" !py-5 rounded-xl"
               >
                 {brands.map((brand) => (
                   <SwiperSlide key={brand.id}>
                     <Link href={`/brand/${slugify(brand.brand_name)}`}>
                       <div
                         className="group flex cursor-pointer flex-col items-center rounded-lg p-4
-                                  my-4 mx-4 border border-gray-300
-                                  hover:bg-white hover:shadow-md hover:border-lime-400
+                                  my-4 mx-4 border border-gray-300 shadow-md
+                                  hover:bg-gray hover:shadow-md hover:border-lime-400
                                   transition-all duration-300"
                       >
                         <div className="w-24 h-14 flex items-center justify-center">
