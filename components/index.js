@@ -963,7 +963,7 @@ export default function HomeComponent() {
           </section>
         )}
         {/* Growth Story */}
-        <section className="bg-white py-10">
+        <section className="py-10">
           <div className="max-w-7xl mx-auto px-4 text-center">
             {/* Heading */}
             <h2 className="text-3xl font-bold text-gray-900">
@@ -1116,12 +1116,12 @@ export default function HomeComponent() {
           </div>
         </section>
         {/* Why Choose Cycle World */}
-        <section className="bg-white py-10">
+        <section className="py-10">
           <div className="max-w-7xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-gray-900">
               Why Choose Cycle World
             </h2>
-            <p className="text-gray-500 mt-2">
+            <p className="text-gray-800 mt-2">
               Choose Cycle World for its trusted nationwide presence, quality
               bicycles and e-mobility products, expert service support, and
               excellent value for money.
@@ -1261,7 +1261,7 @@ export default function HomeComponent() {
         </section>
         {/* shop by brands */}
         {!isBrandsLoading && brands.length > 0 && (
-          <section id="brands" className="rounded-xl bg-white py-6">
+          <section id="brands" className="rounded-xl py-6">
             <div className="max-w-7xl mx-auto px-4">
 
               {/* Header */}
@@ -1307,15 +1307,15 @@ export default function HomeComponent() {
                   640: { slidesPerView: 3 },
                   1024: { slidesPerView: 5 },
                 }}
-                className="bg-white !py-5 rounded-xl border"
+                className=" !py-5 rounded-xl"
               >
                 {brands.map((brand) => (
                   <SwiperSlide key={brand.id}>
                     <Link href={`/brand/${slugify(brand.brand_name)}`}>
                       <div
                         className="group flex cursor-pointer flex-col items-center rounded-lg p-4
-                                  my-4 mx-4 border border-gray-300
-                                  hover:bg-white hover:shadow-md hover:border-lime-400
+                                  my-4 mx-4 border border-gray-300 shadow-md
+                                  hover:bg-gray hover:shadow-md hover:border-lime-400
                                   transition-all duration-300"
                       >
                         <div className="w-24 h-14 flex items-center justify-center">
