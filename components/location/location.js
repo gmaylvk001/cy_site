@@ -1,12 +1,12 @@
-'use client';
-import React from 'react';
+"use client";
+import React from "react";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 export default function LocationPage() {
-
-const [branches, setBranches] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
 
- useEffect(() => {
+  useEffect(() => {
     async function fetchBranches() {
       try {
         const res = await fetch("/api/store/get");
@@ -23,55 +23,66 @@ const [branches, setBranches] = useState([]);
     fetchBranches();
   }, []);
 
-
   if (loading) return <p>Loading branches...</p>;
 
-    if (!branches || branches.length === 0) {
+  if (!branches || branches.length === 0) {
     return <p>No branches found.</p>;
   }
-
 
   return (
     <div className="min-h-screen bg-white py-12 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-[#a3ca43] mb-10">Our Branches</h1>
+        <h1 className="text-3xl font-bold text-[#a3ca43] mb-10">
+          Our Branches
+        </h1>
 
         {/* Branch Grid */}
-         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      {branches.map((branch, idx) => (
-        <div
-  key={branch._id || idx}
-  className="border border-[#a3ca43] rounded-lg shadow-sm p-4 hover:shadow-md transition"
->
-  <h2 className="text-md font-semibold text-gray-800 mb-2">
-    {branch.title}
-  </h2>
-  <p className="text-sm text-gray-700 mb-1">{branch.address}</p>
-  <p className="text-sm text-gray-700 mb-1">{branch.city}</p>
-  <p className="text-sm text-gray-700 mb-1">Phone: {branch.phone}</p>
-  
-  <a
-    href={`mailto:${branch.email}?subject=Inquiry&body=Hello, I would like to know more about your services.`}
-    className="text-[#a3ca43] hover:text-[#a3ca43] hover:underline"
-  >
-    {branch.email}
-  </a>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {branches.map((branch, idx) => (
+            <div
+              key={branch._id || idx}
+              className="border border-[#a3ca43] rounded-lg shadow-sm p-4 hover:shadow-md transition"
+            >
+              <h2 className="text-md font-semibold text-gray-800 mb-2">
+                {branch.title}
+              </h2>
+              <p className="text-sm text-gray-700 mb-1">{branch.address}</p>
+              <p className="text-sm text-gray-700 mb-1">{branch.city}</p>
+              <p className="text-sm text-gray-700 mb-1">
+                Phone: {branch.phone}
+              </p>
 
-  {/* Google Maps Embed */}
-  <div className="mt-3">
-    <iframe
-      src={`https://www.google.com/maps?q=${encodeURIComponent(branch.address)}&output=embed`}
-      width="100%"
-      height="200"
-      style={{ border: 0 }}
-      allowFullScreen=""
-      loading="lazy"
-    ></iframe>
-  </div>
-</div>
+              <a
+                href={`mailto:${branch.email}?subject=Inquiry&body=Hello, I would like to know more about your services.`}
+                className="text-[#a3ca43] hover:text-[#a3ca43] hover:underline"
+              >
+                {branch.email}
+              </a>
 
-      ))}
-    </div>
+              {/* Google Maps Embed */}
+              <div className="mt-3">
+                <iframe
+                  src={`https://www.google.com/maps?q=${encodeURIComponent(
+                    branch.address
+                  )}&output=embed`}
+                  width="100%"
+                  height="200"
+                  style={{ border: 0 }}
+                  allowFullScreen=""
+                  loading="lazy"
+                ></iframe>
+              </div>
+              <div className="mt-2 flex justify-center">
+              <Link
+                href={`/location/${branch.slug}`}
+                className="inline-block bg-[#a3ca43] text-black px-6 py-2 rounded-full text-center"
+              >
+                Visit Store
+              </Link>
+              </div>
+            </div>
+          ))}
+        </div>
         {/* <div className="mt-10 w-full h-[400px]">
   <iframe
     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3911.9092186355943!2d76.95661931480073!3d11.016844292153897!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba85c3b8336cfd1%3A0xa329b2d72a9e92ee!2sCoimbatore%2C%20Tamil%20Nadu!5e0!3m2!1sen!2sin!4v1647442610000!5m2!1sen!2sin"
@@ -83,7 +94,6 @@ const [branches, setBranches] = useState([]);
     referrerPolicy="no-referrer-when-downgrade"
   ></iframe>
 </div> */}
-
       </div>
     </div>
   );
