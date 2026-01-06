@@ -664,8 +664,8 @@ const fetchInitialData = async () => {
       )}
 {/* Categories Circle Section - Dynamic based on subcategories */}
 
-<div className="relative my-12 px-6">
-  {/* Left arrow */}
+{/* <div className="relative my-12 px-6">
+  // Left arrow
   <button
     onClick={() => scroll("left")}
     className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white hover:bg-gray-100 p-3 rounded-full shadow-md hidden md:flex items-center justify-center"
@@ -673,7 +673,7 @@ const fetchInitialData = async () => {
     <span className="text-2xl font-bold text-gray-700">{`‹`}</span>
   </button>
 
-  {/* Right arrow */}
+  // Right arrow
   <button
     onClick={() => scroll("right")}
     className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white hover:bg-gray-100 p-3 rounded-full shadow-md hidden md:flex items-center justify-center"
@@ -681,7 +681,7 @@ const fetchInitialData = async () => {
     <span className="text-2xl font-bold text-gray-700">{`›`}</span>
   </button>
 
-  {/* Scroll container */}
+  // Scroll container
   <div
     ref={scrollRef}
     className={`flex ${
@@ -708,7 +708,7 @@ const fetchInitialData = async () => {
           className="flex flex-row items-center flex-shrink-0 w-[320px] h-[264px] border border-gray-200 rounded-xl bg-white hover:-translate-y-1 transition-all duration-300 hover:shadow-lg hover:bg-gray-50"
           style={{ scrollSnapAlign: "start" }}
         >
-          {/* Image section */}
+          // Image section
           <div className="flex justify-center items-center w-[150px] h-full ml-4 flex-shrink-0">
             {subcategory.image ? (
               <div className="relative w-[170px] h-[220px] flex items-center justify-center">
@@ -751,7 +751,7 @@ const fetchInitialData = async () => {
             )}
           </div>
 
-          {/* Content section */}
+          // Content section
          <div className="flex flex-col text-left px-3 py-10 w-[150px] h-full">
           <h3 className="text-lg font-bold text-gray-900 mb-3 text-nowrap">
             {subcategory.category_name}
@@ -774,7 +774,7 @@ const fetchInitialData = async () => {
       </div>
     )}
   </div>
-</div>
+</div> */}
 
       
 
