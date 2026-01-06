@@ -868,11 +868,11 @@ const grandTotal = subtotal - totalDiscount;
   }
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="min-h-screen">
       <ToastContainer position="top-right" autoClose={5000} />
       
       {/* Checkout Header Bar */}
-      <div className="bg-white py-6 px-8 flex border-b justify-between items-center">
+      <div className="py-6 px-8 flex border-b justify-between items-center">
         <h2 className="text-2xl font-bold text-orange-500 " style={{marginLeft: "64px"}}>Checkout</h2>
         {/* <div className="flex items-center space-x-2" style={{marginRight: "100px"}}>
           <span className="text-2xl text-gray-600">🏠 Home</span>
@@ -886,7 +886,7 @@ const grandTotal = subtotal - totalDiscount;
 
         <div className="flex flex-col lg:flex-row " style={{marginLeft: "100px"}}>
           {/* Left - Checkout Form */}
-         <div className="w-full lg:w-2/4 bg-white p-0 pt-6">
+         <div className="w-full lg:w-2/4 p-0 pt-6">
 
     {error && <p className="text-red-500 text-bold-sm mb-4">{error}</p>}
 
@@ -1261,8 +1261,8 @@ const grandTotal = subtotal - totalDiscount;
     )}
   </div>
 
-          {/* Right - Order Summary */}
-          <div className="w-full lg:w-2/4 p-6 sticky top-6 self-start" style={{backgroundColor: "#F7F4F2", height: "100vh"}}>
+          {/* Right - Order Summary F7F4F2*/}
+          <div className="w-full lg:w-2/4 p-6 sticky top-6 self-start" style={{backgroundColor: "#d3ffaf", height: "100vh"}}>
             <div className="mt-1" style={{marginRight: "100px"}}>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Orders</h3>
 
@@ -1279,7 +1279,7 @@ const grandTotal = subtotal - totalDiscount;
               </div> */}
 
 
-              <div className="relative border-b pb-3 mb-3">
+              <div className="relative pb-3 mb-3">
                 {/* Scrollable List */}
                 <div
                   className="max-h-64 overflow-y-auto pr-2 scroll-smooth"

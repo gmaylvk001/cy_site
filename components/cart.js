@@ -1110,7 +1110,7 @@ export default function CartComponent() {
     );
   }
   return (
-    <div className="bg-white min-h-screen">
+    <div className="min-h-screen">
       {/* Modals */}
       <ConfirmModal
         show={showConfirmModal}
@@ -1131,10 +1131,10 @@ export default function CartComponent() {
         onClose={() => setShowErrorModal(false)}
       />
 
-    {/* Header */}
-      <div className=" sm:pl-[3rem] sm:pr-[2rem] flex flex-col sm:flex-row justify-between items-center gap-2 my-[35px]">
+    {/* Header my-[35px]*/}
+      <div className=" sm:pl-[3rem] sm:pr-[2rem] flex flex-col sm:flex-row justify-between items-center gap-2">
         <div style={{ "--heading-color": "#0069c6" }}>
-          <h1 className="font-bold text-[1.75rem] text-[#0069c6]"> My Cart</h1>
+          <h1 className="font-bold text-[1.75rem] text-black"> My Cart</h1>
         </div>
         
       </div>

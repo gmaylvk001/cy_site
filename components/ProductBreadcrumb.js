@@ -114,7 +114,7 @@ export default function ProductBreadcrumb({ product }) {
       {/* Home Link */}
       <Link 
         href="/" 
-        className="text-gray-500 hover:text-blue-500 transition-colors flex items-center whitespace-nowrap"
+        className="text-black-500 hover:text-blue-500 transition-colors flex items-center whitespace-nowrap"
       >
         <HiHome className="h-4 w-4 mr-2" />
         Home 
@@ -159,7 +159,7 @@ export default function ProductBreadcrumb({ product }) {
       )} */}
       <Link
         href={path}
-        className={`text-gray-500 hover:text-blue-500 whitespace-nowrap ${
+        className={`text-black-500 hover:text-blue-500 whitespace-nowrap ${
           index === categories.length - 1 ? "font-medium" : ""
         }`}
       >
