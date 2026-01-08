@@ -666,7 +666,7 @@ export default function HomeComponent() {
       )}
       {/* main div start */}
       <div
-        className={`relative transition-opacity duration-300 ${isLoading ? "opacity-0 h-0 overflow-hidden" : "opacity-100"}`}
+        className={`relative transition-opacity duration-300 bg-gradient-to-r from-[#2a7b9b] via-[#57c785] to-[#eddd53] ${isLoading ? "opacity-0 h-0 overflow-hidden" : "opacity-100"}`}
         ref={containerRef}
       >
         {/* Banner Section start */}
