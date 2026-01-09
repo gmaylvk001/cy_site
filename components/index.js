@@ -15,234 +15,18 @@ import { useRouter } from "next/navigation";
 import { HiArrowRight } from "react-icons/hi";
 import { FiChevronLeft, FiChevronRight, FiShoppingCart } from "react-icons/fi";
 import {FaBicycle,FaPhoneAlt,FaShieldAlt,FaHeadset,FaCreditCard,FaUserTie,FaScrewdriver,FaStore,FaLayerGroup,FaWrench,FaTags,FaEnvelope,FaPhone,FaUsers,FaGlobe,FaIndustry,FaAward,} from "react-icons/fa";
-import { Heart, ShoppingCart } from "lucide-react";
 import Addtocart from "@/components/AddToCart";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay, Pagination } from "swiper/modules";
 import RecentlyViewedProducts from "@/components/RecentlyViewedProducts";
-import CategoryProducts from "@/components/CategoryProducts";
-import { ChevronRight } from "lucide-react";
+import Findperfectcycle from "@/components/Findperfectcycle";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { v4 as uuidv4 } from "uuid";
 import ProductCard from "@/components/ProductCard";
-/* ------------------- UTIL: click outside ------------------- */
-function useOutside(ref, cb) {
-  useEffect(() => {
-    const handler = (e) =>
-      ref.current && !ref.current.contains(e.target) && cb();
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [ref, cb]);
-}
 
-/* ------------------- Gender Select ------------------- */
-function GenderSelect({ value, setValue }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  useOutside(ref, () => setOpen(false));
 
-  return (
-    <div className="relative w-full" ref={ref}>
-      <button
-        onClick={() => setOpen(!open)}
-        className={`w-full px-3 py-5 rounded-md shadow-sm
-            flex justify-between items-center text-md font-semibold border
-            ${open ? "bg-[#f5f5f5]" : "bg-white"}`}
-      >
-        {value}
-        <span className={`transition ${open ? "rotate-180" : ""}`}>▾</span>
-      </button>
-
-      {open && (
-        <div
-          className="absolute top-[115%] left-0 w-[480px] max-w-[90vw]
-            bg-[#f5f5f5] rounded-xl shadow-xl z-50 px-6 py-6"
-        >
-          <div className="absolute -top-2 left-10 w-4 h-4 bg-[#f5f5f5] rotate-45"></div>
-
-          <div className="flex flex-col sm:flex-row gap-4">
-            {[
-              { label: "MALE", icon: <i className="fa-solid fa-mars"></i> },
-              { label: "FEMALE", icon: <i className="fa-solid fa-venus"></i> },
-              {
-                label: "UNISEX",
-                icon: <i className="fa-solid fa-venus-mars"></i>,
-              },
-            ].map((g) => (
-              <button
-                key={g.label}
-                onClick={() => {
-                  setValue(g.label);
-                  setOpen(false);
-                }}
-                className={`flex-1 py-3 rounded-full font-bold text-sm
-                    flex justify-center items-center gap-2
-                    ${
-                      value === g.label
-                        ? "bg-[#a3ca43] text-white"
-                        : "bg-gray-200 text-gray-700"
-                    }`}
-              >
-                {g.icon} {g.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ------------------- Height Select (FT + CM) ------------------- */
-function HeightSelect({ value, setValue }) {
-  const [open, setOpen] = useState(false);
-  const [unit, setUnit] = useState("FT");
-  const ref = useRef(null);
-  useOutside(ref, () => setOpen(false));
-
-  const ftToCm = (ft) => Math.round(ft * 30.48);
-  const cmToFt = (cm) => +(cm / 30.48).toFixed(1);
-
-  const display =
-    typeof value === "number"
-      ? unit === "FT"
-        ? `${value.toFixed(1)} FT`
-        : `${ftToCm(value)} CM`
-      : value; // show placeholder string like "Height"
-
-  return (
-    <div className="relative w-full" ref={ref}>
-      <button
-        onClick={() => setOpen(!open)}
-        className={`w-full px-2 py-5 rounded-md shadow-sm
-            flex justify-between items-center text-md font-semibold border
-            ${open ? "bg-[#f5f5f5]" : "bg-white"}`}
-      >
-        {display}
-        <span className={`transition ${open ? "rotate-180" : ""}`}>▾</span>
-      </button>
-
-      {open && (
-        <div
-          className="absolute top-[115%] left-[-25] w-[560px] max-w-[95vw]
-            bg-[#f5f5f5] rounded-xl shadow-xl z-50 px-6 py-6"
-        >
-          <div className="absolute -top-2 left-12 w-4 h-4 bg-[#f5f5f5] rotate-45"></div>
-
-          {/* Unit Toggle */}
-          <div className="flex mb-6">
-            {["FT", "CM"].map((u) => (
-              <button
-                key={u}
-                onClick={() => setUnit(u)}
-                className={`px-4 py-2 text-sm font-bold border
-                    ${u === "FT" ? "rounded-l-md" : "rounded-r-md"}
-                    ${
-                      unit === u
-                        ? "bg-[#a3ca43] text-white border-[#a3ca43]"
-                        : "bg-white text-gray-700"
-                    }`}
-              >
-                {u === "FT" ? "FT/INCH" : "CM"}
-              </button>
-            ))}
-          </div>
-
-          {/* Slider */}
-          <div className="relative px-2">
-            <input
-              type="range"
-              min={unit === "FT" ? 2 : 90}
-              max={unit === "FT" ? 7 : 210}
-              step={unit === "FT" ? 0.1 : 1}
-              value={unit === "FT" ? value : ftToCm(value)}
-              onChange={(e) =>
-                unit === "FT"
-                  ? setValue(+e.target.value)
-                  : setValue(cmToFt(+e.target.value))
-              }
-              className="w-full accent-[#a3ca43]"
-            />
-
-            {/* Bubble */}
-            <div
-              className="absolute -top-10 bg-[#a3ca43] text-white
-                  text-sm font-bold px-3 py-1 rounded-md"
-              style={{
-                left:
-                  unit === "FT"
-                    ? `${((value - 2) / 5) * 100}%`
-                    : `${((ftToCm(value) - 90) / 120) * 100}%`,
-                transform: "translateX(-50%)",
-              }}
-            >
-              {display}
-            </div>
-
-            {/* Scale */}
-            <div className="flex justify-between text-xs text-gray-500 mt-2 px-1">
-              {unit === "FT"
-                ? [2, 3, 4, 5, 6, 7].map((n) => <span key={n}>{n}</span>)
-                : [90, 120, 150, 180, 210].map((n) => <span key={n}>{n}</span>)}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ------------------- Purpose Select ------------------- */
-function PurposeSelect({ value, setValue }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  useOutside(ref, () => setOpen(false));
-
-  return (
-    <div className="relative w-full" ref={ref}>
-      <button
-        onClick={() => setOpen(!open)}
-        className={`w-full px-3 py-5 rounded-md shadow-sm
-            flex justify-between items-center text-md font-semibold border
-            ${open ? "bg-[#f5f5f5]" : "bg-white"}`}
-      >
-        {value}
-        <span className={`transition ${open ? "rotate-180" : ""}`}>▾</span>
-      </button>
-
-      {open && (
-        <div
-          className="absolute top-[115%] right-0 w-[480px] max-w-[90vw]
-            bg-[#f5f5f5] rounded-xl shadow-xl z-50 px-6 py-6"
-        >
-          <div className="absolute -top-2 right-12 w-4 h-4 bg-[#f5f5f5] rotate-45"></div>
-
-          <div className="flex flex-col sm:flex-row gap-4">
-            {["DAILY-COMMUTE", "FITNESS", "SPORT"].map((p) => (
-              <button
-                key={p}
-                onClick={() => {
-                  setValue(p);
-                  setOpen(false);
-                }}
-                className={`flex-1 py-3 rounded-full font-bold text-sm
-                    ${
-                      value === p
-                        ? "bg-[#a3ca43] text-white"
-                        : "bg-gray-200 text-gray-700"
-                    }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 export default function HomeComponent() {
   function slugify(text) {
     return text
@@ -253,28 +37,7 @@ export default function HomeComponent() {
       .replace(/[^\w\-]+/g, "")
       .replace(/\-\-+/g, "-");
   }
-  const features = [
-    {
-      icon: <FaBicycle className="w-9 h-9 text-[#a3ca43]" />,
-      title: "Bicycle Insurance",
-      subtitle: "Toffee Insurance",
-    },
-    {
-      icon: <FaPhoneAlt className="w-7 h-7 text-[#a3ca43]" />,
-      title: "11/7 Support",
-      subtitle: "Dedicated Support",
-    },
-    {
-      icon: <FaShieldAlt className="w-7 h-7 text-[#a3ca43]" />,
-      title: "100% Safety",
-      subtitle: "Only secure payments",
-    },
-    {
-      icon: <FaCreditCard className="w-7 h-7 text-[#a3ca43]" />,
-      title: "Bajaj Finserv",
-      subtitle: "0% EMI",
-    },
-  ];
+
   const reels = [
     "https://www.instagram.com/reel/DSHpp73DWm5/",
     "https://www.instagram.com/p/DSJt6wICEaw/?hl=en",
@@ -296,8 +59,8 @@ export default function HomeComponent() {
   });
 
   const [gender, setGender] = useState("Gender");
-  const [height, setHeight] = useState("Height");
-  const [purpose, setPurpose] = useState("Purpose");
+  const [type, setType] = useState("Type of Cycle");
+  const [price, setPrice] = useState("Budget");
   const router = useRouter();
   const [userData, setUserData] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -592,7 +355,6 @@ export default function HomeComponent() {
   const getCategoryUrl = (category) => {
     return category.category_slug ? `/category/${category.category_slug}`: "#";
   };
-
    // Map product types to colors if your API doesn't provide typeColor
   const typeColors = {
     MTB: "bg-red-500",
@@ -666,7 +428,7 @@ export default function HomeComponent() {
       )}
       {/* main div start */}
       <div
-        className={`relative transition-opacity duration-300 bg-gradient-to-r from-[#2a7b9b] via-[#57c785] to-[#eddd53] ${isLoading ? "opacity-0 h-0 overflow-hidden" : "opacity-100"}`}
+        className={`relative transition-opacity duration-300 ${isLoading ? "opacity-0 h-0 overflow-hidden" : "opacity-100"}`}
         ref={containerRef}
       >
         {/* Banner Section start */}
@@ -766,34 +528,13 @@ export default function HomeComponent() {
           </div>
         </motion.section>
         {/* find perfect bicycle */}
-        <section className="py-10">
-          <div className=" px-5 max-w-7xl mx-auto space-x-6">
-            <div className="grid grid-cols-1  gap-4 items-center">
-              <div className="sectitle">
-                <h1 className="text-3xl text-center">
-                  Find Your Perfect Bicycle
-                </h1>
-              </div>
-              <div className="col-span-2 seccontent">
-                <div className="max-w-7xl mx-auto px-4 py-5">
-                  {/* Controls */}
-                  <div className="flex flex-col sm:flex-row gap-4 items-start justify-end">
-                    <GenderSelect value={gender} setValue={setGender} />
-                    <HeightSelect value={height} setValue={setHeight} />
-                    <PurposeSelect value={purpose} setValue={setPurpose} />
-                    <button className="w-auto w-12 bg-[#a3ca43] hover:bg-[#33333] text-white font-bold px-5 py-5 rounded-md shadow-md flex justify-center items-center">
-                      GO
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        <section className="bg-[#f5f5f5]">
+          <Findperfectcycle />
         </section>
         {/* product card */}
         {!loading && products.length > 0 &&(
           <section className="max-w-7xl mx-auto px-4 pt-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 py-4 border-b">
             <h2 className="text-3xl font-bold">New Arrivals</h2>
 
             <div className="flex gap-3 top-selling-swiper">
@@ -806,7 +547,7 @@ export default function HomeComponent() {
             </div>
           </div>
 
-          <div className="top-selling-swiper pb-10">
+          <div className="top-selling-swiper pb-5">
             <div className="swiper-pagination mt-4 text-center" />
 
             <Swiper
@@ -822,7 +563,8 @@ export default function HomeComponent() {
               spaceBetween={20}
               slidesPerView={1}
               breakpoints={{
-                640: { slidesPerView: 2 },
+                 640: { slidesPerView: 1 },
+                 768: { slidesPerView: 1 },
                 1024: { slidesPerView: 3 },
                 1280: { slidesPerView: 4 },
               }}
@@ -1393,7 +1135,7 @@ export default function HomeComponent() {
                   640: { slidesPerView: 3 },
                   1024: { slidesPerView: 5 },
                 }}
-                className=" !py-5 rounded-xl"
+                className=" rounded-xl"
               >
                 {brands.map((brand) => (
                   <SwiperSlide key={brand.id}>
