@@ -178,7 +178,10 @@ export default function HomeComponent() {
       try {
         const res = await fetch("/api/product/get");
         const data = await res.json();
-        setProducts(data.slice(0, 20)); // top 20 new arrivals
+        const Stockproducts_only = data.filter(
+        (product) => product.quantity > 0 && product.stock_status === "In Stock" 
+        )
+        setProducts(Stockproducts_only.slice(0, 20)); // top 20 new arrivals
       } catch (err) {
         console.error("Error fetching products:", err);
       } finally {
@@ -533,195 +536,195 @@ export default function HomeComponent() {
         </section>
         {/* product card */}
         {!loading && products.length > 0 &&(
-          <section className="max-w-7xl mx-auto px-4 pt-6">
-          <div className="flex items-center justify-between mb-4 py-4 border-b">
-            <h2 className="text-3xl font-bold">New Arrivals</h2>
+          <section className="max-w-7xl mx-auto px-4 pt-6 ">
+            <div className="flex items-center justify-between mb-4 py-4 border-b">
+              <h2 className="text-3xl font-bold">New Arrivals</h2>
 
-            <div className="flex gap-3 top-selling-swiper">
-              <button className="swiper-prev w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition">
-                ‹
-              </button>
-              <button className="swiper-next w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition">
-                ›
-              </button>
+              <div className="flex gap-3 top-selling-swiper">
+                <button className="swiper-prev w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition">
+                  ‹
+                </button>
+                <button className="swiper-next w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition">
+                  ›
+                </button>
+              </div>
             </div>
-          </div>
 
-          <div className="top-selling-swiper pb-5">
-            <div className="swiper-pagination mt-4 text-center" />
+            <div className="top-selling-swiper pb-5">
+              <div className="swiper-pagination mt-4 text-center" />
 
-            <Swiper
-              modules={[Navigation, Autoplay, Pagination]}
-              navigation={{
-                prevEl: ".top-selling-swiper .swiper-prev",
-                nextEl: ".top-selling-swiper .swiper-next",
-              }}
-              pagination={{
-                el: ".top-selling-swiper .swiper-pagination",
-                clickable: true,
-              }}
-              spaceBetween={20}
-              slidesPerView={1}
-              breakpoints={{
-                 640: { slidesPerView: 1 },
-                 768: { slidesPerView: 1 },
-                1024: { slidesPerView: 3 },
-                1280: { slidesPerView: 4 },
-              }}
-              className="customSwiper-product"
-            >
-              {products.map((product) => (
+              <Swiper
+                modules={[Navigation, Autoplay, Pagination]}
+                navigation={{
+                  prevEl: ".top-selling-swiper .swiper-prev",
+                  nextEl: ".top-selling-swiper .swiper-next",
+                }}
+                pagination={{
+                  el: ".top-selling-swiper .swiper-pagination",
+                  clickable: true,
+                }}
+                spaceBetween={20}
+                slidesPerView={1}
+                breakpoints={{
+                  640: { slidesPerView: 1 },
+                  768: { slidesPerView: 1 },
+                  1024: { slidesPerView: 3 },
+                  1280: { slidesPerView: 4 },
+                }}
+                className="customSwiper-product"
+              >
+                {products.map((product) => (
 
-                <SwiperSlide key={product._id} className="min-h-[450px] flex">
-                  <div className="bg-white rounded-xl border shadow-md overflow-hidden flex flex-col h-full w-full relative">
+                  <SwiperSlide key={product._id} className="min-h-[450px] flex">
+                    <div className="bg-white rounded-xl border shadow-md overflow-hidden flex flex-col h-full w-full relative">
 
-                     {/* Wishlist absolute */}
-                    <div className="absolute top-3 left-3 z-20">
-                      <ProductCard 
-                        productId={product._id} 
-                        isOutOfStock={product.quantity === 0} 
-                      />
-                    </div>
-
-                    {/* Category Badge */}
-                   <div className="absolute top-3 right-3 z-30 bg-blue-600 text-white text-xs px-3 py-1 rounded-md">
-                      {product.category?.name || "New"}
-                    </div>
-
-  
-                    {/* Image */}
-                    <div className="relative h-56">
-                      {product.images?.[0] && (
-                        <Link href={`/product/${product.slug}`} passHref>
-                          <Image
-                            src={
-                              product.images[0].startsWith("http")
-                                ? product.images[0]
-                                : `/uploads/products/${product.images[0]}`
-                            }
-                            alt={product.name}
-                            fill
-                            className="object-contain p-4"
-                          />
-                        </Link>
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="px-4 py-2 border-t flex-grow">
-                     <h4 className="text-xs text-gray-500 mb-2 uppercase">
-                        {brandMap[product.brand] ? (
-                          <Link
-                            href={`/brand/${brandMap[product.brand]
-                              .toLowerCase()
-                              .replace(/\s+/g, "-")}`}
-                            className="hover:text-blue-600 cursor-pointer"
-                          >
-                            {brandMap[product.brand]}
-                          </Link>
-                        ) : (
-                          "Unknown Brand"
-                        )}
-                      </h4>
-
-                      <Link href={`/product/${product.slug}`} passHref>
-                        <h3 className="text-sm font-medium text-[#333] hover:text-[#a3ca43] line-clamp-2 cursor-pointer">
-                          {product.name}{" "}
-                          {product.model_number ? `(${product.model_number})` : ""}
-                        </h3>
-                      </Link>
-
-                      <div className="flex justify-between items-center mt-2 gap-2 flex-wrap">
-                        <div className="flex gap-2 items-center">
-                          {/* Selling Price / Special Price */}
-                          <span className="text-lg font-bold">
-                            ₹{" "}
-                            {Number(product.special_price) > 0 &&
-                            Number(product.special_price) < Number(product.price)
-                              ? Number(product.special_price).toLocaleString()
-                              : Number(product.price).toLocaleString()}
-                          </span>
-
-                          {/* Original Price / MRP */}
-                          {Number(product.special_price) > 0 &&
-                            Number(product.special_price) < Number(product.price) && (
-                              <>
-                                <span className="text-sm text-gray-400 line-through">
-                                  ₹ {Number(product.price).toLocaleString()}
-                                </span>
-
-                                {/* Discount Percentage */}
-                                <span className="text-sm text-[#a3ca43] font-semibold">
-                                  {Math.round(100 - (Number(product.special_price) / Number(product.price)) * 100)}% OFF
-                                </span>
-                              </>
-                            )}
-                        </div>
+                      {/* Wishlist absolute */}
+                      <div className="absolute top-3 left-3 z-20">
+                        <ProductCard 
+                          productId={product._id} 
+                          isOutOfStock={product.quantity === 0} 
+                        />
                       </div>
 
-                    <div className="my-1">
-                      <span
-                        className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                          product.quantity > 0 && product.stock_status === "In Stock"
-                            ? "bg-green-100 text-green-600"
-                            : "bg-red-100 text-red-600"
-                        }`}
-                      >
-                        {product.quantity > 0 && product.stock_status === "In Stock"
-                          ? `In Stock, ${product.quantity} units`
-                          : "Out Of Stock"}
-                      </span>
-                    </div>
+                      {/* Category Badge */}
+                    <div className="absolute top-3 right-3 z-30 bg-blue-600 text-white text-xs px-3 py-1 rounded-md">
+                        {product.category?.name || "New"}
+                      </div>
 
-                    </div>
+    
+                      {/* Image */}
+                      <div className="relative h-56">
+                        {product.images?.[0] && (
+                          <Link href={`/product/${product.slug}`} passHref>
+                            <Image
+                              src={
+                                product.images[0].startsWith("http")
+                                  ? product.images[0]
+                                  : `/uploads/products/${product.images[0]}`
+                              }
+                              alt={product.name}
+                              fill
+                              className="object-contain p-4"
+                            />
+                          </Link>
+                        )}
+                      </div>
 
-                    {/* Actions */}
-                    <div className="mt-auto flex text-sm font-semibold border-t">
-                      <Link
-                        href={`https://wa.me/919865555000?text=${encodeURIComponent(
-                          `Check Out This Product: ${
-                            typeof window !== "undefined"
-                              ? window.location.origin
-                              : ""
-                          }/product/${product.slug}`
-                        )}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-white  text-[#a3ca43] p-1 transition-colors duration-300 flex items-center justify-center px-2 border-r"
-                      >
-                        <svg
-                          className="w-5 h-5"
-                          viewBox="0 0 32 32"
-                          fill="currentColor"
-                          xmlns="http://www.w3.org/2000/svg"
+                      {/* Info */}
+                      <div className="px-4 py-2 border-t flex-grow">
+                      <h4 className="text-xs text-gray-500 mb-2 uppercase">
+                          {brandMap[product.brand] ? (
+                            <Link
+                              href={`/brand/${brandMap[product.brand]
+                                .toLowerCase()
+                                .replace(/\s+/g, "-")}`}
+                              className="hover:text-blue-600 cursor-pointer"
+                            >
+                              {brandMap[product.brand]}
+                            </Link>
+                          ) : (
+                            "Unknown Brand"
+                          )}
+                        </h4>
+
+                        <Link href={`/product/${product.slug}`} passHref>
+                          <h3 className="text-sm font-medium text-[#333] hover:text-[#a3ca43] line-clamp-2 cursor-pointer">
+                            {product.name}{" "}
+                            {product.model_number ? `(${product.model_number})` : ""}
+                          </h3>
+                        </Link>
+
+                        <div className="flex justify-between items-center mt-2 gap-2 flex-wrap">
+                          <div className="flex gap-2 items-center">
+                            {/* Selling Price / Special Price */}
+                            <span className="text-lg font-bold">
+                              ₹{" "}
+                              {Number(product.special_price) > 0 &&
+                              Number(product.special_price) < Number(product.price)
+                                ? Number(product.special_price).toLocaleString()
+                                : Number(product.price).toLocaleString()}
+                            </span>
+
+                            {/* Original Price / MRP */}
+                            {Number(product.special_price) > 0 &&
+                              Number(product.special_price) < Number(product.price) && (
+                                <>
+                                  <span className="text-sm text-gray-400 line-through">
+                                    ₹ {Number(product.price).toLocaleString()}
+                                  </span>
+
+                                  {/* Discount Percentage */}
+                                  <span className="text-sm text-[#a3ca43] font-semibold">
+                                    {Math.round(100 - (Number(product.special_price) / Number(product.price)) * 100)}% OFF
+                                  </span>
+                                </>
+                              )}
+                          </div>
+                        </div>
+
+                      <div className="my-1">
+                        <span
+                          className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                            product.quantity > 0 && product.stock_status === "In Stock"
+                              ? "bg-green-100 text-green-600"
+                              : "bg-red-100 text-red-600"
+                          }`}
                         >
-                          <path d="M16.003 2.667C8.64 2.667 2.667 8.64 2.667 16c0 2.773.736 5.368 2.009 7.629L2 30l6.565-2.643A13.254 13.254 0 0016.003 29.333C23.36 29.333 29.333 23.36 29.333 16c0-7.36-5.973-13.333-13.33-13.333zm7.608 18.565c-.32.894-1.87 1.749-2.574 1.865-.657.104-1.479.148-2.385-.148-.55-.175-1.256-.412-2.162-.812-3.8-1.648-6.294-5.77-6.49-6.04-.192-.269-1.55-2.066-1.55-3.943 0-1.878.982-2.801 1.33-3.168.346-.364.75-.456 1.001-.456.25 0 .5.002.719.013.231.01.539-.088.845.643.32.768 1.085 2.669 1.18 2.863.096.192.16.423.03.683-.134.26-.2.423-.39.65-.192.231-.413.512-.589.689-.192.192-.391.401-.173.788.222.392.986 1.625 2.116 2.636 1.454 1.298 2.682 1.7 3.075 1.894.393.192.618.173.845-.096.23-.27.975-1.136 1.237-1.527.262-.392.524-.32.894-.192.375.13 2.35 1.107 2.75 1.308.393.205.656.308.75.48.096.173.096 1.003-.224 1.897z" />
-                        </svg>
-                      </Link>
-                      <Addtocart
-                        productId={product._id}
-                        stockQuantity={product.quantity}
-                        special_price={product.special_price}
-                        className="flex-1 whitespace-nowrap text-xs sm:text-sm py-1.5 my-2"
-                      />
-                    <button
-                      onClick={() => handleBuyNow(product)}
-                      className={`w-1/2 py-3  font-semibold text-white transition-colors duration-300 ${
-                        product.quantity > 0 && product.stock_status === "In Stock"
-                          ? "bg-[#a3ca43] hover:bg-lime-500 cursor-pointer"
-                          : "bg-gray-300 hover:bg-gray-300 cursor-not-allowed"
-                      }`}
-                      disabled={!(product.quantity > 0 && product.stock_status === "In Stock")}
-                    >
-                      BUY NOW
-                    </button>
+                          {product.quantity > 0 && product.stock_status === "In Stock"
+                            ? `In Stock, ${product.quantity} units`
+                            : "Out Of Stock"}
+                        </span>
+                      </div>
+
+                      </div>
+
+                      {/* Actions */}
+                      <div className="mt-auto flex text-sm font-semibold border-t">
+                        <Link
+                          href={`https://wa.me/919865555000?text=${encodeURIComponent(
+                            `Check Out This Product: ${
+                              typeof window !== "undefined"
+                                ? window.location.origin
+                                : ""
+                            }/product/${product.slug}`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-white  text-[#a3ca43] p-1 transition-colors duration-300 flex items-center justify-center px-2 border-r"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            viewBox="0 0 32 32"
+                            fill="currentColor"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path d="M16.003 2.667C8.64 2.667 2.667 8.64 2.667 16c0 2.773.736 5.368 2.009 7.629L2 30l6.565-2.643A13.254 13.254 0 0016.003 29.333C23.36 29.333 29.333 23.36 29.333 16c0-7.36-5.973-13.333-13.33-13.333zm7.608 18.565c-.32.894-1.87 1.749-2.574 1.865-.657.104-1.479.148-2.385-.148-.55-.175-1.256-.412-2.162-.812-3.8-1.648-6.294-5.77-6.49-6.04-.192-.269-1.55-2.066-1.55-3.943 0-1.878.982-2.801 1.33-3.168.346-.364.75-.456 1.001-.456.25 0 .5.002.719.013.231.01.539-.088.845.643.32.768 1.085 2.669 1.18 2.863.096.192.16.423.03.683-.134.26-.2.423-.39.65-.192.231-.413.512-.589.689-.192.192-.391.401-.173.788.222.392.986 1.625 2.116 2.636 1.454 1.298 2.682 1.7 3.075 1.894.393.192.618.173.845-.096.23-.27.975-1.136 1.237-1.527.262-.392.524-.32.894-.192.375.13 2.35 1.107 2.75 1.308.393.205.656.308.75.48.096.173.096 1.003-.224 1.897z" />
+                          </svg>
+                        </Link>
+                        <Addtocart
+                          productId={product._id}
+                          stockQuantity={product.quantity}
+                          special_price={product.special_price}
+                          className="flex-1 whitespace-nowrap text-xs sm:text-sm py-1.5 my-2"
+                        />
+                      <button
+                        onClick={() => handleBuyNow(product)}
+                        className={`w-1/2 py-3  font-semibold text-white transition-colors duration-300 ${
+                          product.quantity > 0 && product.stock_status === "In Stock"
+                            ? "bg-[#a3ca43] hover:bg-lime-500 cursor-pointer"
+                            : "bg-gray-300 hover:bg-gray-300 cursor-not-allowed"
+                        }`}
+                        disabled={!(product.quantity > 0 && product.stock_status === "In Stock")}
+                      >
+                        BUY NOW
+                      </button>
+                      </div>
                     </div>
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          </div>
-        </section>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
+          </section>
         )}
         {/* category section*/}
          {!loading && categories.length > 0 && (

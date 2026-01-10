@@ -10,7 +10,7 @@ import "swiper/css/pagination";
 import Addtocart from "@/components/AddToCart";
 import ProductCard from "@/components/ProductCard";
 import { FiRefreshCw } from "react-icons/fi";
-import { FiSearch} from "react-icons/fi";
+
 
 /* ------------------- useOutside Hook ------------------- */
 function useOutside(ref, cb) {
@@ -38,7 +38,7 @@ function GenderSelect({ value, setValue, options }) {
         {value ? options.find((o) => o.id === value)?.name : "All Genders"} <span className={`transition ${open ? "rotate-180" : ""}`}>▾</span>
       </button>
       {open && (
-        <div className="absolute top-[115%] left-0 w-[250px] max-w-[90vw] bg-white rounded-xl shadow-xl z-10 px-4 py-4">
+        <div className="absolute top-[115%] left-0 w-[250px] max-w-[90vw] bg-white rounded-xl shadow-xl z-10 px-4 py-4 max-h-60 overflow-y-auto scrollbar-hide">
           <div className="absolute -top-2 left-10 w-4 h-4 bg-white rotate-45"></div>
           <div className="flex flex-col gap-2">
             {options.map((opt) => (
@@ -83,24 +83,43 @@ function TypeSelect({ value, setValue, options }) {
         {value ? options.find((o) => o.id === value)?.name : "All Types"} <span className={`transition ${open ? "rotate-180" : ""}`}>▾</span>
       </button>
       {open && (
-        <div className="absolute top-[115%] left-0 w-[250px] max-w-[90vw] bg-white rounded-xl shadow-xl z-10 px-4 py-4">
-          <div className="absolute -top-2 left-10 w-4 h-4 bg-white rotate-45"></div>
-          <div className="flex flex-col gap-2">
+        <div className="absolute top-[115%] left-0 w-[250px] max-w-[90vw] bg-white rounded-xl shadow-xl z-10 px-4 py-2 flex flex-col items-center">
+          
+          {/* Up arrow */}
+          <button
+            onClick={() => {
+              const scrollDiv = document.getElementById("dropdown-scroll");
+              scrollDiv.scrollBy({ top: -40, behavior: "smooth" });
+            }}
+            className="text-lime-500 mb-1"
+          >
+          </button>
+
+          {/* Scrollable options with hidden scrollbar */}
+          <div
+            id="dropdown-scroll"
+            className="flex flex-col gap-2 w-full max-h-60 overflow-y-auto scrollbar-none"
+            style={{
+              scrollbarWidth: 'none', // Firefox
+            }}
+          >
             {options.map((opt) => (
-            <button
-              key={opt.id}
-              onClick={() => {
-                setValue(opt.id);
-                setOpen(false);
-              }}
-              className={`flex-1 py-2 rounded-full font-bold text-sm ${value === opt.id ? "bg-[#a3ca43] text-white" : "bg-gray-200 text-gray-700"}`}
-            >
-              {opt.name}
-            </button>
+              <button
+                key={opt.id}
+                onClick={() => {
+                  setValue(opt.id);
+                  setOpen(false);
+                }}
+                className={`flex-1 py-2 rounded-full font-bold text-sm ${
+                  value === opt.id ? "bg-[#a3ca43] text-white" : "bg-gray-200 text-gray-700"
+                }`}
+              >
+                {opt.name}
+              </button>
             ))}
             <button
               onClick={() => {
-                setValue(null); // select "all"
+                setValue(null);
                 setOpen(false);
               }}
               className="flex-1 py-2 rounded-full font-bold text-sm bg-gray-300 text-gray-700 mt-2"
@@ -108,8 +127,19 @@ function TypeSelect({ value, setValue, options }) {
               All Types
             </button>
           </div>
+
+          {/* Down arrow */}
+          <button
+            onClick={() => {
+              const scrollDiv = document.getElementById("dropdown-scroll");
+              scrollDiv.scrollBy({ top: 40, behavior: "smooth" });
+            }}
+            className="text-lime-500 mt-1"
+          >
+          </button>
         </div>
       )}
+
     </div>
   );
 }
@@ -129,7 +159,7 @@ function PriceSelect({ value, setValue, min = 0, max = 50000 }) {
         {value ? `₹${value.toLocaleString()}` : `₹${min.toLocaleString()} - ₹${max.toLocaleString()}`} <span className={`transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
       </button>
       {open && (
-        <div className="absolute z-10 top-full left-0 w-[360px] bg-white rounded-lg shadow-lg mt-2 p-5">
+        <div className="absolute z-40 top-full left-0 w-[360px] bg-white rounded-lg shadow-lg mt-2 p-5">
           <div className="absolute -top-2 left-10 w-4 h-4 bg-white rotate-45"></div>
           <input
             type="range"
@@ -209,10 +239,10 @@ export default function BicycleFilterSection() {
 
     async function fetchAllProducts() {
       try {
-        const res = await fetch(`/api/productfind?minPrice=0&maxPrice=50000`);
+        const res = await fetch(`/api/productfind?minPrice=0&maxPrice=50000&limit=25`);
         if (!res.ok) throw new Error("Failed to fetch products");
         const data = await res.json();
-        setProducts(data);
+        setProducts(data.slice(0, 20));
       } catch (err) {
         console.error(err);
         setProducts([]);
@@ -308,8 +338,7 @@ export default function BicycleFilterSection() {
         <PriceSelect value={selectedFilters.price} setValue={(v) => setSelectedFilters((p) => ({ ...p, price: v }))} />
         <div className="relative lg:w-64 md:w-full flex items-center md:justify-start justify-center">
           <button onClick={handleGo} className="flex items-center justify-center bg-[#a3ca43] hover:bg-green-700 text-white font-bold px-5 py-3 rounded-md shadow-md mr-3">
-          <FiSearch className="mr-2 hidden lg:block"/>
-          Search
+          Find
           </button>
           <button onClick={handleRefreshFilters} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold px-5 py-3 rounded-md shadow-md">
             <FiRefreshCw size={20} />
@@ -334,12 +363,20 @@ export default function BicycleFilterSection() {
       {products.length > 0 && (
         <div className="top-selling-swiper">
           <Swiper
-            modules={[Navigation, Autoplay, Pagination]}
-            navigation={{ prevEl: ".top-selling-swiper .swiper-prev", nextEl: ".top-selling-swiper .swiper-next" }}
-            pagination={{ el: ".top-selling-swiper .swiper-pagination", clickable: true }}
+            modules={[Navigation, Autoplay]}
+             navigation={{
+                prevEl: ".top-selling-swiper .swiper-prev",
+                nextEl: ".top-selling-swiper .swiper-next",
+              }}
             spaceBetween={20}
             slidesPerView={1}
-            breakpoints={{ 640: { slidesPerView: 1 }, 768: { slidesPerView: 2 }, 1024: { slidesPerView: 3 }, 1280: { slidesPerView: 4 } }}
+            slidesPerGroup={4}
+            breakpoints={{
+              640: { slidesPerView: 1 },
+              768: { slidesPerView: 2 },
+              1024: { slidesPerView: 3 },
+              1280: { slidesPerView: 4 },
+            }}
           >
             {products.map((product) => (
               <SwiperSlide key={product._id} className="min-h-[420px] flex">
@@ -381,9 +418,31 @@ export default function BicycleFilterSection() {
                       <h3 className="text-sm font-medium text-[#333] hover:text-[#a3ca43] line-clamp-2 cursor-pointer">{product.name}</h3>
                     </Link>
                     <div className="flex justify-between items-center mt-2 gap-2 flex-wrap">
-                      <span className="text-lg font-bold">
-                        ₹{(product.special_price && product.special_price < product.price ? product.special_price : product.price).toLocaleString()}
-                      </span>
+                      <div className="flex gap-2 items-center">
+                        {/* Selling Price / Special Price */}
+                        <span className="text-lg font-bold">
+                          ₹{" "}
+                          {Number(product.special_price) > 0 &&
+                          Number(product.special_price) < Number(product.price)
+                            ? Number(product.special_price).toLocaleString()
+                            : Number(product.price).toLocaleString()}
+                        </span>
+
+                        {/* Original Price / MRP */}
+                        {Number(product.special_price) > 0 &&
+                          Number(product.special_price) < Number(product.price) && (
+                            <>
+                              <span className="text-sm text-gray-400 line-through">
+                                ₹ {Number(product.price).toLocaleString()}
+                              </span>
+
+                              {/* Discount Percentage */}
+                              <span className="text-sm text-[#a3ca43] font-semibold">
+                                {Math.round(100 - (Number(product.special_price) / Number(product.price)) * 100)}% OFF
+                              </span>
+                            </>
+                          )}
+                      </div>
                     </div>
                     <div className="my-1">
                       <span className={`text-xs font-semibold px-3 py-1 rounded-full ${product.quantity > 0 ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>

@@ -12,11 +12,14 @@ export async function GET(req) {
     const type = searchParams.get("type");     // optional
     const minPrice = Number(searchParams.get("minPrice")) || 0;
     const maxPrice = Number(searchParams.get("maxPrice")) || 100000;
+    const limit = Number(searchParams.get("limit")) || 25;
 
     // Base product query
     const query = {
       status: "Active",
       special_price: { $gte: minPrice, $lte: maxPrice },
+      quantity: { $gt: 0 },
+      stock_status: "In Stock",
     };
 
     // Build filter list dynamically
@@ -49,7 +52,9 @@ export async function GET(req) {
     }
 
     // Fetch products
-    const products = await Product.find(query)
+   const products = await Product.find(query)
+      .sort({ createdAt: -1 })   // Newest first
+      .limit(25)                 // Only 25 products
       .populate("category", "category_name")
       .populate("brand", "brand_name")
       .lean();
