@@ -542,10 +542,10 @@ export default function HomeComponent() {
 
               <div className="flex gap-3 top-selling-swiper">
                 <button className="swiper-prev w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition">
-                  ‹
+                  <FiChevronLeft size={20} md={22}/>
                 </button>
                 <button className="swiper-next w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition">
-                  ›
+                  <FiChevronRight size={20} md={22} />
                 </button>
               </div>
             </div>
@@ -565,12 +565,26 @@ export default function HomeComponent() {
                 }}
                 spaceBetween={20}
                 slidesPerView={1}
+                slidesPerGroup={1}
                 breakpoints={{
-                  640: { slidesPerView: 1 },
-                  768: { slidesPerView: 1 },
-                  1024: { slidesPerView: 3 },
-                  1280: { slidesPerView: 4 },
-                }}
+                    640: {
+                      slidesPerView: 1,
+                      slidesPerGroup: 1,
+                    },
+                    768: {
+                      slidesPerView: 3,
+                      slidesPerGroup: 3,
+                    },
+                    1024: {
+                      slidesPerView: 3,
+                      slidesPerGroup: 3, 
+                    },
+                    1280:
+                    {
+                      slidesPerView :4,
+                      slidesPerGroup :4,
+                    }
+                  }}
                 className="customSwiper-product"
               >
                 {products.map((product) => (
@@ -739,7 +753,13 @@ export default function HomeComponent() {
                 </p>
               </div>
 
-              <div className="top-selling-swiper-1 mx-2">
+              <div className="relative top-selling-swiper-1 mx-2">
+                    <button className="swiper-prev-1 absolute top-[155px] -translate-y-1/2 left-0 z-20 p-2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition border-2 border-lime-500">
+                      <FiChevronLeft size={20} md={22}/>
+                    </button>
+                    <button className="swiper-next-1 absolute top-[155px] -translate-y-1/2 right-0 z-20 p-2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition border-2 border-lime-500">
+                      <FiChevronRight size={20} md={22} />
+                    </button>
                 <Swiper
                   modules={[Navigation, Autoplay, Pagination]}
                    navigation={{
@@ -752,10 +772,20 @@ export default function HomeComponent() {
                   }}
                   spaceBetween={20}
                   slidesPerView={1}
+                  slidesPerGroup={1}
                   breakpoints={{
-                    640: { slidesPerView: 2 },
-                    768: { slidesPerView: 2 },
-                    1024: { slidesPerView: 4 },
+                    640: {
+                      slidesPerView: 1,
+                      slidesPerGroup: 1,
+                    },
+                    768: {
+                      slidesPerView: 2,
+                      slidesPerGroup: 2,
+                    },
+                    1024: {
+                      slidesPerView: 4,
+                      slidesPerGroup: 4, // desktop behavior
+                    },
                   }}
                 >
                   {categories.map((category) => (
@@ -904,10 +934,17 @@ export default function HomeComponent() {
             </p>
            <div className="insta-swiper pb-[40px] mx-2 relative">
               {/* Navigation & Pagination wrapper above slides */}
-              <div className="flex justify-between items-center mb-4">
+              <div className="hidden lg:block flex justify-between items-center mb-4">
                 <div className="swiper-pagination" />
               </div>
 
+              <button className="lg:hidden swiper-prev absolute top-1/2 -translate-y-1/2 left-0 z-20 p-2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition border-2 border-lime-500">
+                <FiChevronLeft size={20} md={22}/>
+              </button>
+              <button className="lg:hidden swiper-next absolute top-1/2 -translate-y-1/2 right-0 z-20 p-2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition border-2 border-lime-500">
+                <FiChevronRight size={20} md={22} />
+              </button>
+    
               <Swiper
                 modules={[Navigation, Autoplay, Pagination]}
                 navigation={{
@@ -920,12 +957,25 @@ export default function HomeComponent() {
                 }}
                 spaceBetween={20}
                 slidesPerView={1}
-                breakpoints={{
-                  640: { slidesPerView: 2, spaceBetween: 20 },
-                  768: { slidesPerView: 2, spaceBetween: 20 },
-                  1024: { slidesPerView: 3, spaceBetween: 20 },
-                }}
-                preventClicks={false} // allows clicks inside slide
+                 slidesPerGroup={1}
+                  breakpoints={{
+                    640: {
+                      slidesPerView: 1,
+                      slidesPerGroup: 1,
+                      spaceBetween: 20
+                    },
+                    768: {
+                      slidesPerView: 2,
+                      slidesPerGroup: 2,
+                       spaceBetween: 20
+                    },
+                    1024: {
+                      slidesPerView: 3,
+                      slidesPerGroup: 3,
+                      spaceBetween: 20 
+                    },
+                  }}
+                preventClicks={false} 
                 preventClicksPropagation={false}
                 onSwiper={() => window.instgrm?.Embeds.process()} // ensures Instagram renders
               >
@@ -936,7 +986,7 @@ export default function HomeComponent() {
                       className="instagram-media"
                       data-instgrm-permalink={url}
                       data-instgrm-version="14"
-                      style={{ maxWidth: 420, margin: "0 auto" }}
+                      style={{ maxWidth: 420, margin: "0 auto" }} 
                     />
                     </div>
                   </SwiperSlide>
@@ -1147,7 +1197,7 @@ export default function HomeComponent() {
                         className="group flex cursor-pointer flex-col items-center rounded-lg p-4
                                   my-4 mx-4 border border-gray-300 shadow-md
                                   hover:bg-gray hover:shadow-md hover:border-lime-400
-                                  transition-all duration-300"
+                                  transition-all duration-300 bg-white"
                       >
                         <div className="w-24 h-14 flex items-center justify-center">
                           <Image
