@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "react-feather";
 import ProductCard from "@/components/ProductCard";
 import Image from "next/image";
+import { v4 as uuidv4 } from "uuid";
 
 const RecentlyViewedProducts = () => {
   const [recentProducts, setRecentProducts] = useState([]);
@@ -173,6 +174,47 @@ const RecentlyViewedProducts = () => {
     setClickElement("next");
   };
 
+  // buynow button
+      const handleBuyNow = async (product) => {
+        try {
+          const token = localStorage.getItem("token");
+          let isLoggedIn = false;
+          let guestCartId = null;
+    
+          if (token) {
+            const res = await fetch("/api/auth/check", {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await res.json();
+            isLoggedIn = data.loggedIn;
+          }
+    
+          if (!isLoggedIn) {
+            guestCartId = localStorage.getItem("guestCartId") || uuidv4();
+            localStorage.setItem("guestCartId", guestCartId);
+          }
+    
+          // Add main product to cart
+          await fetch("/api/cart", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(isLoggedIn && { Authorization: `Bearer ${token}` }),
+            },
+            body: JSON.stringify({
+              productId: product._id,
+              quantity: 1, // Home page default quantity
+              ...(guestCartId && { guestCartId }),
+            }),
+          });
+    
+          // Redirect to checkout
+          window.location.href = "/checkout";
+        } catch (err) {
+          console.error("Buy Now error", err);
+        }
+      };
+
   if (isLoading || recentProducts.length === 0) return null;
 
   return (
@@ -315,7 +357,7 @@ const RecentlyViewedProducts = () => {
 
 
                       {/* Product Info */}
-                      <div className="p-4 flex flex-col">
+                      <div className="p-4 flex flex-col bg-white">
                          <h4 className="text-xs text-gray-500 mb-2 uppercase">
                             <Link
                               href={`/brand/${product.brand.toLowerCase().replace(/\s+/g, "-")}`}
@@ -362,7 +404,7 @@ const RecentlyViewedProducts = () => {
                         </h4>
 
                         {/* Add To Cart Button */}
-                        <div className="mt-auto flex items-center justify-between gap-2">
+                        {/* <div className="mt-auto flex items-center justify-between gap-2">
                           <Addtocart
                             productId={product._id} stockQuantity={product.quantity}  special_price={product.special_price}
                             className="w-full text-xs sm:text-sm py-1.5"
@@ -382,9 +424,48 @@ const RecentlyViewedProducts = () => {
                               <path d="M16.003 2.667C8.64 2.667 2.667 8.64 2.667 16c0 2.773.736 5.368 2.009 7.629L2 30l6.565-2.643A13.254 13.254 0 0016.003 29.333C23.36 29.333 29.333 23.36 29.333 16c0-7.36-5.973-13.333-13.33-13.333zm7.608 18.565c-.32.894-1.87 1.749-2.574 1.865-.657.104-1.479.148-2.385-.148-.55-.175-1.256-.412-2.162-.812-3.8-1.648-6.294-5.77-6.49-6.04-.192-.269-1.55-2.066-1.55-3.943 0-1.878.982-2.801 1.33-3.168.346-.364.75-.456 1.001-.456.25 0 .5.002.719.013.231.01.539-.088.845.643.32.768 1.085 2.669 1.18 2.863.096.192.16.423.03.683-.134.26-.2.423-.39.65-.192.231-.413.512-.589.689-.192.192-.391.401-.173.788.222.392.986 1.625 2.116 2.636 1.454 1.298 2.682 1.7 3.075 1.894.393.192.618.173.845-.096.23-.27.975-1.136 1.237-1.527.262-.392.524-.32.894-.192.375.13 2.35 1.107 2.75 1.308.393.205.656.308.75.48.096.173.096 1.003-.224 1.897z" />
                             </svg>
                           </a>
-                        </div>
+                        </div> */}
+
                         
                       </div>
+
+                      
+                        {/* Action Bottom button */}
+                        {/* Bottom Buttons */}
+                        <div className="mt-auto flex text-sm font-semibold border-t">
+                          <Link
+                            href={`https://wa.me/918749000087?text=${encodeURIComponent(`Check Out This Product: ${apiUrl}/product/${product.slug}`)}`} 
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-white  text-[#a3ca43] p-1 transition-colors duration-300 flex items-center justify-center px-2 border-r"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              viewBox="0 0 32 32"
+                              fill="currentColor"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path d="M16.003 2.667C8.64 2.667 2.667 8.64 2.667 16c0 2.773.736 5.368 2.009 7.629L2 30l6.565-2.643A13.254 13.254 0 0016.003 29.333C23.36 29.333 29.333 23.36 29.333 16c0-7.36-5.973-13.333-13.33-13.333zm7.608 18.565c-.32.894-1.87 1.749-2.574 1.865-.657.104-1.479.148-2.385-.148-.55-.175-1.256-.412-2.162-.812-3.8-1.648-6.294-5.77-6.49-6.04-.192-.269-1.55-2.066-1.55-3.943 0-1.878.982-2.801 1.33-3.168.346-.364.75-.456 1.001-.456.25 0 .5.002.719.013.231.01.539-.088.845.643.32.768 1.085 2.669 1.18 2.863.096.192.16.423.03.683-.134.26-.2.423-.39.65-.192.231-.413.512-.589.689-.192.192-.391.401-.173.788.222.392.986 1.625 2.116 2.636 1.454 1.298 2.682 1.7 3.075 1.894.393.192.618.173.845-.096.23-.27.975-1.136 1.237-1.527.262-.392.524-.32.894-.192.375.13 2.35 1.107 2.75 1.308.393.205.656.308.75.48.096.173.096 1.003-.224 1.897z" />
+                            </svg>
+                          </Link>
+                          <Addtocart
+                            productId={product._id} 
+                            stockQuantity={product.quantity}  
+                            special_price={product.special_price}
+                            className="w-full text-xs sm:text-sm py-1.5"
+                          />
+                          <button
+                            onClick={() => handleBuyNow(product)}
+                            className={`w-1/2 py-3 font-semibold text-white transition-colors duration-300 ${
+                              product.quantity > 0 && product.stock_status === "In Stock"
+                                ? "bg-[#a3ca43] hover:bg-lime-500 cursor-pointer"
+                                : "bg-gray-300 hover:bg-gray-300 cursor-not-allowed"
+                            }`}
+                            disabled={!(product.quantity > 0 && product.stock_status === "In Stock")}
+                          >
+                            BUY NOW
+                          </button>
+                        </div>
 
 
                       

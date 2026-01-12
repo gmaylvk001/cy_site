@@ -1570,8 +1570,8 @@ const Header = () => {
                     </div>
                      <div className="flex items-center text-gray-700">
                        <div className="hidden lg:flex items-center space-x-6">
-                        <Link href="https://supportcycleworld.zohodesk.in/portal/en/signin"  className="text-md hover:text-[#A3CA43]">Support</Link>
-                        <Link href="/track-orders" className="text-md hover:text-[#A3CA43]">Track Order</Link>
+                        <Link href="https://supportcycleworld.zohodesk.in/portal/en/signin"  className="text-md hover:text-[#c7ff3e]">Support</Link>
+                        <Link href="/track-orders" className="text-md hover:text-[#c7ff3e]">Track Order</Link>
                        </div>
                      </div>
 
@@ -1631,11 +1631,11 @@ const Header = () => {
                     {/* Text and Icons Group */}
                     <div className="flex items-center text-gray-700">
                       
-                       {/* TEXT MENU (DESKTOP ONLY) */}
+                       {/* TEXT MENU (DESKTOP ONLY) A3CA43*/}
                       <div className="hidden lg:flex items-center space-x-6 pr-3">
                         
-                        <Link href="/location" className="text-md hover:text-[#A3CA43]">Store</Link>
-                        <Link href="/franchise" className="text-md hover:text-[#A3CA43]">Franchise</Link>
+                        <Link href="/location" className="text-md hover:text-[#c7ff3e]">Store</Link>
+                        <Link href="/franchise" className="text-md hover:text-[#c7ff3e]">Franchise</Link>
                       </div>
 
                       {/* Icons Group */}

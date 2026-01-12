@@ -13,6 +13,7 @@ export async function GET(req) {
     const minPrice = Number(searchParams.get("minPrice")) || 0;
     const maxPrice = Number(searchParams.get("maxPrice")) || 100000;
     const limit = Number(searchParams.get("limit")) || 25;
+    const brand = searchParams.get("brand");
 
     // Base product query
     const query = {
@@ -51,10 +52,14 @@ export async function GET(req) {
       query._id = { $in: productIds };
     }
 
+    if (brand) {
+      query.brand = brand; 
+    }
+
     // Fetch products
    const products = await Product.find(query)
       .sort({ createdAt: -1 })   // Newest first
-      .limit(25)                 // Only 25 products
+      .limit(limit)                 // Only 25 products
       .populate("category", "category_name")
       .populate("brand", "brand_name")
       .lean();

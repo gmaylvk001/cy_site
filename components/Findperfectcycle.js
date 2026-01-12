@@ -9,7 +9,9 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import Addtocart from "@/components/AddToCart";
 import ProductCard from "@/components/ProductCard";
-import { FiRefreshCw } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight, FiRefreshCw } from "react-icons/fi";
+
+
 
 
 /* ------------------- useOutside Hook ------------------- */
@@ -30,17 +32,35 @@ function GenderSelect({ value, setValue, options }) {
   useOutside(dropdownRef, () => setOpen(false));
 
   return (
-    <div className="relative lg:w-64 md:w-full w-full" ref={dropdownRef}>
+    <div className="relative w-full" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="lg:w-64 md:w-full w-full px-3 py-3 rounded-md shadow-sm flex justify-between items-center text-md font-semibold border border-gray-300 bg-white"
+        className="w-full px-3 py-3 rounded-md shadow-sm flex justify-between items-center text-md font-semibold border border-gray-300 bg-white"
       >
         {value ? options.find((o) => o.id === value)?.name : "All Genders"} <span className={`transition ${open ? "rotate-180" : ""}`}>▾</span>
       </button>
       {open && (
-        <div className="absolute top-[115%] left-0 w-[250px] max-w-[90vw] bg-white rounded-xl shadow-xl z-10 px-4 py-4 max-h-60 overflow-y-auto scrollbar-hide">
+        <div className="absolute top-[115%] left-0 w-[200px]
+        lg:w-[250px] md:w-[210px] max-w-[90vw] bg-white rounded-xl shadow-xl z-10 px-4 py-2 flex flex-col items-center">
           <div className="absolute -top-2 left-10 w-4 h-4 bg-white rotate-45"></div>
-          <div className="flex flex-col gap-2">
+          {/* Up arrow */}
+          <button
+            onClick={() => {
+              const scrollDiv = document.getElementById("dropdown-scroll");
+              scrollDiv.scrollBy({ top: -40, behavior: "smooth" });
+            }}
+            className="text-lime-500 mb-1"
+          >
+          </button>
+
+          {/* Scrollable options with hidden scrollbar */}
+          <div
+            id="dropdown-scroll"
+            className="flex flex-col gap-2 w-full max-h-60 overflow-y-auto scrollbar-none"
+            style={{
+              scrollbarWidth: 'none', // Firefox
+            }}
+          >
             {options.map((opt) => (
               <button
                 key={opt.id}
@@ -53,14 +73,14 @@ function GenderSelect({ value, setValue, options }) {
                 {opt.name}
               </button>
             ))}
-            <button
+           <button
               onClick={() => {
-                setValue(null); // select "all"
+                setValue(null);
                 setOpen(false);
               }}
               className="flex-1 py-2 rounded-full font-bold text-sm bg-gray-300 text-gray-700 mt-2"
             >
-              All Genders
+              All Gender
             </button>
           </div>
         </div>
@@ -75,16 +95,17 @@ function TypeSelect({ value, setValue, options }) {
   useOutside(dropdownRef, () => setOpen(false));
 
   return (
-    <div className="relative lg:w-64 md:w-full w-full" ref={dropdownRef}>
+    <div className="relative w-full" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="lg:w-64 md:w-full w-full px-3 py-3 rounded-md shadow-sm flex justify-between items-center text-md font-semibold border border-gray-300 bg-white"
+        className="w-full px-3 py-3 rounded-md shadow-sm flex justify-between items-center text-md font-semibold border border-gray-300 bg-white"
       >
         {value ? options.find((o) => o.id === value)?.name : "All Types"} <span className={`transition ${open ? "rotate-180" : ""}`}>▾</span>
       </button>
       {open && (
-        <div className="absolute top-[115%] left-0 w-[250px] max-w-[90vw] bg-white rounded-xl shadow-xl z-10 px-4 py-2 flex flex-col items-center">
-          
+        <div className="absolute top-[115%] left-0 w-[200px]
+        lg:w-[250px] md:w-[210px] max-w-[90vw] bg-white rounded-xl shadow-xl z-10 px-4 py-2 flex flex-col items-center">
+          <div className="absolute -top-2 left-10 w-4 h-4 bg-white rotate-45"></div>
           {/* Up arrow */}
           <button
             onClick={() => {
@@ -150,13 +171,13 @@ function PriceSelect({ value, setValue, min = 0, max = 50000 }) {
   useOutside(ref, () => setOpen(false));
 
   return (
-    <div ref={ref} className="relative lg:w-64 md:w-full w-full">
+    <div ref={ref} className="relative w-full">
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="lg:w-64 md:w-full w-full px-3 py-3 border rounded-md shadow-sm flex justify-between items-center font-semibold border-gray-300 bg-white"
+        className="w-full px-3 py-3 border rounded-md shadow-sm flex justify-between items-center font-semibold border-gray-300 bg-white"
       >
-        {value ? `₹${value.toLocaleString()}` : `₹${min.toLocaleString()} - ₹${max.toLocaleString()}`} <span className={`transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
+        {value ? `₹${value.toLocaleString()}` : `Budget`} <span className={`transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
       </button>
       {open && (
         <div className="absolute z-40 top-full left-0 w-[360px] bg-white rounded-lg shadow-lg mt-2 p-5">
@@ -190,6 +211,83 @@ function PriceSelect({ value, setValue, min = 0, max = 50000 }) {
   );
 }
 
+function BrandSelect({ value, setValue, options, loading }) {
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  useOutside(dropdownRef, () => setOpen(false));
+
+  return (
+    <div className="relative w-full" ref={dropdownRef}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full px-3 py-3 rounded-md shadow-sm flex justify-between items-center text-md font-semibold border border-gray-300 bg-white"
+      >
+        {value ? options.find((o) => o.id === value)?.brand_name : "All Brands"} 
+        <span className={`transition ${open ? "rotate-180" : ""}`}>▾</span>
+      </button>
+      {open && (
+         <div className="absolute top-[115%] left-0 w-[200px]
+        lg:w-[250px] md:w-[210px] max-w-[90vw] bg-white rounded-xl shadow-xl z-10 px-4 py-2 flex flex-col items-center">
+          <div className="absolute -top-2 left-10 w-4 h-4 bg-white rotate-45"></div>
+          {/* Up arrow */}
+          <button
+            onClick={() => {
+              const scrollDiv = document.getElementById("dropdown-scroll");
+              scrollDiv.scrollBy({ top: -40, behavior: "smooth" });
+            }}
+            className="text-lime-500 mb-1"
+          >
+          </button>
+
+          {/* Scrollable options with hidden scrollbar */}
+          <div
+            id="dropdown-scroll"
+            className="flex flex-col gap-2 w-full max-h-60 overflow-y-auto scrollbar-none"
+            style={{
+              scrollbarWidth: 'none', // Firefox
+            }}
+          >
+          {options.map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => {
+                setValue(opt.id);
+                setOpen(false);
+              }}
+              className={`flex-1 py-2 rounded-full font-bold text-sm ${
+                value === opt.id ? "bg-[#a3ca43] text-white" : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              {opt.brand_name}
+            </button>
+          ))}
+           <button
+              onClick={() => {
+                setValue(null);
+                setOpen(false);
+              }}
+              className="flex-1 py-2 rounded-full font-bold text-sm bg-gray-300 text-gray-700 mt-2"
+            >
+              All Types
+            </button>
+          </div>
+
+          {/* Down arrow */}
+          <button
+            onClick={() => {
+              const scrollDiv = document.getElementById("dropdown-scroll");
+              scrollDiv.scrollBy({ top: 40, behavior: "smooth" });
+            }}
+            className="text-lime-500 mt-1"
+          >
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 /* ------------------- Main Component ------------------- */
 export default function BicycleFilterSection() {
   const [filters, setFilters] = useState({ gender: [], type: [] });
@@ -197,6 +295,7 @@ export default function BicycleFilterSection() {
     gender: null,
     type: null,
     price: null,
+    brand: null, 
   });
   const [products, setProducts] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -262,6 +361,7 @@ export default function BicycleFilterSection() {
     if (selectedFilters.gender) query.append("gender", selectedFilters.gender);
     if (selectedFilters.type) query.append("type", selectedFilters.type);
     if (selectedFilters.price) query.append("maxPrice", selectedFilters.price);
+    if (selectedFilters.brand) query.append("brand", selectedFilters.brand);
 
     try {
       const res = await fetch(`/api/productfind?${query}`);
@@ -280,7 +380,7 @@ export default function BicycleFilterSection() {
   };
 
   const handleRefreshFilters = () => {
-    setSelectedFilters({ gender: null, type: null, price: null });
+    setSelectedFilters({ gender: null, type: null, price: null, brand: null });
     setHasSearched(false);
     fetch("/api/productfind")
       .then((res) => res.json())
@@ -330,52 +430,61 @@ export default function BicycleFilterSection() {
 
   return (
     <section className="px-5 max-w-7xl mx-auto py-10">
-      <h1 className="text-3xl text-center mb-6">Find Your Perfect Bicycle</h1>
-
-      <div className="flex flex-col sm:flex-row gap-4 items-start justify-center mb-8">
-        <GenderSelect value={selectedFilters.gender} setValue={(v) => setSelectedFilters((p) => ({ ...p, gender: v }))} options={filters.gender || []} />
-        <TypeSelect value={selectedFilters.type} setValue={(v) => setSelectedFilters((p) => ({ ...p, type: v }))} options={filters.type || []} />
-        <PriceSelect value={selectedFilters.price} setValue={(v) => setSelectedFilters((p) => ({ ...p, price: v }))} />
-        <div className="relative lg:w-64 md:w-full flex items-center md:justify-start justify-center">
-          <button onClick={handleGo} className="flex items-center justify-center bg-[#a3ca43] hover:bg-green-700 text-white font-bold px-5 py-3 rounded-md shadow-md mr-3">
-          Find
-          </button>
-          <button onClick={handleRefreshFilters} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold px-5 py-3 rounded-md shadow-md">
-            <FiRefreshCw size={20} />
-          </button>
-        </div>
-      </div>
-
-       <div className="flex items-center justify-between mb-4 py-4 border-b">
-          <h2 className="text-3xl font-bold">Filters Products</h2>
-
-          <div className="flex gap-3 top-selling-swiper">
-              <button className="swiper-prev w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition">
-                ‹
-              </button>
-              <button className="swiper-next w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition">
-                ›
-              </button>
+      <h1 className="text-3xl text-center mb-2">Find Your Perfect Bicycle</h1>
+        <div className="flex flex-col sm:flex-row gap-4 items-start justify-center mb-4">
+          <GenderSelect className="min-w-[120px]" value={selectedFilters.gender} setValue={(v) => setSelectedFilters((p) => ({ ...p, gender: v }))} options={filters.gender || []} />
+          <TypeSelect value={selectedFilters.type} setValue={(v) => setSelectedFilters((p) => ({ ...p, type: v }))} options={filters.type || []} />
+          <PriceSelect className="min-w-[120px]" value={selectedFilters.price} setValue={(v) => setSelectedFilters((p) => ({ ...p, price: v }))} />
+          <BrandSelect className="min-w-[120px]"  value={selectedFilters.brand} setValue={(v) => setSelectedFilters((p) => ({ ...p, brand: v }))} options={brands} loading={isBrandsLoading} 
+          />
+          <div className="relative w-full flex items-center md:justify-start justify-center">
+            <button onClick={handleGo} className="flex items-center justify-center bg-[#a3ca43] hover:bg-green-700 text-white font-bold px-6 py-3 rounded-md shadow-md mr-3">
+            Find
+            </button>
+            <button onClick={handleRefreshFilters} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold px-6 py-3 rounded-md shadow-md">
+              <FiRefreshCw size={20} />
+            </button>
           </div>
         </div>
 
       {/* Products */}
       {products.length > 0 && (
-        <div className="top-selling-swiper">
+        <div className="relative top-selling-swipers">
+          <div className="top-selling-swipers">
+            <button className="swiper-prev absolute top-1/2 -translate-y-1/2 left-0 z-20 p-2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition border-2 border-lime-500">
+              <FiChevronLeft size={20} md={22}/>
+            </button>
+            <button className="swiper-next absolute top-1/2 -translate-y-1/2 right-0 z-20 p-2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition border-2 border-lime-500">
+              <FiChevronRight size={20} md={22} />
+            </button>
+           </div>
           <Swiper
             modules={[Navigation, Autoplay]}
              navigation={{
-                prevEl: ".top-selling-swiper .swiper-prev",
-                nextEl: ".top-selling-swiper .swiper-next",
+                prevEl: ".top-selling-swipers .swiper-prev",
+                nextEl: ".top-selling-swipers .swiper-next",
               }}
             spaceBetween={20}
             slidesPerView={1}
-            slidesPerGroup={4}
-            breakpoints={{
-              640: { slidesPerView: 1 },
-              768: { slidesPerView: 2 },
-              1024: { slidesPerView: 3 },
-              1280: { slidesPerView: 4 },
+            slidesPerGroup={1}
+             breakpoints={{
+              640: {
+                slidesPerView: 1,
+                slidesPerGroup: 1,
+              },
+              768: {
+                slidesPerView: 3,
+                slidesPerGroup: 3,
+              },
+              1024: {
+                slidesPerView: 3,
+                slidesPerGroup: 3, 
+              },
+              1280:
+              {
+                slidesPerView :4,
+                slidesPerGroup :4,
+              }
             }}
           >
             {products.map((product) => (
