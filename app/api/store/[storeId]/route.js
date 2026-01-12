@@ -253,7 +253,8 @@ export async function PUT(request, context) {
         image,
       });
     }
-
+    
+    updateData.offers = offers;
     const highlights = [];
 
     for (let i = 0; ; i++) {

@@ -136,8 +136,8 @@ export default function BulkUploadPage() {
 
     const formData = new FormData();
     formData.append("excel", excelFile);
-
     setIsFilterGroupUploadLoading(true);
+
 
     try {
       const res = await fetch("/api/filter_group/bulk-upload", {
@@ -206,6 +206,7 @@ export default function BulkUploadPage() {
     e.preventDefault();
     const form        = e.target;
     const formData    = new FormData(form);
+
     if(uploadType == "overview") {
 
       // Validate required files - only Excel is required now
@@ -601,6 +602,7 @@ export default function BulkUploadPage() {
           setActiveUploadType(null);
         }
     }
+
   };
 
   const handleDownload = () => {

@@ -3,17 +3,18 @@
 import React, { useEffect, useState } from "react";
 import ReactPaginate from "react-paginate";
 import { FaPlus, FaMinus, FaEdit } from "react-icons/fa";
-import DateRangePicker from '@/components/DateRangePicker';
-
-import { Icon } from '@iconify/react';
-import Link from 'next/link';
-import * as XLSX from 'xlsx';
+import DateRangePicker from "@/components/DateRangePicker";
+import EditProductModal from "../product/EditProductModal";
+import { Icon } from "@iconify/react";
+import Link from "next/link";
+import * as XLSX from "xlsx";
+import { ToastContainer, toast } from "react-toastify";
 
 export default function CategoryComponent() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
@@ -21,17 +22,19 @@ export default function CategoryComponent() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [SelectedProduct, setSelectedProduct] = useState("");
-  
-  
+  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [filters, setFilters] = useState([]);
+
   // Filters
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [dateFilter, setDateFilter] = useState({
     startDate: null,
-    endDate: null
+    endDate: null,
   });
- const [stockFilter, setStockFilter] = useState("");
+  const [stockFilter, setStockFilter] = useState("");
   const [showAlert, setShowAlert] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -54,16 +57,15 @@ export default function CategoryComponent() {
   };
 
   const [subcategories, setSubcategories] = useState([]);
-
-const fetchSubcategories = async () => {
-  try {
-    const response = await fetch("/api/categories");
-    const data = await response.json();
-    setSubcategories(data);
-  } catch (error) {
-    console.error("Error fetching subcategories:", error);
-  }
-};
+  const fetchSubcategories = async () => {
+    try {
+      const response = await fetch("/api/categories");
+      const data = await response.json();
+      setSubcategories(data);
+    } catch (error) {
+      console.error("Error fetching subcategories:", error);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -82,7 +84,6 @@ const fetchSubcategories = async () => {
       if (data.success) {
         setBrands(data.brands);
       }
-      
     } catch (error) {
       console.error("Error fetching brands:", error);
     }
@@ -92,7 +93,7 @@ const fetchSubcategories = async () => {
     fetchProducts();
     fetchCategories();
     fetchBrands();
-    fetchSubcategories
+    fetchSubcategories;
   }, []);
 
   // Debounce search input
@@ -107,90 +108,20 @@ const fetchSubcategories = async () => {
     };
   }, [searchQuery]);
 
-const exportToExcel = () => {
-  // Create mapping objects for faster lookup
-  const categoryMap = {};
-  categories.forEach(cat => {
-    categoryMap[cat._id] = cat.category_name;
-  });
+  // const OpenModelBulk = (type_val) => {
+  //   if (type_val == "movement") {
+  //     setIsBulkUploadModel({
+  //       isOpen: true,
+  //       type: type_val,
+  //     });
+  //   } else {
+  //     setIsBulkUploadModel({
+  //       isOpen: true,
+  //       type: type_val,
+  //     });
+  //   }
+  // };
 
-  const brandMap = {};
-  brands.forEach(brand => {
-    // Check what ID field your brands actually have
-    const brandId = brand.brand_name || brand.brand_name;
-    if (brandId) {
-      brandMap[brandId] = brand.brand_name || brand.name;
-    }
-  });
-
-  // Prepare data with names instead of IDs
-  const dataForExport = filteredProducts.map(product => {
-    // Resolve category name
-    let categoryName = 'No Category';
-    if (product.category) {
-      if (typeof product.category === 'object') {
-        categoryName = product.category.category_name;
-      } else if (categoryMap[product.category]) {
-        categoryName = categoryMap[product.category];
-      }
-    }
-
-    // Resolve subcategory name
-    let subcategoryName = 'No Subcategory';
-    if (product.sub_category) {
-      if (typeof product.sub_category === 'object') {
-        subcategoryName = product.sub_category.category_name;
-      } else if (categoryMap[product.sub_category]) {
-        subcategoryName = categoryMap[product.sub_category];
-      }
-    }
-
-    // Resolve brand name
-    let brandName = 'No Brand';
-    if (product.brand) {
-        // If brand is stored as ID
-        brandName = product.brand || 'Brand not found';
-    }
-
-
-
-    return {
-      'Item No.': product.item_code,
-    
-      'StockQty': product.quantity,
-      
-      'Brand': brandName,
-      
-      // 'Movement': product.movement,
-      'MRP PRICE': product.price,
-      'Special Price': product.special_price,
-     
-    };
-  });
-
-  // Create worksheet with the exact column order
-  const worksheet = XLSX.utils.json_to_sheet(dataForExport, {
-    header: [
-      'Item No.',
-      
-      'StockQty',
-      
-      'Brand',
-     
-      // 'Movement',
-      'MRP PRICE',
-      'Special Price',
-      
-    ]
-  });
-  
-  // Create workbook
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
-  
-  // Generate file and trigger download
-  XLSX.writeFile(workbook, `products_export_${new Date().toISOString().slice(0,10)}.xlsx`);
-};
   const handleEditProduct = (product) => {
     setSelectedProduct(product);
     setShowEditModal(true);
@@ -204,51 +135,51 @@ const exportToExcel = () => {
   const handleDateChange = ({ startDate, endDate }) => {
     const normalizedStartDate = startDate ? new Date(startDate) : null;
     const normalizedEndDate = endDate ? new Date(endDate) : null;
-    
-    setDateFilter({ 
+
+    setDateFilter({
       startDate: normalizedStartDate,
-      endDate: normalizedEndDate 
+      endDate: normalizedEndDate,
     });
     setCurrentPage(0);
   };
 
-  // const handleDeleteProduct = async (productId) => {
-  //   try {
-  //     const response = await fetch("/api/product/delete", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ productId }),
-  //     });
+  const handleDeleteProduct = async (productId) => {
+    try {
+      const response = await fetch("/api/newproduct/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId }),
+      });
 
-  //     const result = await response.json();
-  //     if (response.ok) {
-  //       setSuccessMessage("Product deleted successfully.");
-  //       setShowSuccessModal(true);
-  //       fetchProducts();
-  //     } else {
-  //       console.error("Error:", result.error);
-  //       alert("Failed to delete product.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error:", error);
-  //     alert("An error occurred.");
-  //   } finally {
-  //     setShowConfirmationModal(false);
-  //     setProductToDelete(null);
-  //   }
-  // };
+      const result = await response.json();
+      if (response.ok) {
+        setSuccessMessage("Product deleted successfully.");
+        setShowSuccessModal(true);
+        fetchProducts();
+      } else {
+        console.error("Error:", result.error);
+        alert("Failed to delete product.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred.");
+    } finally {
+      setShowConfirmationModal(false);
+      setProductToDelete(null);
+    }
+  };
 
   const clearDateFilter = () => {
     setDateFilter({
       startDate: null,
-      endDate: null
+      endDate: null,
     });
     setCurrentPage(0);
   };
 
   const flattenProducts = (products, level = 0, result = []) => {
     products.forEach((product) => {
-      if (product.item_code !== 'none') {
+      if (product.item_code !== "none") {
         result.push({ ...product, level });
       }
     });
@@ -256,21 +187,21 @@ const exportToExcel = () => {
   };
 
   const renderCategoryOptions = () => {
-    const mainCategories = categories.filter(cat => cat.parentid === "none");
+    const mainCategories = categories
+      .filter((cat) => cat.parentid === "none")
+      .slice() // prevent mutating original
+      .sort((a, b) => a.category_name.localeCompare(b.category_name)); // ✅ sort ascending A–Z;
     const options = [];
-    
+
     options.push(
       <option key="all" value="">
         All Categories
       </option>
     );
 
-    mainCategories.forEach(mainCat => {
+    mainCategories.forEach((mainCat) => {
       options.push(
-        <option 
-          key={mainCat._id} 
-          value={mainCat._id.toString()}
-        >
+        <option key={mainCat._id} value={mainCat._id.toString()}>
           {mainCat.category_name}
         </option>
       );
@@ -284,74 +215,86 @@ const exportToExcel = () => {
       <option key="all" value="">
         All Brands
       </option>,
-      ...brands.map(brand => (
-        <option 
-          key={brand.id} 
-          value={brand.id}
-        >
-          {brand.brand_name}
-        </option>
-
-
-
-      ))
+      ...brands
+        .slice() // create a shallow copy so you don't mutate the original array
+        .sort((a, b) => a.brand_name.localeCompare(b.brand_name))
+        .map((brand) => (
+          <option key={brand.id} value={brand.id}>
+            {brand.brand_name}
+          </option>
+        )),
     ];
   };
-const getFilteredProducts = () => {
+
+  const getFilteredProducts = () => {
     const flattenedProducts = flattenProducts(products);
-   
+
     return flattenedProducts.filter((product) => {
       // Search filter
-      const matchesSearch = debouncedSearchQuery === "" ||
-        product.name?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-        product.slug?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-        product.item_code?.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
- 
+      const matchesSearch =
+        debouncedSearchQuery === "" ||
+        product.name
+          ?.toLowerCase()
+          .includes(debouncedSearchQuery.toLowerCase()) ||
+        product.slug
+          ?.toLowerCase()
+          .includes(debouncedSearchQuery.toLowerCase()) ||
+        product.item_code
+          ?.toLowerCase()
+          .includes(debouncedSearchQuery.toLowerCase());
+
       // Status filter
-      const matchesStatus = statusFilter === "" ||
+      const matchesStatus =
+        statusFilter === "" ||
         product.status?.toLowerCase() === statusFilter.toLowerCase();
- 
+
       // Date filter
       let matchesDate = true;
       if (dateFilter.startDate && dateFilter.endDate && product.createdAt) {
         const productDate = new Date(product.createdAt);
         const startDate = new Date(dateFilter.startDate);
         const endDate = new Date(dateFilter.endDate);
- 
+
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(23, 59, 59, 999);
- 
+
         matchesDate = productDate >= startDate && productDate <= endDate;
       }
- 
+
       // Category filter
       let matchesCategory = true;
       if (categoryFilter) {
-        if (product.category && typeof product.category === 'object') {
+        if (product.category && typeof product.category === "object") {
           const productCategoryId = product.category._id.toString();
-          const selectedCategory = categories.find(cat => cat._id.toString() === categoryFilter);
-         
+          const selectedCategory = categories.find(
+            (cat) => cat._id.toString() === categoryFilter
+          );
+
           if (selectedCategory.parentid === "none") {
             const subCategoryIds = categories
-              .filter(cat => cat.parentid === categoryFilter)
-              .map(cat => cat._id.toString());
-           
-            matchesCategory = productCategoryId === categoryFilter ||
-                            subCategoryIds.includes(productCategoryId);
+              .filter((cat) => cat.parentid === categoryFilter)
+              .map((cat) => cat._id.toString());
+
+            matchesCategory =
+              productCategoryId === categoryFilter ||
+              subCategoryIds.includes(productCategoryId);
           } else {
             matchesCategory = productCategoryId === categoryFilter;
           }
         } else if (product.category) {
           const productCategoryId = product.category.toString();
-          const selectedCategory = categories.find(cat => cat._id.toString() === categoryFilter);
-         
+          const selectedCategory = categories.find(
+            (cat) => cat._id.toString() === categoryFilter
+          );
+
           if (selectedCategory.parentid === "none") {
             const subCategoryIds = categories
-              .filter(cat => cat.parentid === categoryFilter)
-              .map(cat => cat._id.toString());
-           
-            matchesCategory = productCategoryId === categoryFilter ||
-                            subCategoryIds.includes(productCategoryId);
+              .filter((cat) => cat.parentid === categoryFilter)
+              .map((cat) => cat._id.toString());
+
+            matchesCategory =
+              productCategoryId === categoryFilter ||
+              subCategoryIds.includes(productCategoryId);
           } else {
             matchesCategory = productCategoryId === categoryFilter;
           }
@@ -359,11 +302,11 @@ const getFilteredProducts = () => {
           matchesCategory = false;
         }
       }
- 
+
       // Brand filter
       let matchesBrand = true;
       if (brandFilter) {
-        if (product.brand && typeof product.brand === 'object') {
+        if (product.brand && typeof product.brand === "object") {
           matchesBrand = product.brand._id.toString() === brandFilter;
         } else if (product.brand) {
           matchesBrand = product.brand.toString() === brandFilter;
@@ -371,18 +314,23 @@ const getFilteredProducts = () => {
           matchesBrand = false;
         }
       }
- 
- 
-     let matchesStock = true;
-if (stockFilter) {
-  matchesStock = product.stock_status?.toLowerCase() === stockFilter.toLowerCase();
-}
- 
- 
-      return matchesSearch && matchesStatus && matchesDate && matchesCategory && matchesBrand && matchesStock;
+
+      let matchesStock = true;
+      if (stockFilter) {
+        matchesStock =
+          product.stock_status?.toLowerCase() === stockFilter.toLowerCase();
+      }
+
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesDate &&
+        matchesCategory &&
+        matchesBrand &&
+        matchesStock
+      );
     });
   };
- 
 
   const filteredProducts = getFilteredProducts();
   const pageCount = Math.ceil(filteredProducts.length / itemsPerPage);
@@ -399,22 +347,19 @@ if (stockFilter) {
         </div>
       )}
 
-  <div className="flex justify-between items-center mb-5">
-  <h2 className="text-2xl font-bold">Product List</h2>
-   <div className="flex items-center gap-4">
-      <button
-        onClick={exportToExcel}
-        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md flex items-center gap-2"
-      >
-        <Icon icon="mdi:microsoft-excel" className="text-lg" />
-        Export to Excel
-      </button>
-  
-      
-    </div>
- 
-</div>
+      <div className="flex justify-between items-center mb-5">
+        <h2 className="text-2xl font-bold">New Product List</h2>
 
+        <div className="flex items-center gap-4">
+          {/* <button onClick={() => OpenModelBulk("movement")} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center gap-2" >
+            <Icon icon="mdi:upload" className="text-lg" /> Bulk uploads one
+          </button>
+
+          <button onClick={() => OpenModelBulk("size")} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center gap-2" >
+            <Icon icon="mdi:upload" className="text-lg" /> Bulk uploads two
+          </button> */}
+        </div>
+      </div>
 
       {isLoading ? (
         <p>Loading Products...</p>
@@ -424,7 +369,9 @@ if (stockFilter) {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end mb-4">
             {/* Search Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Search
+              </label>
               <input
                 type="text"
                 placeholder="Search Product..."
@@ -435,8 +382,10 @@ if (stockFilter) {
             </div>
 
             {/* Status Filter */}
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status
+              </label>
               <select
                 value={statusFilter}
                 onChange={(e) => {
@@ -449,11 +398,13 @@ if (stockFilter) {
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
               </select>
-            </div> */}
+            </div>
 
             {/* Category Filter */}
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
               <select
                 value={categoryFilter}
                 onChange={(e) => {
@@ -464,11 +415,13 @@ if (stockFilter) {
               >
                 {renderCategoryOptions()}
               </select>
-            </div> */}
+            </div>
 
             {/* Brand Filter */}
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Brand
+              </label>
               <select
                 value={brandFilter}
                 onChange={(e) => {
@@ -479,9 +432,11 @@ if (stockFilter) {
               >
                 {renderBrandOptions()}
               </select>
-            </div> */}
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Stock
+              </label>
               <select
                 value={stockFilter}
                 onChange={(e) => {
@@ -494,7 +449,7 @@ if (stockFilter) {
                 <option value="In Stock">In Stock</option>
                 <option value="Out of Stock">Out of Stock</option>
               </select>
-            </div> */}
+            </div>
             {/* Date Range Picker */}
             {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
@@ -512,14 +467,13 @@ if (stockFilter) {
             <thead>
               <tr className="bg-gray-200">
                 <th className="p-2">Item Code</th>
-                {/* <th className="p-2">Image</th> */}
-                {/* <th className="p-2">Name</th> */}
+                <th className="p-2">Image</th>
+                <th className="p-2">Name</th>
                 <th className="p-2">Price</th>
                 <th className="p-2 whitespace-nowrap">Spl Price</th>
                 <th className="p-2">Quantity</th>
-                <th className="p-2">Brand</th>
-                {/* <th className="p-2">Status</th> */}
-               {/* // <th className="p-2">Action</th> */}
+                <th className="p-2">Status</th>
+                <th className="p-2">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -530,28 +484,30 @@ if (stockFilter) {
                     <td className="p-2 text-center align-middle">
                       {product.item_code}
                     </td>
-                  
+
                     {/* Image Column */}
-                    {/* <td className="p-2">
+                    <td className="p-2">
                       {product.images && product.images.length > 0 ? (
-                        <img 
+                        <img
                           src={`/uploads/products/${product.images[0]}`}
                           alt={product.name}
                           className="w-12 h-12 object-contain mx-auto"
                           onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = '/no-image.jpg';
+                            e.target.src = "/no-image.jpg";
                           }}
                         />
                       ) : (
                         <div className="w-12 h-12 bg-gray-100 flex items-center justify-center mx-auto">
-                          <span className="text-xs text-gray-400">No Image</span>
+                          <span className="text-xs text-gray-400">
+                            No Image
+                          </span>
                         </div>
                       )}
-                    </td> */}
-                    
+                    </td>
+
                     {/* Name Column */}
-                    {/* <td className="p-2 text-center align-middle">
+                    <td className="p-2 text-center align-middle">
                       <a
                         href={`/product/${product.slug}`}
                         className="block mx-auto text-center truncate max-w-xs text-sm hover:underline"
@@ -559,49 +515,52 @@ if (stockFilter) {
                       >
                         {product.name}
                       </a>
-                    </td> */}
-                    
+                    </td>
+
                     {/* Price Column */}
                     <td className="p-2">{product.price}</td>
-                    
+
                     {/* Special Price Column */}
                     <td className="p-2">{product.special_price}</td>
-                    
+
                     {/* Quantity Column */}
                     <td className="p-2">{product.quantity}</td>
-                    <td className="p-2">{product.brand}</td>
-                    
+
                     {/* Status Column */}
-                    {/* <td className="p-2 font-semibold">
+                    <td className="p-2 font-semibold">
                       {product.status === "Active" ? (
-                        <span className="bg-green-100 text-green-600 px-6 py-1.5 rounded-full font-medium text-sm">Active</span>
+                        <span className="bg-green-100 text-green-600 px-6 py-1.5 rounded-full font-medium text-sm">
+                          Active
+                        </span>
                       ) : (
-                        <span className="bg-red-100 text-red-600 px-6 py-1.5 rounded-full font-medium text-sm">Inactive</span>
+                        <span className="bg-red-100 text-red-600 px-6 py-1.5 rounded-full font-medium text-sm">
+                          Inactive
+                        </span>
                       )}
-                    </td> */}
-                    
+                    </td>
+
                     {/* Action Column */}
-                    {/* <td>
+                    <td>
                       <div className="flex items-center gap-2 justify-center">
                         <button
                           onClick={() => handleEditProduct(product)}
-                          className="w-7 h-7 bg-red-100 text-red-600 rounded-full inline-flex items-center justify-center"
+                          className="w-7 h-7 bg-green-100 green-red-600 rounded inline-flex items-center justify-center"
                           title="Edit"
                         >
-                          <FaEdit className="w-3 h-3" />
+                          <Icon icon="mdi:upload" className="w-3 h-3" />
                         </button>
                         <button
                           onClick={() => {
                             setProductToDelete(product._id);
                             setShowConfirmationModal(true);
                           }}
-                          className="w-7 h-7 bg-pink-100 text-pink-600 rounded-full inline-flex items-center justify-center"
+                          className="w-7 h-7 bg-pink-100 text-pink-600 rounded inline-flex items-center justify-center"
                           title="Delete"
                         >
                           <Icon icon="mingcute:delete-2-line" />
                         </button>
                       </div>
-                    </td> */}
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -617,14 +576,22 @@ if (stockFilter) {
           {/* Pagination */}
           <div className="flex justify-between items-center mt-6 flex-wrap gap-3">
             <div className="text-sm text-gray-600">
-              Showing {Math.min(currentPage * itemsPerPage + 1, filteredProducts.length)} to{" "}
-              {Math.min((currentPage + 1) * itemsPerPage, filteredProducts.length)} of{" "}
-              {filteredProducts.length} entries
+              Showing{" "}
+              {Math.min(
+                currentPage * itemsPerPage + 1,
+                filteredProducts.length
+              )}{" "}
+              to{" "}
+              {Math.min(
+                (currentPage + 1) * itemsPerPage,
+                filteredProducts.length
+              )}{" "}
+              of {filteredProducts.length} entries
             </div>
 
             <div className="pagination flex items-center space-x-1">
               <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 0))}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
                 disabled={currentPage === 0}
                 className={`px-3 py-1.5 border border-gray-300 rounded-md ${
                   currentPage === 0
@@ -674,7 +641,9 @@ if (stockFilter) {
               })}
 
               <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, pageCount - 1))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, pageCount - 1))
+                }
                 disabled={currentPage === pageCount - 1}
                 className={`px-3 py-1.5 border border-gray-300 rounded-md ${
                   currentPage === pageCount - 1
@@ -695,7 +664,9 @@ if (stockFilter) {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-xl font-bold mb-4">Delete Product</h2>
-            <p className="mb-4">Are you sure you want to delete this Product?</p>
+            <p className="mb-4">
+              Are you sure you want to delete this Product?
+            </p>
 
             <div className="flex justify-end space-x-3">
               <button
@@ -744,6 +715,8 @@ if (stockFilter) {
           }}
         />
       )}
+
+      <ToastContainer position="top-right" autoClose={5000} />
     </div>
   );
 }

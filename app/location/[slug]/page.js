@@ -178,7 +178,7 @@ export default function StoreDetails() {
           <img
             src={store.images[0]}
             alt={store.organisation_name}
-            className="max-h-[400px]"
+            className="max-h-[400px] fit-object-cover rounded-2xl"
           />
         </div>
       </div>
@@ -354,7 +354,7 @@ export default function StoreDetails() {
       </section>
 
       {/* Highlights */}
-      {store?.highlights > 0 && (
+      {store?.highlights.length > 0 && (
         <section className="bg-gradient-to-r bg-[#a8c55d] text-white rounded-xl py-6 px-4 md:px-8">
           <h2 className="text-center text-lg md:text-3xl font-semibold mb-4">
             Highlights
@@ -376,7 +376,7 @@ export default function StoreDetails() {
       )}
 
       {/* Time line */}
-      {store?.social_timeline > 0 && (
+      {store?.social_timeline.length > 0 && (
         <section className="space-y-4">
           <h2 className="text-lg md:text-xl font-semibold text-center">
             Social Timeline

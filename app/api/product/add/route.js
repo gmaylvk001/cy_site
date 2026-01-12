@@ -22,7 +22,7 @@ async function buildCategoryChain(categoryId) {
       root_chain: "",
       root_md5: "",
       root_id: "",
-      root_id_chain: ""
+      root_id_chain: "",
     };
   }
 
@@ -58,10 +58,33 @@ async function buildCategoryChain(categoryId) {
     id_chain: id_chain.join("##"),
     root_chain,
     root_md5,
-    root_id
+    root_id,
   };
 }
 
+async function buildMultiCategoryChains(subCategories) {
+  const rootIds = new Set();
+  const rootMd5s = new Set();
+  const md5Chains = [];
+  const nameChains = [];
+
+  for (const subId of subCategories) {
+    const chain = await buildCategoryChain(subId);
+    if (!chain.id_chain) continue;
+
+    rootIds.add(chain.root_id);
+    rootMd5s.add(chain.root_md5);
+    md5Chains.push(chain.md5_chain);
+    nameChains.push(chain.name_chain);
+  }
+
+  return {
+    category_ids: Array.from(rootIds),
+    category_md5s: Array.from(rootMd5s),
+    sub_category_new: md5Chains.join("||"),
+    sub_category_new_name: nameChains.join("||"),
+  };
+}
 
 export async function POST(req) {
   try {
@@ -99,47 +122,62 @@ export async function POST(req) {
       productData.size = "";
     }
 
-
     const imageFiles = formData.getAll("images");
     // const category   = formData.get("category");
     let variants = JSON.parse(formData.get("variant"));
-    const Filters    = productData.filters;
-    const item_code  = productData.item_code;
-    const slug       = productData.slug;
+    const Filters = productData.filters;
+    const item_code = productData.item_code;
+    const slug = productData.slug;
     const overviewimageFiles = formData.getAll("overviewImages");
     let md5_cat_name = md5(slug);
     let existingProduct = await Product.findOne({ item_code });
-      if (existingProduct) {
-        return NextResponse.json({ error: "Product already exists" }, { status: 400 });
-      }
+    if (existingProduct) {
+      return NextResponse.json(
+        { error: "Product already exists" },
+        { status: 400 }
+      );
+    }
 
-      // ✅ Duplicate check for model_number (optional - remove if not needed)
+    // ✅ Duplicate check for model_number (optional - remove if not needed)
     if (productData.model_number) {
-      let existingModel = await Product.findOne({ model_number: productData.model_number });
+      let existingModel = await Product.findOne({
+        model_number: productData.model_number,
+      });
       if (existingModel) {
-        return NextResponse.json({ error: "Product with this model number already exists" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Product with this model number already exists" },
+          { status: 400 }
+        );
       }
     }
 
-      console.log(productData);
-console.log("..............................................................");
- const category = productData.sub_category;
-      let existingProductname = await Product.findOne({ slug });
-      if (existingProductname) {
-        return NextResponse.json({ error: "Product name already exists" }, { status: 400 });
-      }
+    console.log(productData);
+    console.log(
+      ".............................................................."
+    );
+    const category = productData.sub_category;
+    let existingProductname = await Product.findOne({ slug });
+    if (existingProductname) {
+      return NextResponse.json(
+        { error: "Product name already exists" },
+        { status: 400 }
+      );
+    }
 
     const savedImages = [];
     const OverviewSavedImages = [];
     if (!imageFiles.length) {
-        return NextResponse.json({ error: "No images received" }, { status: 400 });
+      return NextResponse.json(
+        { error: "No images received" },
+        { status: 400 }
+      );
     }
     const savedVariantImages = [];
-    if(productData.hasVariants){
+    if (productData.hasVariants) {
       for (let i = 0; i < variants.length; i++) {
         const variant = variants[i];
         const variantImages = [];
-        
+
         // Get all images for this variant
         let imgIndex = 0;
         while (true) {
@@ -147,30 +185,38 @@ console.log("..............................................................");
           const imageFile = formData.get(imageKey);
           console.log(imageFile);
           if (!imageFile) break;
-          
+
           // Process and save the image
-          const filename = `${Date.now()}-${imageFile.name.replace(/\s+/g, "-")}`;
-          const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'products');
+          const filename = `${Date.now()}-${imageFile.name.replace(
+            /\s+/g,
+            "-"
+          )}`;
+          const uploadDir = path.join(
+            process.cwd(),
+            "public",
+            "uploads",
+            "products"
+          );
           const filePath = path.join(uploadDir, filename);
-          
+
           const buffer = Buffer.from(await imageFile.arrayBuffer());
           await writeFile(filePath, buffer);
-          
+
           variantImages.push(`${filename}`);
           imgIndex++;
         }
-        
+
         variant.images = variantImages;
       }
     }
     const uploadDir = path.join(process.cwd(), "public/uploads/products");
     if (!fs.existsSync(uploadDir)) {
-        await fs.promises.mkdir(uploadDir, { recursive: true });
+      await fs.promises.mkdir(uploadDir, { recursive: true });
     }
     for (const file of imageFiles) {
       if (!file || typeof file.name !== "string") {
-          console.error("Invalid file received:", file);
-          continue;
+        console.error("Invalid file received:", file);
+        continue;
       }
       const filename = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
       const filePath = path.join(uploadDir, filename);
@@ -181,8 +227,8 @@ console.log("..............................................................");
 
     for (const file of overviewimageFiles) {
       if (!file || typeof file.name !== "string") {
-          console.error("Invalid file received:", file);
-          continue;
+        console.error("Invalid file received:", file);
+        continue;
       }
       const filename = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
       const filePath = path.join(uploadDir, filename);
@@ -192,21 +238,21 @@ console.log("..............................................................");
     }
 
     await connectDB();
-    if(productData.quantity <= 0){
-        productData.stock_status = "Out of Stock";
+    if (productData.quantity <= 0) {
+      productData.stock_status = "Out of Stock";
     }
 
-    if(productData.slug != ""){
-      productData.slug =slug;
+    if (productData.slug != "") {
+      productData.slug = slug;
     }
-    if(md5_cat_name != ""){
-      productData.md5_name =md5_cat_name;
+    if (md5_cat_name != "") {
+      productData.md5_name = md5_cat_name;
     }
-    let main_Category = "";
-    let cat_new = "";
-    let sub_cat_new = "";
-    let sub_cat_name_new = "";
-    
+    // let main_Category = "";
+    // let cat_new = "";
+    // let sub_cat_new = "";
+    // let sub_cat_name_new = "";
+
     /*
     if(category != ""){
       const main_cat = await Category.findOne({ _id: category });
@@ -215,29 +261,37 @@ console.log("..............................................................");
       }
     }
     */
-    
-    if(category != ""){
-        
-      const chain = await buildCategoryChain(category);
-      if(chain){
-          main_Category = chain.root_id;
-          cat_new = chain.root_md5;
-          sub_cat_new = chain.md5_chain;
-          sub_cat_name_new = chain.name_chain;
-      }
-        
+
+    // if(category != ""){
+
+    //   const chain = await buildCategoryChain(category);
+    //   if(chain){
+    //       main_Category = chain.root_id;
+    //       cat_new = chain.root_md5;
+    //       sub_cat_new = chain.md5_chain;
+    //       sub_cat_name_new = chain.name_chain;
+    //   }
+
+    // }
+    // productData.category = main_Category;
+    // productData.sub_category = category;
+    // productData.category_new = cat_new;
+    // productData.sub_category_new = sub_cat_new;
+    // productData.sub_category_new_name = sub_cat_name_new;
+
+    const subCategories = productData.sub_category || [];
+
+    const chain = await buildMultiCategoryChains(subCategories);
+
+    productData.category = chain.category_ids; // array of root IDs
+    productData.sub_category = subCategories; // array of sub ids
+    productData.category_new = chain.category_md5s; // array of md5 roots
+    productData.sub_category_new = chain.sub_category_new; // md5 chains joined with ||
+    productData.sub_category_new_name = chain.sub_category_new_name;
+
+    if (!productData.hasVariants) {
+      variants = [];
     }
-    
-    if(!productData.hasVariants){
-          variants = [];
-        }
-
-    productData.category = main_Category;
-    productData.sub_category = category;
-    productData.category_new = cat_new;  
-    productData.sub_category_new = sub_cat_new;
-    productData.sub_category_new_name = sub_cat_name_new;
-
     const highlights = JSON.parse(formData.get("highlights") || "[]");
     productData.product_highlights = highlights;
     console.log(productData);
@@ -249,14 +303,14 @@ console.log("..............................................................");
     });
     await newProduct.save();
 
-    if(newProduct.id){
+    if (newProduct.id) {
       const product_id = newProduct._id;
       for (const filter of Filters) {
-      const newProductFilter = new Product_filter({
-        filter_id: filter,
-        product_id: product_id,
-      });
-      await newProductFilter.save();
+        const newProductFilter = new Product_filter({
+          filter_id: filter,
+          product_id: product_id,
+        });
+        await newProductFilter.save();
       }
     }
 
