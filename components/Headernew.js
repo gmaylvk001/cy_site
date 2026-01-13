@@ -1534,6 +1534,14 @@ const Header = () => {
       setIsMobileMenuOpen(false);
     };
 
+    const getCategoryImage = (category) => {
+      return (
+        category?.navImage ||
+        category?.image ||
+        "/images/placeholder-category-image.jpg"
+      );
+    };
+
     return (
       <>
         <header className="sticky top-0 z-50">
@@ -2272,33 +2280,37 @@ const Header = () => {
               slidesPerView="auto"
               spaceBetween={25}
               className={`max-w-7xl mx-auto px-5 ${
-                categories.length >= 1 && categories.length <= 10 ? "cat-nav" : ""
+                categories?.length >= 1 && categories?.length <= 10 ? "cat-nav" : ""
               }`}
             >
-              {categories.map((category) => (
-                <SwiperSlide key={category._id} className="!w-auto">
-                  <Link
-                    href={`/category/${category.category_slug}`}
-                    className="flex flex-col items-center justify-center gap-2 text-[#333333] hover:text-[#A3CA43] transition cursor-pointer"
-                  >
-                    {/* Category image */}
-                   {category.navImage && (
+              {categories
+                ?.filter(
+                  (category) =>
+                    category?.category_name && category?.category_slug
+                )
+                .map((category) => (
+                  <SwiperSlide key={category._id} className="!w-auto">
+                    <Link
+                      href={`/category/${category.category_slug}`}
+                      className="flex flex-col items-center justify-center gap-2 text-[#333333] hover:text-[#A3CA43] transition cursor-pointer"
+                    >
+                      {/* Category Image */}
                       <img
-                        src={category.navImage}
+                        src={getCategoryImage(category)}
                         alt={category.category_name}
                         className="lg:w-16 lg:h-16 md:w-12 md:h-12 rounded bg-white object-contain"
                       />
-                    )}
-                    {/* Category name */}
-                    <span className="text-sm md:text-xs whitespace-nowrap">
-                      {category.category_name}
-                    </span>
-                  </Link>
-                </SwiperSlide>
-              ))}
-            </Swiper>
 
+                      {/* Category Name */}
+                      <span className="text-sm md:text-xs whitespace-nowrap">
+                        {category.category_name}
+                      </span>
+                    </Link>
+                  </SwiperSlide>
+                ))}
+            </Swiper>
           </div>
+
          </div>
     
          {/* DESKTOP SUGGESTIONS DROPDOWN */}

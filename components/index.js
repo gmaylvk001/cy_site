@@ -131,7 +131,7 @@ export default function HomeComponent() {
                   throw new Error('Network response was not ok');
               }
               const data = await response.json();
-              console.log(data);
+              // console.log(data);
               if (data.success) {
                   setBrands(data.brands || []);
               }
@@ -415,6 +415,15 @@ export default function HomeComponent() {
     }
   };
 
+  const validCategories = categories?.filter(
+  ({ category_name, category_slug }) =>
+    typeof category_name === "string" &&
+    typeof category_slug === "string" &&
+    category_name.trim() &&
+    category_slug.trim()
+);
+
+
   return (
     <>
       {navigating && (
@@ -601,9 +610,9 @@ export default function HomeComponent() {
                       </div>
 
                       {/* Category Badge */}
-                    <div className="absolute top-3 right-3 z-30 bg-blue-600 text-white text-xs px-3 py-1 rounded-md">
+                    {/* <div className="absolute top-3 right-3 z-30 bg-blue-600 text-white text-xs px-3 py-1 rounded-md">
                         {product.category?.name || "New"}
-                      </div>
+                      </div> */}
 
     
                       {/* Image */}
@@ -740,8 +749,8 @@ export default function HomeComponent() {
             </div>
           </section>
         )}
-        {/* category section*/}
-         {!loading && categories.length > 0 && (
+        {/* category section */}
+        {!loading && validCategories?.length > 0 && (
           <section className="bg-[#F5F5F5]">
             <div className="max-w-7xl mx-auto px-4 py-10 text-center">
 
@@ -754,15 +763,17 @@ export default function HomeComponent() {
               </div>
 
               <div className="relative top-selling-swiper-1 mx-2">
-                    <button className="swiper-prev-1 absolute top-[155px] -translate-y-1/2 left-0 z-20 p-2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition border-2 border-lime-500">
-                      <FiChevronLeft size={20} md={22}/>
-                    </button>
-                    <button className="swiper-next-1 absolute top-[155px] -translate-y-1/2 right-0 z-20 p-2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition border-2 border-lime-500">
-                      <FiChevronRight size={20} md={22} />
-                    </button>
+                <button className="swiper-prev-1 absolute top-[155px] -translate-y-1/2 left-0 z-20 p-2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition border-2 border-lime-500">
+                  <FiChevronLeft size={20} />
+                </button>
+
+                <button className="swiper-next-1 absolute top-[155px] -translate-y-1/2 right-0 z-20 p-2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition border-2 border-lime-500">
+                  <FiChevronRight size={20} />
+                </button>
+
                 <Swiper
                   modules={[Navigation, Autoplay, Pagination]}
-                   navigation={{
+                  navigation={{
                     prevEl: ".top-selling-swiper-1 .swiper-prev-1",
                     nextEl: ".top-selling-swiper-1 .swiper-next-1",
                   }}
@@ -774,24 +785,15 @@ export default function HomeComponent() {
                   slidesPerView={1}
                   slidesPerGroup={1}
                   breakpoints={{
-                    640: {
-                      slidesPerView: 1,
-                      slidesPerGroup: 1,
-                    },
-                    768: {
-                      slidesPerView: 2,
-                      slidesPerGroup: 2,
-                    },
-                    1024: {
-                      slidesPerView: 4,
-                      slidesPerGroup: 4, // desktop behavior
-                    },
+                    640: { slidesPerView: 1, slidesPerGroup: 1 },
+                    768: { slidesPerView: 2, slidesPerGroup: 2 },
+                    1024: { slidesPerView: 4, slidesPerGroup: 4 },
                   }}
                 >
-                  {categories.map((category) => (
+                  {validCategories.map((category) => (
                     <SwiperSlide key={category._id}>
                       <Link
-                        href={getCategoryUrl(category)}
+                        href={`/category/${category.category_slug}`}
                         className="block relative h-80 rounded-xl overflow-hidden group cursor-pointer
                                   border-4 border-transparent hover:border-lime-400 transition-colors duration-300"
                       >
@@ -801,11 +803,14 @@ export default function HomeComponent() {
                           fill
                           className="object-cover rounded-xl transition-transform duration-300 group-hover:scale-105"
                         />
+
                         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black via-black/70 to-transparent" />
+
                         <div className="absolute bottom-0 left-4 right-4 text-center">
                           <h3 className="text-white text-lg font-semibold mb-2">
                             {category.category_name}
                           </h3>
+
                           <button className="inline-flex items-center gap-2 bg-lime-400 text-black font-semibold px-2 py-1 rounded-t-md
                                             opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
                             Shop Now
@@ -815,14 +820,15 @@ export default function HomeComponent() {
                     </SwiperSlide>
                   ))}
                 </Swiper>
-                {/* Navigation & Pagination wrapper above slides */}
-              <div className="flex justify-between items-center mt-4">
-                <div className="swiper-pagination-1" />
-              </div>
+
+                <div className="flex justify-between items-center mt-4">
+                  <div className="swiper-pagination-1" />
+                </div>
               </div>
             </div>
           </section>
         )}
+
         {/* Growth Story */}
         <section className="py-10">
           <div className="max-w-7xl mx-auto px-4 text-center">
@@ -1190,7 +1196,14 @@ export default function HomeComponent() {
                 }}
                 className=" rounded-xl"
               >
-                {brands.map((brand) => (
+             {brands
+              .filter(
+                (brand) =>
+                  brand?.brand_name &&
+                  typeof brand.brand_name === "string" &&
+                  brand.brand_name.trim() !== ""
+              )
+              .map((brand) => (
                   <SwiperSlide key={brand.id}>
                     <Link href={`/brand/${slugify(brand.brand_name)}`}>
                       <div

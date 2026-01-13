@@ -9,7 +9,7 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
 
     const gender = searchParams.get("gender"); // optional
-    const type = searchParams.get("type");     // optional
+    // const type = searchParams.get("type");     
     const minPrice = Number(searchParams.get("minPrice")) || 0;
     const maxPrice = Number(searchParams.get("maxPrice")) || 100000;
     const limit = Number(searchParams.get("limit")) || 25;
@@ -26,7 +26,7 @@ export async function GET(req) {
     // Build filter list dynamically
     const filterIds = [];
     if (gender) filterIds.push(gender);
-    if (type) filterIds.push(type);
+    // if (type) filterIds.push(type);
 
     // If filters exist → apply ProductFilter aggregation
     if (filterIds.length > 0) {
