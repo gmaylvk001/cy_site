@@ -1,15 +1,13 @@
 // app/franchise/page.js
-"use client";
-import { useState, useEffect } from "react";
 import Franchise from '../../components/franchise/Franchise';
 
-export default function FranchisePage() {
-  const [time, setTime] = useState(null);
+export const metadata = {
+  title: "Cycle World Franchise | Profitable Bicycle Store Business in India",
+  description: "Apply for Cycle World franchise and build a profitable bicycle retail business. 25+ global brands, strong margins, and proven store model.",
+};
 
-  useEffect(() => {
-    setTime(Date.now());
-  }, []);
-  
+export default function FranchisePage() {
+
   return <Franchise />;
 }
 
