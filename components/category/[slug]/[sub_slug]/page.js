@@ -138,6 +138,7 @@ const scroll = (direction) => {
       await fetchFilteredProducts(categoryData, 1, true);
       }else{
         // Redirect to 404 if no products found
+        if(categoryData,'testingggggggggggg')
         router.push('/noproduct');
       }
     } catch (error) {
