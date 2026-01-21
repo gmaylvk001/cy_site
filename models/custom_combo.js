@@ -7,11 +7,13 @@ const CustomComboSchema = new mongoose.Schema(
       ref: "ecom_users_infos",
       required: true,
       index: true,
+      default:null,
     },
     guestId: {
       type: String,
       default: null,
       index: true,
+      default:null,
     },
 
     cycles: [

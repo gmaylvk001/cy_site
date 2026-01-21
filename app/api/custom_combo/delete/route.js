@@ -11,10 +11,10 @@ export async function POST(req) {
   const authHeader = req.headers.get("authorization");
   const token = authHeader?.split(" ")[1];
 
-  if (!item || !type) {
+  if (!item) {
     return NextResponse.json(
       { message: "item and type are required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -30,31 +30,32 @@ export async function POST(req) {
   else if (guestId) {
     query.guestId = guestId;
   } else {
-    return NextResponse.json(
-      { message: "Unauthorized" },
-      { status: 401 }
-    );
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   const productId = new mongoose.Types.ObjectId(item._id);
 
-  // 🎯 Decide which array to pull from
-  if (type === "bycycle") update.$pull = { cycles: productId };
-  if (type === "accessories") update.$pull = { accessories: productId };
-  if (type === "bags") update.$pull = { bags: productId };
-
-  if (!update.$pull) {
-    return NextResponse.json(
-      { message: "Invalid type" },
-      { status: 400 }
-    );
+  // 🎯 If type exists, delete from specific array
+  if (type) {
+    if (type === "bycycle") update.$pull = { cycles: productId };
+    else if (type === "accessories") update.$pull = { accessories: productId };
+    else if (type === "bags") update.$pull = { bags: productId };
+    else {
+      return NextResponse.json({ message: "Invalid type" }, { status: 400 });
+    }
+  }
+  // 🎯 If type does NOT exist, remove productId from ALL arrays
+  else {
+    update.$pull = {
+      cycles: productId,
+      accessories: productId,
+      bags: productId,
+    };
   }
 
-  const combo = await custom_combo.findOneAndUpdate(
-    query,
-    update,
-    { new: true }
-  );
+  const combo = await custom_combo.findOneAndUpdate(query, update, {
+    new: true,
+  });
 
   return NextResponse.json({ success: 1, combo });
 }

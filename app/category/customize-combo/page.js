@@ -87,8 +87,15 @@ export default function customize_combo() {
       0,
     );
 
-    return cyclesTotal + accessoriesTotal + bagsTotal;
+    return Number(cyclesTotal + accessoriesTotal + bagsTotal);
   }, [finalBycycles, finalAccessories, finalBags]);
+
+  const discount = useMemo(() => {
+    if (totalPrice >= 10000) {
+      return totalPrice * 0.1; // 10% discount
+    }
+    return 0; // no discount below 10000
+  }, [totalPrice]);
 
   // const fetchFilteredProducts = useCallback(
   //   async (categoryData, pageNum = 1, initialLoad = false) => {
@@ -151,7 +158,6 @@ export default function customize_combo() {
 
     const categoryRes = await fetch(`/api/categories/${slug}`);
     const categoryData = await categoryRes.json();
-    console.log(categoryData, "testing");
     setCategoryData({
       ...categoryData,
       categoryTree: categoryData.category,
@@ -227,14 +233,11 @@ export default function customize_combo() {
         cat.category_name.toLowerCase().includes("cycle"),
       ),
     );
-    console.log(allcycle_cat, "testing");
   };
 
   const allProducts = async () => {
-    console.log("rest");
     const raw = await fetch("/api/product/get");
     const res = await raw.json();
-    console.log(res, "restinga");
     const cycleMd5s = allcycle_cat.map((cat) =>
       cat.md5_cat_name.trim().toLowerCase(),
     );
@@ -285,8 +288,6 @@ export default function customize_combo() {
     }
   };
   const filter = (products = [], selected = null) => {
-    console.log(selected, "selected cat");
-
     if (!selected || !all_categries.length) {
       setFilteredProducts([]);
       return;
@@ -315,7 +316,6 @@ export default function customize_combo() {
 
   const handlecyclePOP = (open = false) => {
     open ? setBycyclePOP(true) : setBycyclePOP(false);
-    console.log("final to select", finalBycycles);
     if (open) {
       setFilteredProducts(cycleProducts);
       if (finalBycycles.length > 0) {
@@ -367,7 +367,6 @@ export default function customize_combo() {
         setFinalBycycles(data.products.cycles || []);
         setFinalAccessories(data.products.accessories || []);
         setFinalBags(data.products.bags || []);
-        console.log(data.products, "products checking");
         if (
           (data.products.cycles?.length || 0) > 0 ||
           (data.products.accessories?.length || 0) > 0 ||
@@ -1060,11 +1059,27 @@ export default function customize_combo() {
                   {totalPrice > 0 && (
                     <div>
                       <h4>Total price</h4>
-                      <h3>
-                        ₹{totalPrice}
-                        /-
-                      </h3>
-                      <button className="w-full h-[60px] bg-yellow-400 text-black text-center">
+
+                      {/* If discount exists, show original price struck through */}
+                      {discount > 0 ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="line-through text-gray-500">
+                            ₹{totalPrice}/-
+                          </span>
+                          <span className="text-xl font-bold text-black">
+                            ₹{totalPrice - discount}/-
+                          </span>
+                        </div>
+                      ) : (
+                        <h3 className="text-xl font-bold text-[#a3ca43]">
+                          ₹{totalPrice}/-
+                        </h3>
+                      )}
+
+                      <button
+                        className="w-full h-[60px] bg-yellow-400 text-black text-center mt-2"
+                        onClick={() => router.push("/custom_combo_checkout")}
+                      >
                         Buy now
                       </button>
                     </div>
@@ -1296,7 +1311,7 @@ export default function customize_combo() {
                           {product.name}
                         </h4>
                         <p className="text-sm font-bold mt-1">
-                          ₹{product.price.toLocaleString()}
+                          ₹{product.special_price.toLocaleString()}
                         </p>
                       </div>
                     </div>
