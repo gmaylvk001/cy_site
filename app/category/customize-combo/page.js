@@ -13,7 +13,7 @@ import { v4 as uuidv4 } from "uuid";
 export default function customize_combo() {
   // Unwrap the params promise using React.use()
   const slug = "customize-combo";
-  const [custom_combo, setCustom_combo] = useState(false);
+  const [custom_combo, setCustom_combo] = useState(true);
   const [finalBycycles, setFinalBycycles] = useState([]);
   const [finalAccessories, setFinalAccessories] = useState([]);
   const [finalBags, setFinalBags] = useState([]);
@@ -41,29 +41,7 @@ export default function customize_combo() {
     main_category: null,
   });
 
-  const comboItems = [
-    {
-      name: "Invictus 27.5T",
-      url: "https://www.outdoors91.com/bicycles/mountain-bikes/buy/invictus-27-5t",
-      image:
-        "https://d2f9uwgpmber13.cloudfront.net/public/uploads/mobile/652381bdc69733425cd53fc9262d429d?.jpeg",
-      price: 33759,
-    },
-    {
-      name: "Cable lock 2 keys",
-      url: "https://www.outdoors91.com/bicycle-accessories/buy/cable-lock-2-keys",
-      image:
-        "https://d2f9uwgpmber13.cloudfront.net/public/uploads/mobile/9b25c190e9c8a0751259a544a94efbcb?.jpeg",
-      price: 349,
-    },
-    {
-      name: "91Trekker - 15L Unisex Black Grey Backpack",
-      url: "https://www.outdoors91.com/bags-backpacks/buy/91trekker-15l-unisex-black-grey-backpack",
-      image:
-        "https://d2f9uwgpmber13.cloudfront.net/public/uploads/mobile/fdd41a9d697e3b7853218f485c69a6a2?.jpeg",
-      price: 1573,
-    },
-  ];
+
 
   const comboPrice = {
     final: 28081,
@@ -379,7 +357,7 @@ export default function customize_combo() {
         setFinalBycycles([]);
         setFinalAccessories([]);
         setFinalBags([]);
-        setCustom_combo(false);
+        setCustom_combo(true);
       }
     } catch (err) {
       console.error("Failed to fetch combo", err);
@@ -403,7 +381,6 @@ export default function customize_combo() {
     allcategries();
   }, []);
   const handleBuyCombo = () => {
-    // Replace with your actual buy logic
     alert("Buying Combo!");
   };
 
@@ -615,76 +592,15 @@ export default function customize_combo() {
           </div>
 
           {/* Button */}
-          <button
+          {/* <button
             className="bg-[#a3ca43] hover:bg-lime-500 text-white font-semibold uppercase px-6 py-3 rounded shadow transition-colors"
             onClick={() => setCustom_combo((custom) => !custom)}
           >
             {!custom_combo ? "Create your own Combo" : "Close Custom Combo"}
-          </button>
+          </button> */}
         </div>
       </section>
 
-      {!custom_combo && (
-        <section className="py-8">
-          <div className="mx-auto px-4">
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-              {/* Header */}
-              <div className="px-6 py-4 border-b border-gray-200 font-bold text-lg flex items-center">
-                Top Selling MTB Combo
-              </div>
-
-              {/* Items */}
-              <div className="px-6 py-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {comboItems.map((item, index) => (
-                  <div key={index} className="flex gap-4 items-center">
-                    <a href={item.url} className="flex-shrink-0">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-24 h-14 object-cover rounded"
-                      />
-                    </a>
-                    <div>
-                      <a
-                        href={item.url}
-                        className="block font-semibold uppercase hover:text-[#A3CA43] transition mb-1"
-                      >
-                        {item.name}
-                      </a>
-                      <div className="text-green-600 font-semibold">
-                        Mrp : ₹ {item.price.toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Footer: Combo Price & Button */}
-              <div className="px-6 py-4 border-t border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-                  <div className="text-2xl font-bold">
-                    ₹ {comboPrice.final.toLocaleString()}/-
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    <span className="line-through">
-                      Mrp : ₹ {comboPrice.mrp.toLocaleString()}
-                    </span>
-                    <span className="ml-2 text-red-500 font-semibold">
-                      {comboPrice.off.toLocaleString()} Off
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={handleBuyCombo}
-                  className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded shadow transition-colors"
-                >
-                  Buy Combo
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
       {custom_combo && (
         <section className="py-8">
           <div className="container mx-auto px-4">
@@ -1066,12 +982,12 @@ export default function customize_combo() {
                           <span className="line-through text-gray-500">
                             ₹{totalPrice}/-
                           </span>
-                          <span className="text-xl font-bold text-black">
+                          <span className="text-xl font-bold text-[#a3ca43]">
                             ₹{totalPrice - discount}/-
                           </span>
                         </div>
                       ) : (
-                        <h3 className="text-xl font-bold text-[#a3ca43]">
+                        <h3 className="text-xl font-bold text-black">
                           ₹{totalPrice}/-
                         </h3>
                       )}
