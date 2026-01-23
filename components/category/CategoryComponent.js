@@ -235,65 +235,136 @@ export default function CategoryPage(params) {
     fetchBrand();
   }, []);
 
+  // const fetchFilteredProducts = useCallback(
+  //   async (categoryData, pageNum = 1, initialLoad = false) => {
+  //     try {
+  //       if (!initialLoad) setLoading(true);
+  //       const query = new URLSearchParams();
+  //       const categoryIds =
+  //         selectedFilters.categories.length > 0
+  //           ? selectedFilters.categories
+  //           : categoryData.allCategoryIds;
+
+  //           console.log(categoryData?.main_category ,'main categries check');
+  //         query.set(
+  //           "sub_category_new",
+  //           categoryData?.main_category?.md5_cat_name,
+  //         );
+
+
+  //       //query.set('categoryIds', categoryIds.join(','));
+  //       query.set("page", pageNum);
+  //       query.set("limit", itemsPerPage);
+
+  //       if (selectedFilters.brands.length > 0) {
+  //         query.set("brands", selectedFilters.brands.join(","));
+  //       }
+  //       query.set("minPrice", selectedFilters.price.min);
+  //       query.set("maxPrice", selectedFilters.price.max);
+
+  //       if (selectedFilters.filters.length > 0) {
+  //         query.set("filters", selectedFilters.filters.join(","));
+  //       }
+
+  //       const res = await fetch(`/api/product/filter/main-cat?${query}`);
+  //       const { products, pagination: paginationData } = await res.json();
+
+  //       setProducts(products);
+
+  //       // Update pagination state
+  //       setPagination({
+  //         currentPage: paginationData.currentPage,
+  //         totalPages: paginationData.totalPages,
+  //         hasNext: paginationData.hasNext,
+  //         hasPrev: paginationData.hasPrev,
+  //         totalProducts: paginationData.totalProducts,
+  //       });
+
+  //       if (products.length === 0 && pageNum === 1) {
+  //         setNofound(true);
+  //         router.push("/noproduct");
+  //       } else {
+  //         setNofound(false);
+  //       }
+  //     } catch (error) {
+  //       toast.error("Error fetching products" + error);
+  //       router.push("/noproduct");
+
+  //       // Redirect to 404 on error
+  //     } finally {
+  //       if (!initialLoad) setLoading(false);
+  //     }
+  //   },
+  //   [selectedFilters],
+  // );
+
+
   const fetchFilteredProducts = useCallback(
-    async (categoryData, pageNum = 1, initialLoad = false) => {
-      try {
-        if (!initialLoad) setLoading(true);
-        const query = new URLSearchParams();
-        const categoryIds =
-          selectedFilters.categories.length > 0
-            ? selectedFilters.categories
-            : categoryData.allCategoryIds;
-        if (categoryData?.main_category?.md5_cat_name) {
-          query.set(
-            "sub_category_new",
-            categoryData?.main_category?.md5_cat_name,
-          );
-        }
+  async (categoryData, pageNum = 1, initialLoad = false) => {
+    try {
+      if (!initialLoad) setLoading(true);
 
-        //query.set('categoryIds', categoryIds.join(','));
-        query.set("page", pageNum);
-        query.set("limit", itemsPerPage);
+      const query = new URLSearchParams();
 
-        if (selectedFilters.brands.length > 0) {
-          query.set("brands", selectedFilters.brands.join(","));
-        }
-        query.set("minPrice", selectedFilters.price.min);
-        query.set("maxPrice", selectedFilters.price.max);
+      const categoryIds =
+        selectedFilters.categories.length > 0
+          ? selectedFilters.categories
+          : categoryData?.allCategoryIds || [];
+           
+        query.set(
+          "sub_category_new",
+          categoryData?.main_category?.md5_cat_name || null
+        );
+      
 
-        if (selectedFilters.filters.length > 0) {
-          query.set("filters", selectedFilters.filters.join(","));
-        }
+      query.set("page", pageNum);
+      query.set("limit", itemsPerPage);
 
-        const res = await fetch(`/api/product/filter/main-cat?${query}`);
-        const { products, pagination: paginationData } = await res.json();
-
-        setProducts(products);
-
-        // Update pagination state
-        setPagination({
-          currentPage: paginationData.currentPage,
-          totalPages: paginationData.totalPages,
-          hasNext: paginationData.hasNext,
-          hasPrev: paginationData.hasPrev,
-          totalProducts: paginationData.totalProducts,
-        });
-
-        if (products.length === 0 && pageNum === 1) {
-          setNofound(true);
-        } else {
-          setNofound(false);
-        }
-      } catch (error) {
-        toast.error("Error fetching products" + error);
-        // Redirect to 404 on error
-        router.push("/noproduct");
-      } finally {
-        if (!initialLoad) setLoading(false);
+      if (selectedFilters.brands.length > 0) {
+        query.set("brands", selectedFilters.brands.join(","));
       }
-    },
-    [selectedFilters],
-  );
+
+      query.set("minPrice", selectedFilters.price.min);
+      query.set("maxPrice", selectedFilters.price.max);
+
+      if (selectedFilters.filters.length > 0) {
+        query.set("filters", selectedFilters.filters.join(","));
+      }
+
+      const res = await fetch(`/api/product/filter/main-cat?${query}`);
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch products");
+      }
+
+      const { products, pagination } = await res.json();
+
+      setProducts(products);
+
+      setPagination({
+        currentPage: pagination.currentPage,
+        totalPages: pagination.totalPages,
+        hasNext: pagination.hasNext,
+        hasPrev: pagination.hasPrev,
+        totalProducts: pagination.totalProducts,
+      });
+
+      if (products.length === 0 && pageNum === 1) {
+        setNofound(true);
+        router.push("/noproduct");
+      } else {
+        setNofound(false);
+      }
+    } catch (error) {
+      toast.error("Error fetching products");
+      router.push("/noproduct");
+    } finally {
+      if (!initialLoad) setLoading(false);
+    }
+  },
+  [selectedFilters, itemsPerPage, router]
+);
+
 
   const handleProductClick = (product) => {
     const stored = JSON.parse(localStorage.getItem("recentlyViewed")) || [];
