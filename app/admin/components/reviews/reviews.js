@@ -227,9 +227,9 @@ export default function ReviewComponent() {
                                     <tbody>
                                         {FilteredReviews.slice((currentPage - 1) * itemsPerPage, (currentPage + 1) * itemsPerPage).map((review, index) => (
                                             <tr key={review._id} className="border-b hover:bg-gray-50">
-                                                <td className="p-2 font-bold" title={review.product_id.name} >
-                                                <a href={`/product/${review.product_id.slug}#reviews`} target="_blank">{review.product_id.item_code}</a></td>
-                                                <td className="p-2 font-bold">{review.user_id && review.user_id.name ? review.user_id.name : "-" }</td>
+                                                <td className="p-2 font-bold" title={review?.product_id?.name || ''} >
+                                                <a href={`/product/${review.product_id?.slug}#reviews`} target="_blank">{review.product_id?.item_code}</a></td>
+                                                <td className="p-2 font-bold">{review.user_id && review.user_id?.name ? review.user_id.name||'' : "-" }</td>
                                                 <td className="p-2" title={review.reviews_title}>
                                                     {review.reviews_title.length > 50  ? `${review.reviews_title.substring(0, 50)}...` : review.reviews_title}
                                                 </td>

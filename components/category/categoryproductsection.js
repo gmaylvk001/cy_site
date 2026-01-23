@@ -183,7 +183,7 @@ const CategoryProductCard = ({ product }) => {
 
       {/* WhatsApp Button */}
       <a
-        href={`https://wa.me/919865555000?text=${encodeURIComponent(
+        href={`https://wa.me/9191919191?text=${encodeURIComponent(
           `Check Out This Product: ${apiUrl}/product/${product.slug}`
         )}`}
         target="_blank"

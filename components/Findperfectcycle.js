@@ -488,7 +488,7 @@ export default function BicycleFilterSection() {
 
                       <div className="mt-auto flex text-sm font-semibold border-t">
                         <Link
-                          href={`https://wa.me/919865555000?text=${encodeURIComponent(
+                          href={`https://wa.me/9191919191?text=${encodeURIComponent(
                             `Check Out This Product: ${
                               typeof window !== "undefined"
                                 ? window.location.origin

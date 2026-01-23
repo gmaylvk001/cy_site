@@ -1092,7 +1092,7 @@ const handleCategoryClick = useCallback((category) => (e) => {
                                             <div className="mt-3 flex items-center justify-between gap-2">
                                               <Addtocart productId={product._id} stockQuantity={product.quantity}  special_price={product.special_price} className="flex-1" />
                                               <a 
-                                              href={`https://wa.me/919865555000?text=${encodeURIComponent(`Check Out This Product: ${apiUrl}/product/${product.slug}`)}`} 
+                                              href={`https://wa.me/9191919191?text=${encodeURIComponent(`Check Out This Product: ${apiUrl}/product/${product.slug}`)}`} 
                                               target="_blank" 
                                               rel="noopener noreferrer" 
                                               className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-full transition-colors duration-300 flex items-center justify-center"

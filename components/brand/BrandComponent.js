@@ -1031,7 +1031,7 @@ export default function BrandPage() {
                          {/* Bottom Buttons */}
                           <div className="mt-auto flex text-sm font-semibold border-t">
                             <Link
-                              href={`https://wa.me/919865555000?text=${encodeURIComponent(`Check Out This Product: ${apiUrl}/product/${product.slug}`)}`} 
+                              href={`https://wa.me/9191919191?text=${encodeURIComponent(`Check Out This Product: ${apiUrl}/product/${product.slug}`)}`} 
                               target="_blank"
                               rel="noopener noreferrer"
                               className="bg-white  text-[#a3ca43] p-1 transition-colors duration-300 flex items-center justify-center px-2 border-r"
