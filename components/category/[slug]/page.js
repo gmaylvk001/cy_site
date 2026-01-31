@@ -553,7 +553,8 @@ const STEP = 100;
    }
    
   return(
-    <div className="container mx-auto px-4 py-2 pb-3 max-w-7xl">
+    <div className="w-full h-full  bg-white">
+    <div className="container mx-auto px-4 py-2 pb-3 max-w-7xl bg-white">
            {categoryData.banners && categoryData.banners.length > 0 && (
         <div className="relative w-full mb-8 rounded-lg overflow-hidden shadow-md">
           <div
@@ -1080,6 +1081,7 @@ const STEP = 100;
         </div>
       )}
       </div>
+    </div>
     </div>
   );
 }

@@ -1558,8 +1558,14 @@ const Header = () => {
               }
             `}</style>
           {/* <div className="bg-white shadow-md"> */}
-          <div className="shadow-md bg-gradient-to-r from-[#2a7b9b] via-[#57c785] to-[#eddd53]">
-
+          {/* <div className="shadow-md bg-gradient-to-r from-[#2a7b9b] via-[#57c785] to-[#eddd53]"> */}
+          <div
+            className="shadow-md"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(87,199,133,1) 50%, rgba(237,221,83,1) 100%)",
+            }}
+          >
               {/* Main Header */}
                {/* NEW MOBILE TOP ROW (from reference) */}
                 {/* DESKTOP ROW (unchanged original content) */}

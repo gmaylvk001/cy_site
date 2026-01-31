@@ -70,7 +70,7 @@ function GenderSelect({ value, setValue, options }) {
                 {opt.name}
               </button>
             ))}
-           <button
+            <button
               onClick={() => {
                 setValue(null);
                 setOpen(false);
@@ -158,21 +158,20 @@ function BrandSelect({ value, setValue, options }) {
               scrollbarWidth: 'none', // Firefox
             }}
           >
-          {options.map((opt) => (
+            {options.map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  setValue(opt.id);
+                  setOpen(false);
+                }}
+                className={`flex-1 py-2 rounded-full font-bold text-sm ${value === opt.id ? "bg-[#a3ca43] text-white" : "bg-gray-200 text-gray-700"
+                  }`}
+              >
+                {opt.brand_name}
+              </button>
+            ))}
             <button
-              key={opt.id}
-              onClick={() => {
-                setValue(opt.id);
-                setOpen(false);
-              }}
-              className={`flex-1 py-2 rounded-full font-bold text-sm ${
-                value === opt.id ? "bg-[#a3ca43] text-white" : "bg-gray-200 text-gray-700"
-              }`}
-            >
-              {opt.brand_name}
-            </button>
-          ))}
-           <button
               onClick={() => {
                 setValue(null);
                 setOpen(false);
@@ -223,6 +222,46 @@ export default function BicycleFilterSection() {
   }, [brands]);
 
   /* ------------------- Fetch Filters, Brands, and Products ------------------- */
+  const [variants, setVariants] = useState([]);
+
+  useEffect(() => {
+    const loadVariants = async () => {
+      try {
+        const res = await fetch("/api/Variants/get_all");
+        const data = await res.json();
+        console.log("Variants Data:", data);
+        setVariants(data.variants || []);
+      } catch (err) {
+        console.log("Fetch error:", err);
+      }
+    };
+
+    loadVariants();
+  }, []);
+  const getColorPairs = (temp) => {
+    const pairSet = new Set();
+
+    temp?.variants?.forEach((variant) => {
+      const colorObj = variant?.variant_arr?.find(
+        (v) => v.variant_attribute_name === "color"
+      );
+
+      if (!colorObj?.options) return;
+
+      const colors = colorObj.options
+        .split("/")
+        .map((c) => c.trim().toLowerCase())
+        .filter(Boolean);
+
+      // must have at least 2 colors
+      if (colors.length >= 2) {
+        pairSet.add(`${colors[0]}/${colors[1]}`);
+      }
+    });
+
+    return [...pairSet];
+  };
+
   useEffect(() => {
     async function fetchFiltersAndBrands() {
       setIsFiltersLoading(true);
@@ -253,7 +292,9 @@ export default function BicycleFilterSection() {
       try {
         const res = await fetch(`/api/productfind?minPrice=0&maxPrice=50000&limit=25`);
         if (!res.ok) throw new Error("Failed to fetch products");
-        const data = await res.json();
+        let data = await res.json();
+        data = shuffleArray(data);
+
         setProducts(data.slice(0, 20));
       } catch (err) {
         console.error(err);
@@ -266,6 +307,14 @@ export default function BicycleFilterSection() {
     fetchFiltersAndBrands();
     fetchInitialProducts();
   }, []);
+  function shuffleArray(arr) {
+    const shuffled = [...arr]; // ✅ keep original array safe (pure)
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }
 
   /* ------------------- Filtered Products ------------------- */
   const handleGo = async () => {
@@ -296,13 +345,16 @@ export default function BicycleFilterSection() {
     }
   };
 
-  const handleRefreshFilters = () => {
+  const handleRefreshFilters =() => {
     setSelectedFilters({ gender: null, type: null, price: null, brand: null });
     setHasSearched(false);
     setIsProductsLoading(true);
     fetch("/api/productfind")
       .then((res) => res.json())
-      .then((data) => setProducts(data))
+      .then(async(data) => {
+        let res = shuffleArray(data);
+        setProducts(res)
+      })
       .catch((err) => console.error(err))
       .finally(() => setIsProductsLoading(false));
   };
@@ -358,83 +410,108 @@ export default function BicycleFilterSection() {
     <section className="px-5 max-w-7xl mx-auto py-10">
       <h1 className="text-3xl text-center mb-2">Find Your Perfect Bicycle</h1>
 
-     
-        <div className="flex flex-col sm:flex-row gap-4 items-start justify-center mb-4">
-          <GenderSelect value={selectedFilters.gender} setValue={(v) => setSelectedFilters((p) => ({ ...p, gender: v }))} options={filters.gender} />
-          <BrandSelect value={selectedFilters.brand} setValue={(v) => setSelectedFilters((p) => ({ ...p, brand: v }))} options={brands} />
-          <PriceSelect className="min-w-[120px]" value={selectedFilters.price} setValue={(v) => setSelectedFilters((p) => ({ ...p, price: v }))} />
-          <div className="relative w-full flex items-center md:justify-start justify-center">
-            <button onClick={handleGo} className="flex items-center justify-center bg-[#a3ca43] hover:bg-green-700 text-white font-bold px-6 py-3 rounded-md shadow-md mr-3">
-              Find
-            </button>
-            <button onClick={handleRefreshFilters} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold px-6 py-3 rounded-md shadow-md">
-              <FiRefreshCw size={20} />
-            </button>
-          </div>
+
+      <div className="flex flex-col sm:flex-row gap-4 items-start justify-center mb-4">
+        <GenderSelect value={selectedFilters.gender} setValue={(v) => setSelectedFilters((p) => ({ ...p, gender: v }))} options={filters.gender} />
+        <BrandSelect value={selectedFilters.brand} setValue={(v) => setSelectedFilters((p) => ({ ...p, brand: v }))} options={brands} />
+        <PriceSelect className="min-w-[120px]" value={selectedFilters.price} setValue={(v) => setSelectedFilters((p) => ({ ...p, price: v }))} />
+        <div className="relative w-full flex items-center md:justify-start justify-center">
+          <button onClick={handleGo} className="flex items-center justify-center bg-[#a3ca43] hover:bg-green-700 text-white font-bold px-6 py-3 rounded-md shadow-md mr-3">
+            Find
+          </button>
+          <button onClick={handleRefreshFilters} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold px-6 py-3 rounded-md shadow-md">
+            <FiRefreshCw size={20} />
+          </button>
         </div>
+      </div>
 
 
       {isProductsLoading ? <Loader /> : products.length > 0 ? (
-         <div className="relative top-selling-swipers">
-            <div className="top-selling-swipers">
-              <button className="swiper-prev absolute top-1/2 -translate-y-1/2 left-0 z-20 p-2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition border-2 border-lime-500">
-                <FiChevronLeft size={20} md={22}/>
-              </button>
-              <button className="swiper-next absolute top-1/2 -translate-y-1/2 right-0 z-20 p-2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition border-2 border-lime-500">
-                <FiChevronRight size={20} md={22} />
-              </button>
-              </div>
-            <Swiper
-              modules={[Navigation, Autoplay]}
-                navigation={{
-                  prevEl: ".top-selling-swipers .swiper-prev",
-                  nextEl: ".top-selling-swipers .swiper-next",
-                }}
-              spaceBetween={20}
-              slidesPerView={1}
-              slidesPerGroup={1}
-                breakpoints={{
-                640: {
-                  slidesPerView: 1,
-                  slidesPerGroup: 1,
-                },
-                768: {
-                  slidesPerView: 3,
-                  slidesPerGroup: 3,
-                },
-                1024: {
-                  slidesPerView: 3,
-                  slidesPerGroup: 3, 
-                },
-                1280:
-                {
-                  slidesPerView :4,
-                  slidesPerGroup :4,
-                }
-              }}
-            >
-              {products.map((product) => (
-                <SwiperSlide key={product._id} className="min-h-[420px] flex">
-                  <div className="bg-white rounded-xl border shadow-md overflow-hidden flex flex-col h-full w-full relative">
-                    <div className="absolute top-3 left-3 z-20">
-                      <ProductCard productId={product._id} isOutOfStock={product.quantity === 0} />
-                    </div>
-                    {/* <div className="absolute top-3 right-3 z-30 bg-blue-600 text-white text-xs px-3 py-1 rounded-md">{product.category?.name || "New"}</div> */}
+        <div className="relative top-selling-swipers">
+          <div className="top-selling-swipers">
+            <button className="swiper-prev absolute top-1/2 -translate-y-1/2 left-0 z-20 p-2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition border-2 border-lime-500">
+              <FiChevronLeft size={20} md={22} />
+            </button>
+            <button className="swiper-next absolute top-1/2 -translate-y-1/2 right-0 z-20 p-2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition border-2 border-lime-500">
+              <FiChevronRight size={20} md={22} />
+            </button>
+          </div>
+          <Swiper
+            modules={[Navigation, Autoplay]}
+            navigation={{
+              prevEl: ".top-selling-swipers .swiper-prev",
+              nextEl: ".top-selling-swipers .swiper-next",
+            }}
+            spaceBetween={20}
+            slidesPerView={1}
+            slidesPerGroup={1}
+            breakpoints={{
+              640: {
+                slidesPerView: 1,
+                slidesPerGroup: 1,
+              },
+              768: {
+                slidesPerView: 3,
+                slidesPerGroup: 3,
+              },
+              1024: {
+                slidesPerView: 3,
+                slidesPerGroup: 3,
+              },
+              1280:
+              {
+                slidesPerView: 4,
+                slidesPerGroup: 4,
+              }
+            }}
+          >
+            {products.map((product) => (
 
-                    <div className="relative h-56">
-                      {product.images?.[0] && (
-                        <Link href={`/product/${product.slug}`}>
-                          <Image
-                            src={product.images[0].startsWith("http") ? product.images[0] : `/uploads/products/${product.images[0]}`}
-                            alt={product.name}
-                            fill
-                            className="object-contain p-4"
-                          />
-                        </Link>
-                      )}
+              <SwiperSlide key={product._id} className="min-h-[420px] flex">
+                <div className="bg-white rounded-xl border shadow-md overflow-hidden flex flex-col h-full w-full relative">
+                  <div className="absolute top-3 left-3 z-20">
+                    <ProductCard productId={product._id} isOutOfStock={product.quantity === 0} />
+                  </div>
+                  {/* <div className="absolute top-3 right-3 z-30 bg-blue-600 text-white text-xs px-3 py-1 rounded-md">{product.category?.name || "New"}</div> */}
+
+                  <div className="relative h-56">
+                    {product.images?.[0] && (
+                      <Link href={`/product/${product.slug}`}>
+                        <Image
+                          src={product.images[0].startsWith("http") ? product.images[0] : `/uploads/products/${product.images[0]}`}
+                          alt={product.name}
+                          fill
+                          className="object-contain p-4"
+                        />
+                      </Link>
+                    )}
+                  </div>
+
+                  <div className="px-4 py-2 border-t flex-grow relative">
+                    {/* Right side color circles */}
+                    <div className="absolute top-[28px] right-0 flex flex-col gap-2 bg-slate-200 p-2 rounded-tl-xl rounded-bl-xl">
+                      {variants
+                        .find((vari) => vari.parent_id === product._id) &&
+                        getColorPairs(
+                          variants.find((vari) => vari.parent_id === product._id)
+                        ).map((pair, i) => {
+                          const [c1, c2] = pair.split("/");
+
+                          return (
+                            <span
+                              key={i}
+                              className="w-4 h-4 rounded-full border border-gray-300 shadow-sm"
+                              style={{
+                                background: `linear-gradient(135deg, ${c1} 50%, ${c2} 50%)`,
+                              }}
+                            />
+                          );
+                        })}
                     </div>
 
-                    <div className="px-4 py-2 border-t flex-grow">
+
+
+                    <div>
                       <h4 className="text-xs text-gray-500 mb-2 uppercase">
                         {brandMap[product.brand] ? (
                           <Link
@@ -449,21 +526,23 @@ export default function BicycleFilterSection() {
                           "Unknown Brand"
                         )}
                       </h4>
+
                       <Link href={`/product/${product.slug}`}>
-                        <h3 className="text-sm font-medium text-[#333] hover:text-[#a3ca43] line-clamp-2 cursor-pointer">{product.name}</h3>
+                        <h3 className="text-sm font-medium text-[#333] hover:text-[#a3ca43] line-clamp-2 cursor-pointer">
+                          {product.name}
+                        </h3>
                       </Link>
+
                       <div className="flex justify-between items-center mt-2 gap-2 flex-wrap">
                         <div className="flex gap-2 items-center">
-                          {/* Selling Price / Special Price */}
                           <span className="text-lg font-bold">
                             ₹{" "}
                             {Number(product.special_price) > 0 &&
-                            Number(product.special_price) < Number(product.price)
+                              Number(product.special_price) < Number(product.price)
                               ? Number(product.special_price).toLocaleString()
                               : Number(product.price).toLocaleString()}
                           </span>
 
-                          {/* Original Price / MRP */}
                           {Number(product.special_price) > 0 &&
                             Number(product.special_price) < Number(product.price) && (
                               <>
@@ -471,66 +550,76 @@ export default function BicycleFilterSection() {
                                   ₹ {Number(product.price).toLocaleString()}
                                 </span>
 
-                                {/* Discount Percentage */}
                                 <span className="text-sm text-[#a3ca43] font-semibold">
-                                  {Math.round(100 - (Number(product.special_price) / Number(product.price)) * 100)}% OFF
+                                  {Math.round(
+                                    100 - (Number(product.special_price) / Number(product.price)) * 100
+                                  )}
+                                  % OFF
                                 </span>
                               </>
                             )}
                         </div>
                       </div>
+
                       <div className="my-1">
-                        <span className={`text-xs font-semibold px-3 py-1 rounded-full ${product.quantity > 0 ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
-                          {product.quantity > 0 ? `In Stock, ${product.quantity} units` : "Out Of Stock"}
+                        <span
+                          className={`text-xs font-semibold px-3 py-1 rounded-full ${product.quantity > 0
+                            ? "bg-green-100 text-green-600"
+                            : "bg-red-100 text-red-600"
+                            }`}
+                        >
+                          {product.quantity > 0
+                            ? `In Stock, ${product.quantity} units`
+                            : "Out Of Stock"}
                         </span>
                       </div>
                     </div>
-
-                      <div className="mt-auto flex text-sm font-semibold border-t">
-                        <Link
-                          href={`https://wa.me/9191919191?text=${encodeURIComponent(
-                            `Check Out This Product: ${
-                              typeof window !== "undefined"
-                                ? window.location.origin
-                                : ""
-                            }/product/${product.slug}`
-                          )}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-white  text-[#a3ca43] p-1 transition-colors duration-300 flex items-center justify-center px-2 border-r"
-                        >
-                          <svg
-                            className="w-5 h-5"
-                            viewBox="0 0 32 32"
-                            fill="currentColor"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path d="M16.003 2.667C8.64 2.667 2.667 8.64 2.667 16c0 2.773.736 5.368 2.009 7.629L2 30l6.565-2.643A13.254 13.254 0 0016.003 29.333C23.36 29.333 29.333 23.36 29.333 16c0-7.36-5.973-13.333-13.33-13.333zm7.608 18.565c-.32.894-1.87 1.749-2.574 1.865-.657.104-1.479.148-2.385-.148-.55-.175-1.256-.412-2.162-.812-3.8-1.648-6.294-5.77-6.49-6.04-.192-.269-1.55-2.066-1.55-3.943 0-1.878.982-2.801 1.33-3.168.346-.364.75-.456 1.001-.456.25 0 .5.002.719.013.231.01.539-.088.845.643.32.768 1.085 2.669 1.18 2.863.096.192.16.423.03.683-.134.26-.2.423-.39.65-.192.231-.413.512-.589.689-.192.192-.391.401-.173.788.222.392.986 1.625 2.116 2.636 1.454 1.298 2.682 1.7 3.075 1.894.393.192.618.173.845-.096.23-.27.975-1.136 1.237-1.527.262-.392.524-.32.894-.192.375.13 2.35 1.107 2.75 1.308.393.205.656.308.75.48.096.173.096 1.003-.224 1.897z" />
-                          </svg>
-                        </Link>
-                        <Addtocart
-                          productId={product._id}
-                          stockQuantity={product.quantity}
-                          special_price={product.special_price}
-                          className="flex-1 whitespace-nowrap text-xs sm:text-sm py-1.5 my-2"
-                        />
-                      <button
-                        onClick={() => handleBuyNow(product)}
-                        className={`w-1/2 py-3  font-semibold text-white transition-colors duration-300 ${
-                          product.quantity > 0 && product.stock_status === "In Stock"
-                            ? "bg-[#a3ca43] hover:bg-lime-500 cursor-pointer"
-                            : "bg-gray-300 hover:bg-gray-300 cursor-not-allowed"
-                        }`}
-                        disabled={!(product.quantity > 0 && product.stock_status === "In Stock")}
-                      >
-                        BUY NOW
-                      </button>
-                    </div>
                   </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          </div>
+
+
+                  <div className="mt-auto flex text-sm font-semibold border-t">
+                    <Link
+                      href={`https://wa.me/9191919191?text=${encodeURIComponent(
+                        `Check Out This Product: ${typeof window !== "undefined"
+                          ? window.location.origin
+                          : ""
+                        }/product/${product.slug}`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-white  text-[#a3ca43] p-1 transition-colors duration-300 flex items-center justify-center px-2 border-r"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        viewBox="0 0 32 32"
+                        fill="currentColor"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d="M16.003 2.667C8.64 2.667 2.667 8.64 2.667 16c0 2.773.736 5.368 2.009 7.629L2 30l6.565-2.643A13.254 13.254 0 0016.003 29.333C23.36 29.333 29.333 23.36 29.333 16c0-7.36-5.973-13.333-13.33-13.333zm7.608 18.565c-.32.894-1.87 1.749-2.574 1.865-.657.104-1.479.148-2.385-.148-.55-.175-1.256-.412-2.162-.812-3.8-1.648-6.294-5.77-6.49-6.04-.192-.269-1.55-2.066-1.55-3.943 0-1.878.982-2.801 1.33-3.168.346-.364.75-.456 1.001-.456.25 0 .5.002.719.013.231.01.539-.088.845.643.32.768 1.085 2.669 1.18 2.863.096.192.16.423.03.683-.134.26-.2.423-.39.65-.192.231-.413.512-.589.689-.192.192-.391.401-.173.788.222.392.986 1.625 2.116 2.636 1.454 1.298 2.682 1.7 3.075 1.894.393.192.618.173.845-.096.23-.27.975-1.136 1.237-1.527.262-.392.524-.32.894-.192.375.13 2.35 1.107 2.75 1.308.393.205.656.308.75.48.096.173.096 1.003-.224 1.897z" />
+                      </svg>
+                    </Link>
+                    <Addtocart
+                      productId={product._id}
+                      stockQuantity={product.quantity}
+                      special_price={product.special_price}
+                      className="flex-1 whitespace-nowrap text-xs sm:text-sm py-1.5 my-2"
+                    />
+                    <button
+                      onClick={() => handleBuyNow(product)}
+                      className={`w-1/2 py-3  font-semibold text-white transition-colors duration-300 ${product.quantity > 0 && product.stock_status === "In Stock"
+                        ? "bg-[#a3ca43] hover:bg-lime-500 cursor-pointer"
+                        : "bg-gray-300 hover:bg-gray-300 cursor-not-allowed"
+                        }`}
+                      disabled={!(product.quantity > 0 && product.stock_status === "In Stock")}
+                    >
+                      BUY NOW
+                    </button>
+                  </div>
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
       ) : hasSearched ? (
         <div className="flex flex-col items-center justify-center text-center mt-10 p-6 bg-gray-50 border border-gray-200 rounded-lg shadow-sm">
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">No Matching Products Found</h2>

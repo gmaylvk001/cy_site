@@ -256,7 +256,7 @@ export async function PUT(req, { params }) {
           const imageFile = formData.get(imageKey);
           if (!imageFile || typeof imageFile.name !== "string") break;
 
-          const filename = `${Date.now()}-${imageFile.name.replace(
+          const filename = `${imageFile.name.replace(
             /\s+/g,
             "-"
           )}`;

@@ -21,7 +21,7 @@ const ProductSchema = new mongoose.Schema({
   status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
   stock_status: { type: String, enum: ["In Stock", "Out of Stock"], default: "In Stock" },
   hasVariants: { type: Boolean, default: false },
-  variants: { type: Object, default: {} },
+  variants: { type: [Object], default: [] },
   images: { type: [String], default: [] }, 
   filter : { type: Object, default: {} },
   overview_image: { type: [String], default: [] }, 

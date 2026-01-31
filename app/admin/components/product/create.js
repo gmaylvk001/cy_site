@@ -1,5 +1,5 @@
 "use client";
-import { React, useState, useEffect } from "react";
+import { React, useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { FaPlus, FaMinus, FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import TinyEditor from "./TinyEditor";
@@ -9,6 +9,8 @@ import { ToastContainer, toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { components } from "react-select";
 import { Check } from "react-feather";
+import ColorPicker from "../ColorPicker";
+import VariantModal from "../VariantModel";
 
 const steps = [
   { title: "Basic Information" },
@@ -62,6 +64,9 @@ export default function AddProductPage({
     extended_warranty: "",
     product_highlights: [],
   });
+  const [color, setColor] = useState([])
+  const [showcolorPicker, setShowColorPicker] = useState([]);
+  const [multiple_color, setMultiple_color] = useState(false);
 
   const [variant, setVariant] = useState([
     {
@@ -76,7 +81,9 @@ export default function AddProductPage({
       status: "Active",
     },
   ]);
-
+  const [fetchedVariantData, setFetchedVariantData] = useState(null);
+  const [OpenVariantModal, setOpenVariantModal] = useState(false);
+  const [editVariantIndex, setEditVariantIndex] = useState(null);
   const [variantImages, setVariantImages] = useState([
     {
       images: [],
@@ -197,6 +204,13 @@ export default function AddProductPage({
   //     toast.error(error);
   //   }
   // };
+
+
+  const selectedVariant = useMemo(() => {
+    return editVariantIndex !== null ? [product.variants[editVariantIndex]] : [];
+  }, [editVariantIndex, product.variants]);
+
+
   const fetchFilter = async () => {
     try {
       const response = await fetch("/api/filter");
@@ -332,6 +346,27 @@ export default function AddProductPage({
   // }, [mode, productData, setJsonHighlightsInput,setSelectedCategory]);
 
   useEffect(() => {
+    if (mode === "edit" && productData?._id) {
+      const fetchVariants = async () => {
+        try {
+          const response = await fetch(`/api/Variants/get?_id=${productData._id}`);
+          // if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const data = await response.json();
+          setFetchedVariantData(data || []); // optional
+        } catch (error) {
+          console.error("Failed to fetch variant:", error);
+        }
+      };
+
+      fetchVariants();
+    }
+    else (setFetchedVariantData({
+      variants: []
+    }))
+  }, [mode, productData]);
+
+
+  useEffect(() => {
     if (mode === "edit" || productData) {
       console.log("Edit mode - Product data:", productData);
       console.log("Overview images from DB:", productData.overview_image);
@@ -356,9 +391,9 @@ export default function AddProductPage({
         filters:
           productData.filterDetails && productData.filterDetails.length > 0
             ? productData.filterDetails.map((item) => ({
-                value: item._id,
-                label: item.filter_name,
-              }))
+              value: item._id,
+              label: item.filter_name,
+            }))
             : [],
         hasVariants: productData.hasVariants || false,
         variants: productData.variants || [],
@@ -372,28 +407,28 @@ export default function AddProductPage({
         // FIX: Use overview_image from database
         overviewImage:
           Array.isArray(productData.overview_image) &&
-          productData.overview_image.length > 0
+            productData.overview_image.length > 0
             ? productData.overview_image
             : [null],
         overviewImageFile: productData.overviewImageFile || [null],
         featured_products: productData.featured_products || [],
         removedOverviewImages: [], // Reset removed images
       }));
-if (Array.isArray(productData?.sub_category)) {
-  setSelectedCategory((prev) => {
-    const updated = new Set(prev); // start with previous values
-    productData.sub_category.forEach((id) => updated.add(id)); // add new ones
-    return updated;
-  });
-}
+      if (Array.isArray(productData?.sub_category)) {
+        setSelectedCategory((prev) => {
+          const updated = new Set(prev); // start with previous values
+          productData.sub_category.forEach((id) => updated.add(id)); // add new ones
+          return updated;
+        });
+      }
 
-if (Array.isArray(productData?.category)) {
-  setSelectedParentCategory((prev) => {
-    const updated = new Set(prev); // start with previous values
-    productData.category.forEach((id) => updated.add(id)); // add new ones
-    return updated;
-  });
-}
+      if (Array.isArray(productData?.category)) {
+        setSelectedParentCategory((prev) => {
+          const updated = new Set(prev); // start with previous values
+          productData.category.forEach((id) => updated.add(id)); // add new ones
+          return updated;
+        });
+      }
 
     }
   }, [mode, productData, setJsonHighlightsInput, setSelectedCategory]);
@@ -422,18 +457,18 @@ if (Array.isArray(productData?.category)) {
     const updatedVariants = variant.map((v, i) =>
       i === index
         ? {
-            ...v,
-            variant_attribute_name: v.variant_attribute_name || "",
-            options: v.options || "",
-            item_code: v.item_code || "",
-            price: v.price || "",
-            special_price: v.special_price || "",
-            quantity: v.quantity || "",
-            stock_status: v.stock_status || "In Stock",
-            status: v.status || "Active",
-            images: v.images || [],
-            [field]: value,
-          }
+          ...v,
+          variant_attribute_name: v.variant_attribute_name || "",
+          options: v.options || "",
+          item_code: v.item_code || "",
+          price: v.price || "",
+          special_price: v.special_price || "",
+          quantity: v.quantity || "",
+          stock_status: v.stock_status || "In Stock",
+          status: v.status || "Active",
+          images: v.images || [],
+          [field]: value,
+        }
         : v
     );
 
@@ -746,7 +781,12 @@ if (Array.isArray(productData?.category)) {
 
   const handleAddVariant1 = () => {
     const newVariant = {
-      variant_attribute_name: "",
+      variant_arr: [
+        {
+          variant_attribute_name: "", // default
+          options: "", // user types: red/green
+        }
+      ],
       options: "",
       item_code: "",
       price: "",
@@ -756,9 +796,13 @@ if (Array.isArray(productData?.category)) {
       images: [],
       status: "Active",
     };
-
+    setFetchedVariantData((prev) => ({
+      ...prev,
+      variants: [...prev.variants || [], newVariant],
+    }));
+    productData.hasVariants = true;
     setVariant((prev) => [...prev, newVariant]);
-    setVariantImages((prev) => [...prev, { images: [] }]);
+    // setVariantImages((prev) => [...prev, { images: [] }]);
 
     setProduct((prev) => ({
       ...prev,
@@ -927,46 +971,46 @@ if (Array.isArray(productData?.category)) {
   // }, [product.variantAttributes, product.hasVariants]);
 
   const findParentCategory = (categories, childId) => {
-  for (const cat of categories) {
-    if (cat.children?.some((child) => child._id === childId)) {
-      return cat._id;
+    for (const cat of categories) {
+      if (cat.children?.some((child) => child._id === childId)) {
+        return cat._id;
+      }
+      if (cat.children) {
+        const found = findParentCategory(cat.children, childId);
+        if (found) return found;
+      }
     }
-    if (cat.children) {
-      const found = findParentCategory(cat.children, childId);
-      if (found) return found;
-    }
-  }
-  return null;
-};
+    return null;
+  };
 
 
-const handleCategoryChange = (category) => {
-  setSelectedCategory((prev) => {
-    const updated = new Set(prev);
+  const handleCategoryChange = (category) => {
+    setSelectedCategory((prev) => {
+      const updated = new Set(prev);
 
-    // Toggle leaf category
-    if (updated.has(category._id)) {
-      updated.delete(category._id);
-    } else {
-      updated.add(category._id);
-    }
-    // Find parent categories for all selected children
-    const parentSet = new Set();
-    updated.forEach((childId) => {
-      const parentId = findParentCategory(categories, childId);
-      if (parentId) parentSet.add(parentId);
+      // Toggle leaf category
+      if (updated.has(category._id)) {
+        updated.delete(category._id);
+      } else {
+        updated.add(category._id);
+      }
+      // Find parent categories for all selected children
+      const parentSet = new Set();
+      updated.forEach((childId) => {
+        const parentId = findParentCategory(categories, childId);
+        if (parentId) parentSet.add(parentId);
+      });
+
+      // Update product with correct arrays (no broken ObjectIds)
+      setProduct((p) => ({
+        ...p,
+        sub_category: Array.from(updated),
+        category: Array.from(parentSet),
+      }));
+
+      return updated;
     });
-
-    // Update product with correct arrays (no broken ObjectIds)
-    setProduct((p) => ({
-      ...p,
-      sub_category: Array.from(updated),
-      category: Array.from(parentSet),
-    }));
-
-    return updated;
-  });
-};
+  };
 
 
   //   useEffect(() => {
@@ -1002,11 +1046,10 @@ const handleCategoryChange = (category) => {
             />
           )}
           <span
-            className={`font-medium ${
-              selectedCategory.has(category._id)
-                ? "text-blue-500"
-                : "text-gray-700"
-            }`}
+            className={`font-medium ${selectedCategory.has(category._id)
+              ? "text-blue-500"
+              : "text-gray-700"
+              }`}
           >
             {category.category_name}
           </span>
@@ -1193,10 +1236,10 @@ const handleCategoryChange = (category) => {
       slug:
         name === "name"
           ? value
-              .toLowerCase()
-              .replace(/[^\w\s-]/g, "")
-              .replace(/\s+/g, "-")
-              .replace(/-+/g, "-")
+            .toLowerCase()
+            .replace(/[^\w\s-]/g, "")
+            .replace(/\s+/g, "-")
+            .replace(/-+/g, "-")
           : prev.slug,
     }));
   };
@@ -1356,7 +1399,7 @@ const handleCategoryChange = (category) => {
 
       // Variants with images
       const variantsWithImages = (product.variants || []).map((variant, i) => {
-        const files = variantImages[i]?.images || [];
+        const files = variant.files || [];
         files.forEach((file, j) => {
           if (file) {
             formData.append(`variant_${i}_image_${j}`, file);
@@ -1364,6 +1407,7 @@ const handleCategoryChange = (category) => {
         });
         return { ...variant, images: [] };
       });
+      cleanedProduct.hasVariants = fetchedVariantData.variants.length > 0;
 
       const finalProductData = {
         ...cleanedProduct,
@@ -1387,10 +1431,51 @@ const handleCategoryChange = (category) => {
       const responseData = await response.json();
 
       if (response.ok) {
+        console.log("Product saved:", responseData);
+
+        const formData1 = new FormData();
+
+        formData1.append("parent_id", responseData.product._id);
+        formData1.append("item_code", responseData.product.item_code);
+        formData1.append("product_name", responseData.product.name);
+
+        // ✅ Clean variants JSON (remove File objects)
+        const cleanedVariants = fetchedVariantData.variants.map((variant) => {
+          const copy = { ...variant };
+          delete copy.files;
+          return copy;
+        });
+
+        // ✅ Attach variants JSON
+        formData1.append("variants", JSON.stringify(cleanedVariants));
+
+        // ✅ Attach variant files
+        fetchedVariantData?.variants?.forEach((variant, index) => {
+          const files = Array.from(variant?.files || []);
+
+          files.forEach((file, ind) => {
+            if (file instanceof File) {
+              formData1.append(`variant_files_${index}_${ind}`, file);
+            }
+          });
+        });
+
+
+        const res = await fetch("/api/Variants/AddUpdate", {
+          method: "POST",
+          body: formData1,
+        });
+
+        const data = await res.json();
+        // if (fetchedVariantData?.variants?.length > 0) {
+        // }
+
         toast.success(mode === "edit" ? "Product updated" : "Product added");
+
         if (mode === "edit" && typeof onSuccess === "function") onSuccess();
         else router.push("/admin/product");
-      } else {
+      }
+      else {
         toast.error(responseData.error || "Something went wrong");
       }
     } catch (error) {
@@ -1498,11 +1583,10 @@ const handleCategoryChange = (category) => {
               type="button"
               key={index}
               // onClick={() => setCurrentStep(index- 1)}
-              className={`py-2 px-4 text-sm font-medium focus:outline-none ${
-                currentStep - 1 === index
-                  ? "border-b-2 border-blue-500 text-blue-600"
-                  : "text-gray-600 hover:text-blue-500"
-              }`}
+              className={`py-2 px-4 text-sm font-medium focus:outline-none ${currentStep - 1 === index
+                ? "border-b-2 border-blue-500 text-blue-600"
+                : "text-gray-600 hover:text-blue-500"
+                }`}
             >
               {tab.title}
             </button>
@@ -1580,32 +1664,100 @@ const handleCategoryChange = (category) => {
         }
         break;
       case 3:
-        if (product.hasVariants) {
-          const allFilled = product.variants.every((v, i) => {
-            const hasAll =
-              v.variant_attribute_name?.trim() &&
-              v.options?.trim() &&
-              v.item_code?.trim() &&
-              v.price !== "" &&
-              v.price !== null &&
-              v.special_price !== "" &&
-              v.special_price !== null &&
-              v.quantity !== "" &&
-              v.quantity !== null &&
-              v.stock_status?.trim() &&
-              v.status?.trim();
+        const findInvalidVariantFields = (fetchedVariantData) => {
+          const variants = fetchedVariantData?.variants || [];
+          const issues = [];
 
-            if (!hasAll) {
-              console.log("Missing field in variant index:", i, v);
+          if (variants.length === 0) return issues;
+
+          const isEmpty = (val) =>
+            val === "" || val === null || val === undefined;
+
+          variants.forEach((variant, vIndex) => {
+            // ----------------------------
+            // check variant_arr
+            // ----------------------------
+            (variant?.variant_arr || []).forEach((va, aIndex) => {
+              if (isEmpty(va?.variant_attribute_name)) {
+                issues.push(`variants[${vIndex+1}].variant_arr[${aIndex+1}].variant_attribute_name`);
+              }
+              if (isEmpty(va?.options)) {
+                issues.push(`variants[${vIndex+1}].variant_[${aIndex+1}].options`);
+              }
+            });
+
+            // ----------------------------
+            // check main fields
+            // ----------------------------
+            // if (isEmpty(variant?.item_code)) {
+            //   issues.push(`variants[${vIndex}].item_code`);
+            // }
+
+            if (isEmpty(variant?.price) || Number(variant.price) <= 0) {
+              issues.push(`variants[${vIndex+1}].price`);
             }
 
-            return hasAll;
+            if (isEmpty(variant?.special_price) || Number(variant.special_price) < 0) {
+              issues.push(`variants[${vIndex+1}].special_price`);
+            }
+
+            if (isEmpty(variant?.quantity) || Number(variant.quantity) < 0) {
+              issues.push(`variants[${vIndex+1}].quantity`);
+            }
+
+            if (isEmpty(variant?.stock_status)) {
+              issues.push(`variants[${vIndex+1}].stock_status`);
+            }
+
+            if (isEmpty(variant?.status)) {
+              issues.push(`variants[${vIndex+1}].status`);
+            }
+
+            // images check
+            if (!Array.isArray(variant?.images) || variant.images.length === 0) {
+              issues.push(`variants[${vIndex+1}].images`);
+            } else {
+              variant.images.forEach((img, imgIndex) => {
+                if (isEmpty(img)) {
+                  issues.push(`variants[${vIndex+1}].images[${imgIndex+1}]`);
+                }
+              });
+            }
           });
 
-          if (!allFilled) {
-            return "Please fill in all required variant fields.";
-          }
+          return issues;
+        };
+        const invalidFields = findInvalidVariantFields(fetchedVariantData);
+        if (invalidFields.length > 0) {
+          return `Please fill in all required variant fields. Missing: ${invalidFields.join(", ")}`;
+
         }
+        // if (product.hasVariants) {
+        //   const allFilled = product.variants.every((v, i) => {
+        //     const hasAll =
+        //       v.variant_attribute_name?.trim() &&
+        //       v.options?.trim() &&
+        //       v.item_code?.trim() &&
+        //       v.price !== "" &&
+        //       v.price !== null &&
+        //       v.special_price !== "" &&
+        //       v.special_price !== null &&
+        //       v.quantity !== "" &&
+        //       v.quantity !== null &&
+        //       v.stock_status?.trim() &&
+        //       v.status?.trim();
+
+        //     if (!hasAll) {
+        //       console.log("Missing field in variant index:", i, v);
+        //     }
+
+        //     return hasAll;
+        //   });
+
+        //   if (!allFilled) {
+        //     return "Please fill in all required variant fields.";
+        //   }
+        // }
 
         break;
 
@@ -1633,6 +1785,8 @@ const handleCategoryChange = (category) => {
       </div>
     </div>
   );
+
+
   return (
     <div className="mx-auto p-6 bg-white shadow-md rounded-lg">
       <h2 className="text-2xl font-bold mb-4">
@@ -1658,11 +1812,10 @@ const handleCategoryChange = (category) => {
                   name="name"
                   value={product.name || ""}
                   onChange={handleChange}
-                  className={`w-full border p-2 rounded ${
-                    product.name.length < 20 && product.name.length > 0
-                      ? "border-red-500"
-                      : ""
-                  }`}
+                  className={`w-full border p-2 rounded ${product.name.length < 20 && product.name.length > 0
+                    ? "border-red-500"
+                    : ""
+                    }`}
                   required
                   minLength={20} // HTML5 validation (but may not show until form submission)
                 />
@@ -1781,6 +1934,233 @@ const handleCategoryChange = (category) => {
                   className="w-full border p-2 rounded"
                 />
               </div>
+              {/* <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <input
+                    type='checkbox'
+                    checked={multiple_color}
+                    onChange={(e) => {
+                      setMultiple_color(e.target.checked)
+                      if (color.length == 0) {
+                        setColor((prev) => [
+                          ...prev,
+                          {
+                            color_code1: '',
+                            color_code2: ''
+                          }
+                        ])
+                      }
+                    }}
+                  />
+                  Color code
+                </label>
+                {showcolorPicker ? (
+                  <div>
+                    <ColorPicker
+                      onChange={(color) => {
+                        console.log(color);
+                        setShowColorPicker(false); // ✅ CLOSE PICKER AFTER SELECT
+                      }}
+                    />
+                  </div>
+                ) : 
+                {
+                  multiple_color && (
+                    <div>
+                      {color.map((col, index) => (
+                        <div key={index} className="flex items-center mb-2">
+                          <input
+                            type="text"
+                            value={col.color_code1}
+                            onChange={(e) => handleColorChange(index, e.target.value)}
+                            className="w-full border p-2 rounded"
+                            placeholder="Enter color code"
+                          />
+                          <button
+                            type="button"
+                            className="ml-2 mr-2 bg-blue-500 text-white px-2 py-1 rounded"
+                            onClick={() => {
+                              setShowColorPicker((prev) => [
+                                ...prev,
+                                { index, field: "color_code1", open: true }
+                              ]);
+                            }}
+                          >
+                            picker
+                          </button>
+
+                          {showcolorPicker.some(
+                            (p) => p.index === index && p.field === "color_code1" && p.open
+                          ) && (
+                              <div className="fixed inset-0 z-50 flex items-center justify-center">
+                                <div
+                                  className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                                  onClick={() => {
+                                    setShowColorPicker((prev) =>
+                                      prev.filter(
+                                        (p) => !(p.index === index && p.field === "color_code1")
+                                      )
+                                    );
+                                  }}
+                                />
+
+                                <div className="relative z-50 bg-white rounded-xl p-4 shadow-xl w-[300px]">
+                                  <div className="flex justify-between items-center mb-3">
+                                    <h3 className="font-semibold text-sm">Select Color</h3>
+
+                                    <button
+                                      className="text-gray-500 hover:text-black"
+                                      onClick={() =>
+                                        setShowColorPicker((prev) =>
+                                          prev.filter(
+                                            (p) => !(p.index === index && p.field === "color_code1")
+                                          )
+                                        )
+                                      }
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+
+                                  <ColorPicker
+                                    onChange={(pickedColor) => {
+                                      setColor((prev) => {
+                                        const updated = [...prev];
+                                        updated[index].color_code1 = pickedColor;
+                                        return updated;
+                                      });
+
+
+                                    }}
+                                  />
+                                  <div className="mt-2 flex justify-center  items-center">
+                                    <button className='px-4 text-center py-2 bg-blue-500 rounded-lg hover:bg-blue-600'
+                                      onClick={() => {
+                                        setShowColorPicker((prev) =>
+                                          prev.filter(
+                                            (p) => !(p.index === index && p.field === "color_code1")
+                                          )
+                                        );
+                                      }}>Submit</button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+
+                          <input
+                            type="text"
+                            value={col.color_code2}
+                            onChange={(e) => handleColorChange(index, e.target.value)}
+                            className="w-full border p-2 rounded"
+                            placeholder="Enter color code"
+                          />
+                          <button
+                            type="button"
+                            className="ml-2 bg-blue-500 text-white px-2 py-1 rounded"
+                            onClick={() => {
+                              setShowColorPicker((prev) => [
+                                ...prev,
+                                { index, field: "color_code2", open: true }
+                              ]);
+                            }}
+                          >
+                            picker
+                          </button>
+                          {showcolorPicker.some(
+                            (p) => p.index === index && p.field === "color_code2" && p.open
+                          ) && (
+                              <div className="fixed inset-0 z-50 flex items-center justify-center">
+                                <div
+                                  className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                                  onClick={() => {
+                                    setShowColorPicker((prev) =>
+                                      prev.filter(
+                                        (p) => !(p.index === index && p.field === "color_code2")
+                                      )
+                                    );
+                                  }}
+                                />
+
+                                <div className="relative z-50 bg-white rounded-xl p-4 shadow-xl w-[300px]">
+                                  <div className="flex justify-between items-center mb-3">
+                                    <h3 className="font-semibold text-sm">Select Color</h3>
+
+                                    <button
+                                      className="text-gray-500 hover:text-black"
+                                      onClick={() =>
+                                        setShowColorPicker((prev) =>
+                                          prev.filter(
+                                            (p) => !(p.index === index && p.field === "color_code2")
+                                          )
+                                        )
+                                      }
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+
+                                  <ColorPicker
+                                    onChange={(pickedColor) => {
+                                      setColor((prev) => {
+                                        const updated = [...prev];
+                                        updated[index].color_code2 = pickedColor;
+                                        return updated;
+                                      });
+                                    }}
+                                  />
+                                  <div className="mt-2 flex justify-center  items-center">
+                                    <button className='px-4 text-center py-2 bg-blue-500 rounded-lg hover:bg-blue-600'
+                                      onClick={() => {
+                                        setShowColorPicker((prev) =>
+                                          prev.filter(
+                                            (p) => !(p.index === index && p.field === "color_code2")
+                                          )
+                                        );
+                                      }}>Submit</button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setColor((prev) => [
+                                ...prev,
+                                {
+                                  color_code1: '',
+                                  color_code2: ''
+                                }
+                              ])
+                            }}
+
+                            className="ml-2 bg-green-500 text-white px-2 py-1 rounded"
+                          >
+                            ADD
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (color.length == 1) {
+                                toast.error("At least one color code is required");
+                                return;
+                              }
+                              setColor((prev) => prev.filter((_, i) => i !== index));
+                            }}
+                            className="ml-2 bg-red-500 text-white px-2 py-1 rounded"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                }
+                }
+
+
+              </div> */}
             </div>
           </div>
         )}
@@ -1825,9 +2205,8 @@ const handleCategoryChange = (category) => {
                                 accept="image/*"
                                 onChange={(e) => handleImageChange(index, e)}
                                 required={index === 0}
-                                key={`file-${index}-${
-                                  product.images[index] ? "filled" : "empty"
-                                }`}
+                                key={`file-${index}-${product.images[index] ? "filled" : "empty"
+                                  }`}
                               />
                             </div>
 
@@ -1837,12 +2216,11 @@ const handleCategoryChange = (category) => {
                                 alt={`Preview ${index + 1}`}
                                 src={
                                   product.images[index]?.startsWith("http") ||
-                                  product.images[index]?.startsWith("blob:") ||
-                                  product.images[index]?.startsWith("data:")
+                                    product.images[index]?.startsWith("blob:") ||
+                                    product.images[index]?.startsWith("data:")
                                     ? product.images[index]
-                                    : `/uploads/products/${
-                                        product.images[index] || "no-image.jpg"
-                                      }`
+                                    : `/uploads/products/${product.images[index] || "no-image.jpg"
+                                    }`
                                 }
                               />
                             </div>
@@ -1963,9 +2341,9 @@ const handleCategoryChange = (category) => {
                                   <img
                                     src={
                                       typeof image === "string" &&
-                                      (image.startsWith("http") ||
-                                        image.startsWith("blob:") ||
-                                        image.startsWith("data:"))
+                                        (image.startsWith("http") ||
+                                          image.startsWith("blob:") ||
+                                          image.startsWith("data:"))
                                         ? image
                                         : `/uploads/products/${image}`
                                     }
@@ -2062,6 +2440,149 @@ const handleCategoryChange = (category) => {
         {/* Step 3: Variants & Filters */}
         {currentStep === 3 && (
           <div className="space-y-4">
+            {/* <label className="flex items-center gap-3 text-lg font-semibold cursor-pointer">
+              <input
+                type="checkbox"
+                className="w-5 h-5 accent-blue-600 cursor-pointer"
+                checked={product.hasVariants }
+                onChange={(e) => {
+                  setProduct((prev) => ({
+                    ...prev,
+                    hasVariants: e.target.checked,
+                  })
+                  )
+                  if (fetchedVariantData.variants?.length === 0) {
+                    handleAddVariant1()
+                  }
+                }
+                }
+
+              />
+              Variants
+            </label> */}
+            <div className="border p-4 rounded space-y-3">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-bold mb-2">Variants</h3>
+                <button className="bg-green-500 px-4 py-2 rounded" type="button"
+                  onClick={() => handleAddVariant1()}
+                >+Add</button>
+              </div>
+
+              {fetchedVariantData?.variants?.length === 0 ? (
+                <p className="text-gray-500">No variants added.</p>
+              ) : (
+                fetchedVariantData?.variants?.map((v, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between border p-3 rounded-lg bg-gray-50"
+                  >
+                    {/* Left side info */}
+                    {v.variant_arr.map((va, vaIndex) => (
+                      <div key={vaIndex}
+                        className="mr-4
+                      ">
+                        <p className="font-semibold text-gray-800">
+                          {va.variant_attribute_name}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Options:{" "}
+                          {typeof va.options === "string" ? va.options : ""}
+                        </p>
+                      </div>
+                    ))}
+
+                    {/* <div>
+                      <p className="font-semibold text-gray-800">
+                        {v.variant_attribute_name}
+                      </p>
+
+                      <p className="text-sm text-gray-600">
+                        Options:{" "}
+                        {Array.isArray(v.options) ? v.options.join(" / ") : v.options}
+                      </p>
+                    </div> */}
+
+                    {/* Right side actions */}
+                    <div className="flex gap-2">
+                      {/* Edit */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditVariantIndex(index);
+                          setOpenVariantModal(true);
+                        }}
+                        className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
+                      >
+                        Edit
+                      </button>
+                      {/* {console.log(v, 'selectedVariant')} */}
+                      {/* <VariantModal
+                        open={OpenVariantModal}
+                        onClose={() => {
+                          setOpenVariantModal(false);
+                          setEditVariantIndex(null);
+                        }}
+                        initialVariant={
+                          editVariantIndex !== null ? [product.variants[editVariantIndex]] : []
+                          // selectedVariant
+                          // v 
+                        }
+                        onSubmit={(updatedVariants) => {
+                          // updatedVariants will be array with 1 object (because we pass 1)
+                          console.log(updatedVariants, 'updatedVariants')
+                          setProduct((prev) => {
+                            const newAllVariants = [...prev.variants];
+                            newAllVariants[editVariantIndex] = updatedVariants[0];
+
+                            return {
+                              ...prev,
+                              variants: newAllVariants,
+                              hasVariants: true,
+                            };
+                          });
+                        }}
+                      /> */}
+
+
+                      {/* Delete */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFetchedVariantData((prev) => ({
+                            ...prev,
+                            variants: prev.variants.filter((_, i) => i !== index) ||[],
+                          }));
+                        }}
+                        className="px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {OpenVariantModal && (
+              <VariantModal
+                open={OpenVariantModal}
+                onClose={() => {
+                  setOpenVariantModal(false);
+                  setEditVariantIndex(null);
+                }}
+                initialVariant={editVariantIndex !== null ? fetchedVariantData.variants[editVariantIndex] : null}
+                onSubmit={(updatedVariant) => {
+                  setFetchedVariantData((prev) => {
+                    const newAllVariants = [...prev.variants];
+                    newAllVariants[editVariantIndex] = updatedVariant; // single object now
+                    return { ...prev, variants: newAllVariants, hasVariants: true };
+                  });
+                }}
+              />
+            )}
+
+
+
             <h3 className="text-xl font-semibold mb-4">Filters</h3>
 
             <div className="border p-4 rounded">
@@ -2079,8 +2600,8 @@ const handleCategoryChange = (category) => {
                   Array.isArray(product.filters)
                     ? product.filters.every((f) => typeof f === "string")
                       ? Filter.flatMap((g) => g.options).filter((o) =>
-                          product.filters.includes(o.value)
-                        )
+                        product.filters.includes(o.value)
+                      )
                       : product.filters
                     : []
                 }
@@ -2103,8 +2624,8 @@ const handleCategoryChange = (category) => {
                     backgroundColor: state.isSelected
                       ? "#e6f4ea"
                       : state.isFocused
-                      ? "#f9fafb"
-                      : "white",
+                        ? "#f9fafb"
+                        : "white",
                     color: "#111827",
                     fontWeight: state.isSelected ? 600 : 400,
                   }),
@@ -2295,7 +2816,7 @@ const handleCategoryChange = (category) => {
               </p>
 
               {(product.product_highlights &&
-              product.product_highlights.length > 0
+                product.product_highlights.length > 0
                 ? product.product_highlights
                 : [""]
               ).map((highlight, index) => (

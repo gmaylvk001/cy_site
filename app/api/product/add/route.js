@@ -187,7 +187,7 @@ export async function POST(req) {
           if (!imageFile) break;
 
           // Process and save the image
-          const filename = `${Date.now()}-${imageFile.name.replace(
+          const filename = `${imageFile.name.replace(
             /\s+/g,
             "-"
           )}`;

@@ -710,6 +710,7 @@ export default function CategoryPage(params) {
   };
 
   return (
+    <div className="w-full h-full bg-white">
     <div className="container mx-auto px-4 py-2 pb-3 max-w-7xl">
       {/* Pass the current category slug to show only relevant banners */}
       {/* <BannerSlider categorySlug={slug} /> */}
@@ -1928,6 +1929,7 @@ export default function CategoryPage(params) {
         )}
       </div>
       <ToastContainer />
+    </div>
     </div>
   );
 }
