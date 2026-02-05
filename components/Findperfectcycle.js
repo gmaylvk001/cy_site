@@ -345,13 +345,13 @@ export default function BicycleFilterSection() {
     }
   };
 
-  const handleRefreshFilters =() => {
+  const handleRefreshFilters = () => {
     setSelectedFilters({ gender: null, type: null, price: null, brand: null });
     setHasSearched(false);
     setIsProductsLoading(true);
     fetch("/api/productfind")
       .then((res) => res.json())
-      .then(async(data) => {
+      .then(async (data) => {
         let res = shuffleArray(data);
         setProducts(res)
       })
@@ -489,7 +489,7 @@ export default function BicycleFilterSection() {
 
                   <div className="px-4 py-2 border-t flex-grow relative">
                     {/* Right side color circles */}
-                    <div className="absolute top-[28px] right-0 flex flex-col gap-2 bg-slate-200 p-2 rounded-tl-xl rounded-bl-xl">
+                    <div className="absolute top-[28px] right-0 flex flex-col  bg-slate-200  rounded-tl-xl rounded-bl-xl h-fit">
                       {variants
                         .find((vari) => vari.parent_id === product._id) &&
                         getColorPairs(
@@ -498,13 +498,25 @@ export default function BicycleFilterSection() {
                           const [c1, c2] = pair.split("/");
 
                           return (
-                            <span
+
+                            <Link
                               key={i}
-                              className="w-4 h-4 rounded-full border border-gray-300 shadow-sm"
-                              style={{
-                                background: `linear-gradient(135deg, ${c1} 50%, ${c2} 50%)`,
+                              href={{
+                                pathname: `/product/${product.slug}`,
+                                query: { color: `${c1}-${c2}` },
                               }}
-                            />
+                              className="inline-block"
+                            >
+                              <span
+                                className="w-4 h-4 inline-block rounded-full border border-gray-300 shadow-sm m-2 cursor-pointer mb-0"
+                                style={{
+                                  background: `linear-gradient(135deg, ${c1} 50%, ${c2} 50%)`,
+                                }}
+                              ></span>
+                            </Link>
+
+
+
                           );
                         })}
                     </div>

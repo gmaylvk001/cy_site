@@ -3,7 +3,7 @@ import connectDB from "@/lib/db";
 import Cart from "@/models/ecom_cart_info";
 import Product from "@/models/product";
 import jwt from "jsonwebtoken";
-
+import Variant from "@/models/Variant";
 /** Utils **/
 const extractToken = (req) => {
   const authHeader = req.headers.get("authorization");
@@ -12,7 +12,7 @@ const extractToken = (req) => {
 
 const verifyToken = (token) => {
   if (!token) throw new Error("Authorization token required");
-   try {
+  try {
     return jwt.verify(token, process.env.JWT_SECRET);
   } catch (err) {
     if (err.name === "TokenExpiredError") {
@@ -40,6 +40,50 @@ const calculateCartTotals = (items) => {
   return { totalItems, totalPrice };
 };
 
+function normalize(str) {
+  return String(str || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "")        // remove spaces
+    .replace(/[-_]/g, "/");     // treat - or _ as /
+}
+
+function findMatchingVariant(variantDoc, selectedVariant = {}) {
+  if (!variantDoc?.variants?.length) return null;
+
+  return variantDoc.variants.find((v) => {
+    if (!v.variant_arr?.length) return false;
+
+    // If user selected color, check if any variant_arr has that color
+    if (selectedVariant.color) {
+      const colorMatch = v.variant_arr.some(
+        (attr) =>
+          attr.variant_attribute_name === "color" &&
+          attr.options === selectedVariant.color
+      );
+
+      if (!colorMatch) return false;
+    }
+
+    // If user selected size, check size also (if exists in DB)
+    if (selectedVariant.size) {
+      const sizeMatch = v.variant_arr.some(
+        (attr) =>
+          attr.variant_attribute_name === "size" &&
+          attr.options === selectedVariant.size
+      );
+
+      if (!sizeMatch) return false;
+    }
+
+    return true;
+  });
+}
+
+
+
+
+
 /** POST - Add to Cart **/
 export async function POST(req) {
   try {
@@ -65,17 +109,65 @@ export async function POST(req) {
       selectedWarranty = 0,
       selectedExtendedWarranty = 0,
       upsellProducts = [],
+      variant = {},
       guestCartId, // frontend sends UUID from localStorage
     } = await req.json();
+
+    const selectedColor = variant?.color || "";
+    const selectedSize = variant?.size || "";
 
     if (!productId) {
       return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
     }
 
     const product = await Product.findById(productId);
+
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
+    const variantDoc = await Variant.findOne({ parent_id: productId }).lean()
+
+    // remove empty variant values like { size:"", color:"" }
+    const selectedVariantValues = Object.fromEntries(
+      Object.entries(variant || {}).filter(([k, v]) => v !== "" && v !== null && v !== undefined)
+    );
+
+    const matchedVariant =
+      Object.keys(selectedVariantValues).length > 0
+        ? findMatchingVariant(variantDoc, selectedVariantValues)
+        : null;
+
+    let finalPrice = product.special_price ?? product.price;
+    let finalImage = product.images?.[0] || "";
+    let finalItemCode = product.item_code;
+    let finalStockQty = product.quantity;
+
+    // If variant selected and matched
+    if (Object.keys(selectedVariantValues).length > 0) {
+      if (!matchedVariant) {
+        return NextResponse.json(
+          { error: "Selected variant not found" },
+          { status: 404 }
+        );
+      }
+
+      finalPrice = matchedVariant.special_price > 0
+        ? matchedVariant.special_price
+        : matchedVariant.price;
+
+      finalImage = matchedVariant.images?.[0] || finalImage;
+      finalItemCode = matchedVariant.item_code || finalItemCode;
+      finalStockQty = matchedVariant.quantity ?? finalStockQty;
+      // stock check
+      if (finalStockQty < quantity) {
+        return NextResponse.json(
+          { error: "Requested quantity exceeds available stock for this variant." },
+          { status: 409 }
+        );
+      }
+    }
+
+
 
     // choose key
     const query = userId ? { userId } : { guestId: guestCartId };
@@ -87,20 +179,35 @@ export async function POST(req) {
 
     // add/update item
     const existingItemIndex = cart.items.findIndex(
-      (item) => item.productId.toString() === productId
+      (item) =>
+        item.productId.toString() === productId &&
+        JSON.stringify(item.variant || {}) === JSON.stringify(selectedVariantValues || {})
     );
 
     // const original_prod_quantity = product.data.quantity;
 
     if (existingItemIndex >= 0) {
       cart.items[existingItemIndex].quantity += quantity;
+      console.log('exits', cart.items[existingItemIndex].quantity)
 
-      if(original_prod_quantity && original_prod_quantity < cart.items[existingItemIndex].quantity ) {
+      const item = cart.items[existingItemIndex];
+      const orderQty = quantity; // ordering quantity
+
+      const hasVariant =
+        item.variant &&
+        (item.variant.color || item.variant.size);
+
+      const availableStock = hasVariant
+        ? finalStockQty
+        : original_prod_quantity;
+
+      if (typeof availableStock !== "number" || availableStock < orderQty) {
         return NextResponse.json(
-          { error: "Requested quantity exceeds available stock."},
+          { error: "Requested quantity exceeds available stock." },
           { status: 409 }
         );
       }
+
       cart.items[existingItemIndex].warranty = selectedWarranty;
       cart.items[existingItemIndex].extendedWarranty = selectedExtendedWarranty;
     } else {
@@ -108,12 +215,13 @@ export async function POST(req) {
         item_code: product.item_code,
         productId,
         quantity,
-        price: product.special_price ?? product.price,
+        price: finalPrice,
         name: product.name,
-        image: product.images[0],
+        image: finalImage,
         warranty: selectedWarranty,
+        variant: selectedVariantValues,
         extendedWarranty: selectedExtendedWarranty,
-        actual_price: product.special_price ?? product.price,
+        actual_price: finalPrice,
       });
     }
 
@@ -138,35 +246,33 @@ export async function POST(req) {
 /** GET - Fetch Cart **/
 export async function GET(req) {
   try {
-    
-    
+
+
     let guestId = null;
     let cart = null;
     //let guestCartId = null;
     await connectDB();
     const token = extractToken(req);
     const productdata = [];
-    if(token)
-    {
-    const decoded = verifyToken(token);
-    const userId = decoded.userId;
-    
+    if (token) {
+      const decoded = verifyToken(token);
+      const userId = decoded.userId;
 
-    cart = await Cart.findOne({ userId }).populate(
-      "items.productId",
-      "name price images item_code quantity"
-    );
+
+      cart = await Cart.findOne({ userId }).populate(
+        "items.productId",
+        "name price images item_code quantity"
+      );
 
     }
-    else
-    {
+    else {
 
       const guestId_use = req.headers.get("GuestCartId");
       guestId = guestId_use;
-      cart = await Cart.findOne({  guestId }).populate(
-      "items.productId",
-      "name price images item_code quantity"
-     );
+      cart = await Cart.findOne({ guestId }).populate(
+        "items.productId",
+        "name price images item_code quantity"
+      );
 
     }
 
@@ -177,9 +283,9 @@ export async function GET(req) {
       );
     }
 
-      const items = await Promise.all(
+    const items = await Promise.all(
       cart.items.map(async (item) => {
-       // console.log(item);
+        // console.log(item);
         const original_quantity = await getQuantity(item.productId.item_code);
         return {
           original_quantity,
@@ -190,6 +296,7 @@ export async function GET(req) {
           image: item.productId.images[0],
           quantity: item.quantity,
           warranty: item.warranty || 0,
+          variant: item.variant || { color: "", size: "" },
           extendedWarranty: item.extendedWarranty || 0,
           actual_price: item.productId.price,
         };
@@ -207,7 +314,7 @@ export async function GET(req) {
           totalPrice: cart.totalPrice,
           items,
         },
-        products:{productdata},
+        products: { productdata },
       },
       { status: 200 }
     );
@@ -242,19 +349,17 @@ export async function PUT(req) {
     }
 
     const token = extractToken(req);
-    if(token)
-    {
-    const decoded = verifyToken(token);
-    const userId = decoded.userId;
-    cart = await Cart.findOne({ userId });
+    if (token) {
+      const decoded = verifyToken(token);
+      const userId = decoded.userId;
+      cart = await Cart.findOne({ userId });
     }
-    else
-    {
+    else {
       guestId = req.headers.get("GuestCartId");
       cart = await Cart.findOne({ guestId });
     }
 
-    
+
 
     //const cart = await Cart.findOne({ userId });
     if (!cart) {
@@ -275,19 +380,19 @@ export async function PUT(req) {
     cart.items[itemIndex].quantity = quantity;
     const item_code = cart.items[itemIndex].item_code;
     console.log(item_code);
-     const original_quantity = await getQuantity(item_code);
+    const original_quantity = await getQuantity(item_code);
     const totals = calculateCartTotals(cart.items);
     cart.totalItems = totals.totalItems;
     cart.totalPrice = totals.totalPrice;
     cart.items[itemIndex].original_quantity = original_quantity;
-console.log(cart.items);
-    
-    
+    console.log(cart.items);
+
+
     await cart.save();
 
-cart.items.forEach((item) => {
-  console.log(item);
-});
+    cart.items.forEach((item) => {
+      console.log(item);
+    });
     const items = cart.items.map((item) => ({
       productId: item.productId._id,
       name: item.name,
@@ -324,7 +429,7 @@ export async function DELETE(req) {
     await connectDB();
     let guestId = null;
     let cart = null;
-    
+
     /*
     const authHeader = req.headers.get('authorization');
     const token = authHeader?.split(' ')[1];
@@ -342,14 +447,12 @@ export async function DELETE(req) {
     const { productId, clearAll } = await req.json();
 
     const token = extractToken(req);
-    if(token)
-    {
-    const decoded = verifyToken(token);
-    const userId = decoded.userId;
-    cart = await Cart.findOne({ userId });
+    if (token) {
+      const decoded = verifyToken(token);
+      const userId = decoded.userId;
+      cart = await Cart.findOne({ userId });
     }
-    else
-    {
+    else {
       guestId = req.headers.get("GuestCartId");
       cart = await Cart.findOne({ guestId });
     }

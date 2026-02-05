@@ -23,7 +23,12 @@ const cartItemSchema = new mongoose.Schema({
   image: {
     type: String
   },
-   warranty: { type: Number, default: 0 }, // ✅ Add this
+  variant: {
+    color: { type: String, default: "" },
+    size: { type: String, default: "" },
+  },
+
+  warranty: { type: Number, default: 0 }, // ✅ Add this
   extendedWarranty: { type: Number, default: 0 }, // ✅ Add this
   upsells: [
     {
@@ -36,14 +41,14 @@ const cartItemSchema = new mongoose.Schema({
 
 const cartSchema = new mongoose.Schema({
   userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: undefined, // ⚡ important: undefined skips index
-    },
-    guestId: {
-      type: String,
-      default: undefined,
-    },
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: undefined, // ⚡ important: undefined skips index
+  },
+  guestId: {
+    type: String,
+    default: undefined,
+  },
   items: [cartItemSchema],
   totalItems: { type: Number, default: 0 },
   totalPrice: { type: Number, default: 0 },
@@ -95,7 +100,7 @@ const cartSchema = new mongoose.Schema({
 */
 
 // Update totals before saving
-cartSchema.pre('save', function(next) {
+cartSchema.pre('save', function (next) {
   this.totalItems = this.items.reduce((sum, item) => sum + item.quantity, 0);
   this.totalPrice = this.items.reduce(
     (sum, item) => sum + (item.price * item.quantity), 0

@@ -1677,14 +1677,30 @@ export default function AddProductPage({
             // ----------------------------
             // check variant_arr
             // ----------------------------
+            let colorCount = 0;
             (variant?.variant_arr || []).forEach((va, aIndex) => {
+              const colorIndexes = [];
               if (isEmpty(va?.variant_attribute_name)) {
-                issues.push(`variants[${vIndex+1}].variant_arr[${aIndex+1}].variant_attribute_name`);
+                issues.push(`variants[${vIndex + 1}].variant_arr[${aIndex + 1}].variant_attribute_name`);
               }
               if (isEmpty(va?.options)) {
-                issues.push(`variants[${vIndex+1}].variant_[${aIndex+1}].options`);
+                issues.push(`variants[${vIndex + 1}].variant_[${aIndex + 1}].options`);
               }
+              if (va?.variant_attribute_name === "color") {
+                colorCount++;
+              }
+
             });
+            if (colorCount > 1) {
+              (variant?.variant_arr || []).forEach((va, aIndex) => {
+                if (va?.variant_attribute_name === "color") {
+                  issues.push(
+                    `variants[${vIndex + 1}].variant_arr[${aIndex + 1}].variant_attribute_name
+                    More than one color fields`
+                  );
+                }
+              });
+            }
 
             // ----------------------------
             // check main fields
@@ -1694,32 +1710,32 @@ export default function AddProductPage({
             // }
 
             if (isEmpty(variant?.price) || Number(variant.price) <= 0) {
-              issues.push(`variants[${vIndex+1}].price`);
+              issues.push(`variants[${vIndex + 1}].price`);
             }
 
             if (isEmpty(variant?.special_price) || Number(variant.special_price) < 0) {
-              issues.push(`variants[${vIndex+1}].special_price`);
+              issues.push(`variants[${vIndex + 1}].special_price`);
             }
 
             if (isEmpty(variant?.quantity) || Number(variant.quantity) < 0) {
-              issues.push(`variants[${vIndex+1}].quantity`);
+              issues.push(`variants[${vIndex + 1}].quantity`);
             }
 
             if (isEmpty(variant?.stock_status)) {
-              issues.push(`variants[${vIndex+1}].stock_status`);
+              issues.push(`variants[${vIndex + 1}].stock_status`);
             }
 
             if (isEmpty(variant?.status)) {
-              issues.push(`variants[${vIndex+1}].status`);
+              issues.push(`variants[${vIndex + 1}].status`);
             }
 
             // images check
             if (!Array.isArray(variant?.images) || variant.images.length === 0) {
-              issues.push(`variants[${vIndex+1}].images`);
+              issues.push(`variants[${vIndex + 1}].images`);
             } else {
               variant.images.forEach((img, imgIndex) => {
                 if (isEmpty(img)) {
-                  issues.push(`variants[${vIndex+1}].images[${imgIndex+1}]`);
+                  issues.push(`variants[${vIndex + 1}].images[${imgIndex + 1}]`);
                 }
               });
             }
@@ -2550,7 +2566,7 @@ export default function AddProductPage({
                         onClick={() => {
                           setFetchedVariantData((prev) => ({
                             ...prev,
-                            variants: prev.variants.filter((_, i) => i !== index) ||[],
+                            variants: prev.variants.filter((_, i) => i !== index) || [],
                           }));
                         }}
                         className="px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600"

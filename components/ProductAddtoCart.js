@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useModal } from '@/context/ModalContext';
 import { useHeaderdetails } from '@/context/HeaderContext';
@@ -11,7 +11,7 @@ import { FaShoppingCart} from "react-icons/fa";
 
 import { v4 as uuidv4 } from "uuid";
 
-const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts = [],extendedWarranty, selectedFrequentProducts = [], stockQuantity = 1,special_price }) => {
+const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts = [],extendedWarranty, selectedFrequentProducts = [], stockQuantity = 1,special_price,variant={},selectedVariant={} }) => {
   const { openAuthModal } = useModal();
   const { updateHeaderdetails, setIsLoggedIn, setUserData, setIsAdmin } = useHeaderdetails();
   const [isLoading, setIsLoading] = useState(false);
@@ -22,6 +22,7 @@ const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts
   const isOutOfStock = stockQuantity <= 0;
   const isprice = special_price <= 0;
   const { cartCount, updateCartCount } = useCart();
+
   const handleAddToCart = async () => {
      if (isOutOfStock) return;
 
@@ -127,6 +128,7 @@ const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts
             productId,
             original_prod_quantity,
             quantity,
+            variant,
             selectedWarranty: warranty,
             selectedExtendedWarranty: extendedWarranty,
             ...(guestCartId && { guestCartId }), // ✅ include only if guest

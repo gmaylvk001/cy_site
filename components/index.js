@@ -14,7 +14,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { HiArrowRight } from "react-icons/hi";
 import { FiChevronLeft, FiChevronRight, FiShoppingCart } from "react-icons/fi";
-import {FaBicycle,FaPhoneAlt,FaShieldAlt,FaHeadset,FaCreditCard,FaUserTie,FaScrewdriver,FaStore,FaLayerGroup,FaWrench,FaTags,FaEnvelope,FaPhone,FaUsers,FaGlobe,FaIndustry,FaAward,} from "react-icons/fa";
+import { FaBicycle, FaPhoneAlt, FaShieldAlt, FaHeadset, FaCreditCard, FaUserTie, FaScrewdriver, FaStore, FaLayerGroup, FaWrench, FaTags, FaEnvelope, FaPhone, FaUsers, FaGlobe, FaIndustry, FaAward, } from "react-icons/fa";
 import Addtocart from "@/components/AddToCart";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay, Pagination } from "swiper/modules";
@@ -33,7 +33,7 @@ export default function HomeComponent() {
       ?.toString()
       .toLowerCase()
       .trim()
-      .replace(/\s+/g, "-") 
+      .replace(/\s+/g, "-")
       .replace(/[^\w\-]+/g, "")
       .replace(/\-\-+/g, "-");
   }
@@ -73,6 +73,7 @@ export default function HomeComponent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
   const [isSectionLoading, setIsSectionLoading] = useState(false);
+  const [variants, setVariants] = useState([]);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const scroll = (direction) => {
     if (scrollRef.current) {
@@ -84,7 +85,45 @@ export default function HomeComponent() {
     }
   };
   useEffect(() => {
-   const fetchBannerData = async () => {
+    const loadVariants = async () => {
+      try {
+        const res = await fetch("/api/Variants/get_all");
+        const data = await res.json();
+        console.log("Variants Data:", data);
+        setVariants(data.variants || []);
+      } catch (err) {
+        console.log("Fetch error:", err);
+      }
+    };
+
+    loadVariants();
+  }, []);
+
+  const getColorPairs = (temp) => {
+    const pairSet = new Set();
+
+    temp?.variants?.forEach((variant) => {
+      const colorObj = variant?.variant_arr?.find(
+        (v) => v.variant_attribute_name === "color"
+      );
+
+      if (!colorObj?.options) return;
+
+      const colors = colorObj.options
+        .split("/")
+        .map((c) => c.trim().toLowerCase())
+        .filter(Boolean);
+
+      // must have at least 2 colors
+      if (colors.length >= 2) {
+        pairSet.add(`${colors[0]}/${colors[1]}`);
+      }
+    });
+
+    return [...pairSet];
+  };
+  useEffect(() => {
+    const fetchBannerData = async () => {
       setIsBannerLoading(true);
       try {
         const response = await fetch("/api/topbanner");
@@ -124,23 +163,23 @@ export default function HomeComponent() {
       }
     };
     const fetchBrands = async () => {
-          setIsBrandsLoading(true);
-          try {
-              const response = await fetch('/api/brand/get');
-              if (!response.ok) {
-                  throw new Error('Network response was not ok');
-              }
-              const data = await response.json();
-              // console.log(data);
-              if (data.success) {
-                  setBrands(data.brands || []);
-              }
-          } catch (error) {
-              console.error("Error fetching brands:", error);
-              setBrands([]);
-          } finally {
-              setIsBrandsLoading(false);
-          }
+      setIsBrandsLoading(true);
+      try {
+        const response = await fetch('/api/brand/get');
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        // console.log(data);
+        if (data.success) {
+          setBrands(data.brands || []);
+        }
+      } catch (error) {
+        console.error("Error fetching brands:", error);
+        setBrands([]);
+      } finally {
+        setIsBrandsLoading(false);
+      }
     };
     const fetchCategories = async () => {
       try {
@@ -155,11 +194,11 @@ export default function HomeComponent() {
         // Filter active categories with images
         const activeCategories = categoriesArray.filter((cat) => {
           const isActive = cat.status === "Active";
-          const hasImage = 
-            cat.navImage || 
-            cat.image || 
-            cat.banner || 
-            cat.thumbnail || 
+          const hasImage =
+            cat.navImage ||
+            cat.image ||
+            cat.banner ||
+            cat.thumbnail ||
             cat.category_image ||
             cat.imageUrl;
           return isActive && hasImage;
@@ -179,7 +218,7 @@ export default function HomeComponent() {
         const res = await fetch("/api/product/get");
         const data = await res.json();
         const Stockproducts_only = data.filter(
-        (product) => product.quantity > 0 && product.stock_status === "In Stock" 
+          (product) => product.quantity > 0 && product.stock_status === "In Stock"
         )
         setProducts(Stockproducts_only.slice(0, 20)); // top 20 new arrivals
       } catch (err) {
@@ -279,7 +318,7 @@ export default function HomeComponent() {
     nextArrow: <CustomNextArrow />,
     responsive: [
       {
-        breakpoint: 768, 
+        breakpoint: 768,
         settings: {
           dots: false,
         },
@@ -356,9 +395,9 @@ export default function HomeComponent() {
   };
   // Get URL for category
   const getCategoryUrl = (category) => {
-    return category.category_slug ? `/category/${category.category_slug}`: "#";
+    return category.category_slug ? `/category/${category.category_slug}` : "#";
   };
-   // Map product types to colors if your API doesn't provide typeColor
+  // Map product types to colors if your API doesn't provide typeColor
   const typeColors = {
     MTB: "bg-red-500",
     Road: "bg-indigo-700",
@@ -416,12 +455,12 @@ export default function HomeComponent() {
   };
 
   const validCategories = categories?.filter(
-  ({ category_name, category_slug }) =>
-    typeof category_name === "string" &&
-    typeof category_slug === "string" &&
-    category_name.trim() &&
-    category_slug.trim()
-);
+    ({ category_name, category_slug }) =>
+      typeof category_name === "string" &&
+      typeof category_slug === "string" &&
+      category_name.trim() &&
+      category_slug.trim()
+  );
 
 
   return (
@@ -444,14 +483,14 @@ export default function HomeComponent() {
         ref={containerRef}
       >
         {/* Banner Section start */}
-        <motion.section 
-                id="topbanner"
-                ref={refs.banner}
-                initial="hidden"
-                animate="visible"
-                variants={containerVariants}
-                className="overflow-hidden pt-0 m-0"
-              >
+        <motion.section
+          id="topbanner"
+          ref={refs.banner}
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+          className="overflow-hidden pt-0 m-0"
+        >
           <div className="relative">
             {isBannerLoading ? (
               <div className="p-6 flex justify-center items-center h-64">
@@ -544,14 +583,14 @@ export default function HomeComponent() {
           <Findperfectcycle />
         </section>
         {/* product card */}
-        {!loading && products.length > 0 &&(
+        {!loading && products.length > 0 && (
           <section className="max-w-7xl mx-auto px-4 pt-6 ">
             <div className="flex items-center justify-between mb-4 py-4 border-b">
               <h2 className="text-3xl font-bold">New Arrivals</h2>
 
               <div className="flex gap-3 top-selling-swiper">
                 <button className="swiper-prev w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition">
-                  <FiChevronLeft size={20} md={22}/>
+                  <FiChevronLeft size={20} md={22} />
                 </button>
                 <button className="swiper-next w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition">
                   <FiChevronRight size={20} md={22} />
@@ -576,24 +615,24 @@ export default function HomeComponent() {
                 slidesPerView={1}
                 slidesPerGroup={1}
                 breakpoints={{
-                    640: {
-                      slidesPerView: 1,
-                      slidesPerGroup: 1,
-                    },
-                    768: {
-                      slidesPerView: 3,
-                      slidesPerGroup: 3,
-                    },
-                    1024: {
-                      slidesPerView: 3,
-                      slidesPerGroup: 3, 
-                    },
-                    1280:
-                    {
-                      slidesPerView :4,
-                      slidesPerGroup :4,
-                    }
-                  }}
+                  640: {
+                    slidesPerView: 1,
+                    slidesPerGroup: 1,
+                  },
+                  768: {
+                    slidesPerView: 3,
+                    slidesPerGroup: 3,
+                  },
+                  1024: {
+                    slidesPerView: 3,
+                    slidesPerGroup: 3,
+                  },
+                  1280:
+                  {
+                    slidesPerView: 4,
+                    slidesPerGroup: 4,
+                  }
+                }}
                 className="customSwiper-product"
               >
                 {products.map((product) => (
@@ -603,18 +642,18 @@ export default function HomeComponent() {
 
                       {/* Wishlist absolute */}
                       <div className="absolute top-3 left-3 z-20">
-                        <ProductCard 
-                          productId={product._id} 
-                          isOutOfStock={product.quantity === 0} 
+                        <ProductCard
+                          productId={product._id}
+                          isOutOfStock={product.quantity === 0}
                         />
                       </div>
 
                       {/* Category Badge */}
-                    {/* <div className="absolute top-3 right-3 z-30 bg-blue-600 text-white text-xs px-3 py-1 rounded-md">
+                      {/* <div className="absolute top-3 right-3 z-30 bg-blue-600 text-white text-xs px-3 py-1 rounded-md">
                         {product.category?.name || "New"}
                       </div> */}
 
-    
+
                       {/* Image */}
                       <div className="relative h-56">
                         {product.images?.[0] && (
@@ -634,81 +673,114 @@ export default function HomeComponent() {
                       </div>
 
                       {/* Info */}
-                      <div className="px-4 py-2 border-t flex-grow">
-                      <h4 className="text-xs text-gray-500 mb-2 uppercase">
-                          {brandMap[product.brand] ? (
-                            <Link
-                              href={`/brand/${brandMap[product.brand]
-                                .toLowerCase()
-                                .replace(/\s+/g, "-")}`}
-                              className="hover:text-blue-600 cursor-pointer"
-                            >
-                              {brandMap[product.brand]}
-                            </Link>
-                          ) : (
-                            "Unknown Brand"
-                          )}
-                        </h4>
+                      <div className="px-4 py-2 border-t flex-grow relative">
+                        {/* Right side color circles */}
+                        <div className="absolute top-[28px] right-0 flex flex-col  bg-slate-200  rounded-tl-xl rounded-bl-xl h-fit">
+                          {variants
+                            .find((vari) => vari.parent_id === product._id) &&
+                            getColorPairs(
+                              variants.find((vari) => vari.parent_id === product._id)
+                            ).map((pair, i) => {
+                              const [c1, c2] = pair.split("/");
 
-                        <Link href={`/product/${product.slug}`} passHref>
-                          <h3 className="text-sm font-medium text-[#333] hover:text-[#a3ca43] line-clamp-2 cursor-pointer">
-                            {product.name}{" "}
-                            {product.model_number ? `(${product.model_number})` : ""}
-                          </h3>
-                        </Link>
+                              return (
 
-                        <div className="flex justify-between items-center mt-2 gap-2 flex-wrap">
-                          <div className="flex gap-2 items-center">
-                            {/* Selling Price / Special Price */}
-                            <span className="text-lg font-bold">
-                              ₹{" "}
-                              {Number(product.special_price) > 0 &&
-                              Number(product.special_price) < Number(product.price)
-                                ? Number(product.special_price).toLocaleString()
-                                : Number(product.price).toLocaleString()}
-                            </span>
+                                <Link
+                                  key={i}
+                                  href={{
+                                    pathname: `/product/${product.slug}`,
+                                    query: { color: `${c1}-${c2}` },
+                                  }}
+                                  className="inline-block"
+                                >
+                                  <span
+                                    className="w-4 h-4 inline-block rounded-full border border-gray-300 shadow-sm m-2 cursor-pointer mb-0"
+                                    style={{
+                                      background: `linear-gradient(135deg, ${c1} 50%, ${c2} 50%)`,
+                                    }}
+                                  ></span>
+                                </Link>
 
-                            {/* Original Price / MRP */}
-                            {Number(product.special_price) > 0 &&
-                              Number(product.special_price) < Number(product.price) && (
-                                <>
-                                  <span className="text-sm text-gray-400 line-through">
-                                    ₹ {Number(product.price).toLocaleString()}
-                                  </span>
 
-                                  {/* Discount Percentage */}
-                                  <span className="text-sm text-[#a3ca43] font-semibold">
-                                    {Math.round(100 - (Number(product.special_price) / Number(product.price)) * 100)}% OFF
-                                  </span>
-                                </>
-                              )}
-                          </div>
+
+                              );
+                            })}
                         </div>
 
-                      <div className="my-1">
-                        <span
-                          className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                            product.quantity > 0 && product.stock_status === "In Stock"
-                              ? "bg-green-100 text-green-600"
-                              : "bg-red-100 text-red-600"
-                          }`}
-                        >
-                          {product.quantity > 0 && product.stock_status === "In Stock"
-                            ? `In Stock, ${product.quantity} units`
-                            : "Out Of Stock"}
-                        </span>
-                      </div>
 
+
+                        <div>
+                          <h4 className="text-xs text-gray-500 mb-2 uppercase">
+                            {brandMap[product.brand] ? (
+                              <Link
+                                href={`/brand/${brandMap[product.brand]
+                                  .toLowerCase()
+                                  .replace(/\s+/g, "-")}`}
+                                className="hover:text-blue-600 cursor-pointer"
+                              >
+                                {brandMap[product.brand]}
+                              </Link>
+                            ) : (
+                              "Unknown Brand"
+                            )}
+                          </h4>
+
+                          <Link href={`/product/${product.slug}`}>
+                            <h3 className="text-sm font-medium text-[#333] hover:text-[#a3ca43] line-clamp-2 cursor-pointer">
+                              {product.name}
+                            </h3>
+                          </Link>
+
+                          <div className="flex justify-between items-center mt-2 gap-2 flex-wrap">
+                            <div className="flex gap-2 items-center">
+                              <span className="text-lg font-bold">
+                                ₹{" "}
+                                {Number(product.special_price) > 0 &&
+                                  Number(product.special_price) < Number(product.price)
+                                  ? Number(product.special_price).toLocaleString()
+                                  : Number(product.price).toLocaleString()}
+                              </span>
+
+                              {Number(product.special_price) > 0 &&
+                                Number(product.special_price) < Number(product.price) && (
+                                  <>
+                                    <span className="text-sm text-gray-400 line-through">
+                                      ₹ {Number(product.price).toLocaleString()}
+                                    </span>
+
+                                    <span className="text-sm text-[#a3ca43] font-semibold">
+                                      {Math.round(
+                                        100 - (Number(product.special_price) / Number(product.price)) * 100
+                                      )}
+                                      % OFF
+                                    </span>
+                                  </>
+                                )}
+                            </div>
+                          </div>
+
+                          <div className="my-1">
+                            <span
+                              className={`text-xs font-semibold px-3 py-1 rounded-full ${product.quantity > 0
+                                ? "bg-green-100 text-green-600"
+                                : "bg-red-100 text-red-600"
+                                }`}
+                            >
+                              {product.quantity > 0
+                                ? `In Stock, ${product.quantity} units`
+                                : "Out Of Stock"}
+                            </span>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Actions */}
                       <div className="mt-auto flex text-sm font-semibold border-t">
                         <Link
                           href={`https://wa.me/9191919191?text=${encodeURIComponent(
-                            `Check Out This Product: ${
-                              typeof window !== "undefined"
-                                ? window.location.origin
-                                : ""
+                            `Check Out This Product: ${typeof window !== "undefined"
+                              ? window.location.origin
+                              : ""
                             }/product/${product.slug}`
                           )}`}
                           target="_blank"
@@ -730,17 +802,16 @@ export default function HomeComponent() {
                           special_price={product.special_price}
                           className="flex-1 whitespace-nowrap text-xs sm:text-sm py-1.5 my-2"
                         />
-                      <button
-                        onClick={() => handleBuyNow(product)}
-                        className={`w-1/2 py-3  font-semibold text-white transition-colors duration-300 ${
-                          product.quantity > 0 && product.stock_status === "In Stock"
+                        <button
+                          onClick={() => handleBuyNow(product)}
+                          className={`w-1/2 py-3  font-semibold text-white transition-colors duration-300 ${product.quantity > 0 && product.stock_status === "In Stock"
                             ? "bg-[#a3ca43] hover:bg-lime-500 cursor-pointer"
                             : "bg-gray-300 hover:bg-gray-300 cursor-not-allowed"
-                        }`}
-                        disabled={!(product.quantity > 0 && product.stock_status === "In Stock")}
-                      >
-                        BUY NOW
-                      </button>
+                            }`}
+                          disabled={!(product.quantity > 0 && product.stock_status === "In Stock")}
+                        >
+                          BUY NOW
+                        </button>
                       </div>
                     </div>
                   </SwiperSlide>
@@ -938,19 +1009,19 @@ export default function HomeComponent() {
             <p className="text-gray-600 my-5">
               Watch our latest bicycle highlights straight from Instagram.
             </p>
-           <div className="insta-swiper pb-[40px] mx-2 relative">
+            <div className="insta-swiper pb-[40px] mx-2 relative">
               {/* Navigation & Pagination wrapper above slides */}
               <div className="hidden lg:block flex justify-between items-center mb-4">
                 <div className="swiper-pagination" />
               </div>
 
               <button className="lg:hidden swiper-prev absolute top-1/2 -translate-y-1/2 left-0 z-20 p-2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition border-2 border-lime-500">
-                <FiChevronLeft size={20} md={22}/>
+                <FiChevronLeft size={20} md={22} />
               </button>
               <button className="lg:hidden swiper-next absolute top-1/2 -translate-y-1/2 right-0 z-20 p-2 w-9 h-9 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-[#a3ca43] hover:text-white transition border-2 border-lime-500">
                 <FiChevronRight size={20} md={22} />
               </button>
-    
+
               <Swiper
                 modules={[Navigation, Autoplay, Pagination]}
                 navigation={{
@@ -963,25 +1034,25 @@ export default function HomeComponent() {
                 }}
                 spaceBetween={20}
                 slidesPerView={1}
-                 slidesPerGroup={1}
-                  breakpoints={{
-                    640: {
-                      slidesPerView: 1,
-                      slidesPerGroup: 1,
-                      spaceBetween: 20
-                    },
-                    768: {
-                      slidesPerView: 2,
-                      slidesPerGroup: 2,
-                       spaceBetween: 20
-                    },
-                    1024: {
-                      slidesPerView: 3,
-                      slidesPerGroup: 3,
-                      spaceBetween: 20 
-                    },
-                  }}
-                preventClicks={false} 
+                slidesPerGroup={1}
+                breakpoints={{
+                  640: {
+                    slidesPerView: 1,
+                    slidesPerGroup: 1,
+                    spaceBetween: 20
+                  },
+                  768: {
+                    slidesPerView: 2,
+                    slidesPerGroup: 2,
+                    spaceBetween: 20
+                  },
+                  1024: {
+                    slidesPerView: 3,
+                    slidesPerGroup: 3,
+                    spaceBetween: 20
+                  },
+                }}
+                preventClicks={false}
                 preventClicksPropagation={false}
                 onSwiper={() => window.instgrm?.Embeds.process()} // ensures Instagram renders
               >
@@ -989,11 +1060,11 @@ export default function HomeComponent() {
                   <SwiperSlide key={i}>
                     <div className="px-2">
                       <blockquote
-                      className="instagram-media"
-                      data-instgrm-permalink={url}
-                      data-instgrm-version="14"
-                      style={{ maxWidth: 420, margin: "0 auto" }} 
-                    />
+                        className="instagram-media"
+                        data-instgrm-permalink={url}
+                        data-instgrm-version="14"
+                        style={{ maxWidth: 420, margin: "0 auto" }}
+                      />
                     </div>
                   </SwiperSlide>
                 ))}
@@ -1196,45 +1267,45 @@ export default function HomeComponent() {
                 }}
                 className=" rounded-xl"
               >
-             {brands
-              .filter(
-                (brand) =>
-                  brand?.brand_name &&
-                  typeof brand.brand_name === "string" &&
-                  brand.brand_name.trim() !== ""
-              )
-              .map((brand) => (
-                  <SwiperSlide key={brand.id}>
-                    <Link href={`/brand/${slugify(brand.brand_name)}`}>
-                      <div
-                        className="group flex cursor-pointer flex-col items-center rounded-lg p-4
+                {brands
+                  .filter(
+                    (brand) =>
+                      brand?.brand_name &&
+                      typeof brand.brand_name === "string" &&
+                      brand.brand_name.trim() !== ""
+                  )
+                  .map((brand) => (
+                    <SwiperSlide key={brand.id}>
+                      <Link href={`/brand/${slugify(brand.brand_name)}`}>
+                        <div
+                          className="group flex cursor-pointer flex-col items-center rounded-lg p-4
                                   my-4 mx-4 border border-gray-300 shadow-md
                                   hover:bg-gray hover:shadow-md hover:border-lime-400
                                   transition-all duration-300 bg-white"
-                      >
-                        <div className="w-24 h-14 flex items-center justify-center">
-                          <Image
-                            src={
-                              brand.image
-                                ? `/uploads/Brands/${brand.image}`
-                                : "/images/no-logo-brand-img.png"
-                            }
-                            alt={brand.brand_name}
-                            width={90}
-                            height={90}
-                            className="object-contain grayscale transition-transform duration-300
+                        >
+                          <div className="w-24 h-14 flex items-center justify-center">
+                            <Image
+                              src={
+                                brand.image
+                                  ? `/uploads/Brands/${brand.image}`
+                                  : "/images/no-logo-brand-img.png"
+                              }
+                              alt={brand.brand_name}
+                              width={90}
+                              height={90}
+                              className="object-contain grayscale transition-transform duration-300
                                       group-hover:grayscale-0 group-hover:scale-110"
-                            unoptimized
-                          />
-                        </div>
+                              unoptimized
+                            />
+                          </div>
 
-                        <p className="mt-2 text-sm font-medium text-gray-700 group-hover:text-black">
-                          {brand.brand_name}
-                        </p>
-                      </div>
-                    </Link>
-                  </SwiperSlide>
-                ))}
+                          <p className="mt-2 text-sm font-medium text-gray-700 group-hover:text-black">
+                            {brand.brand_name}
+                          </p>
+                        </div>
+                      </Link>
+                    </SwiperSlide>
+                  ))}
               </Swiper>
 
             </div>

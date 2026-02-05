@@ -5,9 +5,10 @@ import { redirect } from "next/navigation"; // ✅ add this
 
 //import { useParams } from "next/navigation";
 
-export async function generateMetadata({ params  }) {
+export async function generateMetadata({ params,searchParams  }) {
+  // const color = searchParams.get("color"); // "red-blue"
   const slug = params.slug;
-
+  const color = searchParams?.color;
   // Always use absolute URL
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -60,11 +61,11 @@ export const metadata = {
 }
   */
 
-export default function ProductNew({ currentProductId }) {
+export default function ProductNew({ currentProductId, searchParams}) {
   //const product = await getProductById(params.id);
   //console.log("Server-side Product ID:", currentProductId); 
-
-  return <ProductClient currentProductId={currentProductId} />;
+  const color = searchParams?.color;
+  return <ProductClient currentProductId={currentProductId} color={color} />;
 }
 
 

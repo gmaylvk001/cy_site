@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 export default function VariantModal({ open, onClose, initialVariant, onSubmit }) {
+
     const emptyVariant = {
         variant_arr: [
             {
@@ -19,6 +20,12 @@ export default function VariantModal({ open, onClose, initialVariant, onSubmit }
         status: "Active",
     };
     const [error, setError] = useState({});
+    const VARIANT_OPTIONS = [
+        { label: "Color", value: "color" },
+        { label: "Size", value: "size" },
+        { label: "Frame", value: "frame" },
+        { label: "Model", value: "model" },
+    ];
 
 
     const [variant, setVariant] = useState(emptyVariant);
@@ -249,6 +256,18 @@ export default function VariantModal({ open, onClose, initialVariant, onSubmit }
                 }
             }
         }
+        // ❌ Only one Color variant allowed
+        const colorIndexes = data.variant_arr
+            .map((v, i) => (v.variant_attribute_name?.trim() === "color" ? i : null))
+            .filter(i => i !== null);
+
+        if (colorIndexes.length > 1) {
+            colorIndexes.forEach((i) => {
+                newError[`variant_attribute_name_${i}`] =
+                    "Only one Color variant is allowed inthis Variation";
+            });
+        }
+
 
         setError((prev) => {
             if (fieldKey) {
@@ -262,7 +281,18 @@ export default function VariantModal({ open, onClose, initialVariant, onSubmit }
         return Object.keys(newError).length > 0;
     };
 
+    const selectedAttributes = variant.variant_arr
+        .map(v => v.variant_attribute_name)
+        .filter(Boolean);
+    const getAvailableOptions = (currentValue) => {
+        return VARIANT_OPTIONS.filter(opt =>
+            opt.value === currentValue || !selectedAttributes.includes(opt.value)
+        );
+    };
 
+    const isColorUsed = variant.variant_arr.some(
+        v => v.variant_attribute_name === "color"
+    );
 
 
 
@@ -344,20 +374,26 @@ export default function VariantModal({ open, onClose, initialVariant, onSubmit }
                                             <select
                                                 value={variant_item.variant_attribute_name ?? ""}
                                                 onChange={(e) => {
-                                                    handleChange("variant_attribute_name", e.target.value, idx)
+                                                    handleChange("variant_attribute_name", e.target.value, idx);
                                                     errors(`variant_attribute_name_${idx}`);
-                                                }
-                                                }
+                                                }}
                                                 className="w-full border p-2 rounded-lg bg-white"
                                             >
                                                 <option value="" disabled>
                                                     select variant
                                                 </option>
-                                                <option value="color">Color</option>
+
+                                                {/* Show color ONLY if not already used OR this row already has color */}
+                                                {(!isColorUsed || variant_item.variant_attribute_name === "color") && (
+                                                    <option value="color">Color</option>
+                                                )}
+
                                                 <option value="size">Size</option>
                                                 <option value="frame">Frame</option>
                                                 <option value="model">Model</option>
                                             </select>
+
+
                                             {error[`variant_attribute_name_${idx}`] && (
                                                 <p className="text-red-500 text-xs mt-1">
                                                     {error[`variant_attribute_name_${idx}`]}

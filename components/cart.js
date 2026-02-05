@@ -1155,8 +1155,8 @@ export default function CartComponent() {
       </tr>
     </thead>
     <tbody>
-      {cartData.items.map((item) => (
-        <Fragment key={item.productId}>
+      {cartData.items.map((item ,ind) => (
+        <Fragment key={ind}>
           <tr className="border-b">
             <td className="flex items-center py-4 px-4 gap-3">
               <div className="w-20 h-20 flex items-center justify-center border rounded-md overflow-hidden">
@@ -1231,8 +1231,8 @@ export default function CartComponent() {
 
 {/* ✅ Mobile Simplified View */}
 <div className="block md:hidden space-y-4">
-  {cartData.items.map((item) => (
-    <div key={item.productId} className="flex gap-3 border rounded-lg p-3">
+  {cartData.items.map((item,ind) => (
+    <div key={ind} className="flex gap-3 border rounded-lg p-3">
       <div className="w-20 h-20 flex items-center justify-center border rounded-md overflow-hidden">
         <Link href={`/product/${slugify(item.name)}`}>
         <Image
