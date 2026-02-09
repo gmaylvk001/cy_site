@@ -27,12 +27,15 @@ export async function GET(req) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-const combo = await custom_combo
-  .findOne(query)
-  .populate("cycles")
-  .populate("accessories")
-  .populate("bags");
+  // ✅ Populate nested productId correctly
+  const combo = await custom_combo
+    .findOne(query)
+    .populate("cycles.productId")
+    .populate("accessories.productId")
+    .populate("bags.productId");
 
-
-  return NextResponse.json({ success: 1, products: combo });
+  return NextResponse.json({
+    success: 1,
+    products: combo,
+  });
 }

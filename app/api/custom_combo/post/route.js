@@ -18,7 +18,6 @@ export async function POST(req) {
   }
 
   let query = {};
-  let update = {};
 
   // 🔐 Logged-in user
   if (token) {
@@ -28,19 +27,24 @@ export async function POST(req) {
   // 👤 Guest user
   else if (guestId) {
     query.guestId = guestId;
-  }
-  else {
+  } else {
     return NextResponse.json(
       { message: "Unauthorized" },
       { status: 401 }
     );
   }
 
-  const productIds = items.map(i => i._id);
+  // Build array with product + selectedVariant
+  const productsWithVariant = items.map((i) => ({
+    productId: i._id,
+    selectedVariant: i.selectedVariant || {}, // use frontend variant object
+  }));
 
-  if (type === "bycycle") update.cycles = productIds;
-  if (type === "accessories") update.accessories = productIds;
-  if (type === "bags") update.bags = productIds;
+  let update = {};
+
+  if (type === "bycycle") update.cycles = productsWithVariant;
+  if (type === "accessories") update.accessories = productsWithVariant;
+  if (type === "bags") update.bags = productsWithVariant;
 
   const combo = await custom_combo.findOneAndUpdate(
     query,

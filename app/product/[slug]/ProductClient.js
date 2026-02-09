@@ -33,7 +33,9 @@ export default function ProductClient() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const color = searchParams.get("color");
+  const size = searchParams.get('size');
   let colorParam = null;
+  let sizeparam = null;
   const router = useRouter();
   const { slug } = useParams();
   const [relatedProductsLoading, setRelatedProductsLoading] = useState(false);
@@ -554,7 +556,10 @@ export default function ProductClient() {
     if (slug) {
       fetchProduct();
       colorParam = color ? color.replaceAll("-", "/") : null;
+      sizeparam = size ? size : null;
+
       setSelectedColor(colorParam);
+      setSelectedSize(sizeparam);
     }
   }, [slug]);
 
@@ -624,9 +629,33 @@ export default function ProductClient() {
         if (size === value && color) colors.add(color);
       }
     });
+    const params = new URLSearchParams(searchParams.toString());
+    if (type === "color") {
+      setSizeOptions([...sizes])
+      const sizearr = [...sizes]
+      if (sizearr.length <= 1) {
+        setSelectedSize(sizearr[0])
+        params.set("size", sizearr[0]);
 
-    if (type === "color") setSizeOptions([...sizes]);
-    if (type === "size") setColorOptions([...colors]);
+        const newUrl = `${pathname}?${params.toString()}`;
+
+        // window.history.replaceState(null, "", newUrl);
+        router.replace(newUrl,{scroll:false});
+      }
+    };
+    if (type === "size") {
+      setColorOptions([...colors])
+      const colorarr = [...colors];
+      if (colorarr.length <= 1) {
+        setSelectedColor(colorarr[0])
+        params.set("color", colorarr[0].replace('/','-'));
+
+        const newUrl = `${pathname}?${params.toString()}`;
+
+        // window.history.replaceState(null, "", newUrl);
+        router.replace(newUrl,{scroll:false});
+      }
+    };
   };
 
 
@@ -1224,6 +1253,15 @@ export default function ProductClient() {
                               console.log(selectedColor, c, 'testing')
                               setSelectedColor(null);
                               set_options(variantData)
+                              const params = new URLSearchParams(searchParams.toString());
+                              params.delete("color");
+                              if (!selectedSize) {
+                                setSelectedVariant(null);
+                              }
+                              const query = params.toString();
+                              const newUrl = query ? `${pathname}?${query}` : pathname;
+
+                              window.history.replaceState(null, "", newUrl);
                             }
                             else {
                               setSelectedColor(c);
@@ -1279,11 +1317,26 @@ export default function ProductClient() {
                       if (selectedSize === size) {
                         setSelectedSize(null)
                         set_options(variantData)
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.delete("size");
+                        if (!selectedColor) {
+                          setSelectedVariant(null)
+                        }
+
+                        const newUrl = `${pathname}?${params.toString()}`;
+
+                        window.history.replaceState(null, "", newUrl);
                         return;
                       }
                       else {
                         updateDependentOptions(variantData, "size", size);
                         setSelectedSize(size)
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.set("size", size);
+
+                        const newUrl = `${pathname}?${params.toString()}`;
+
+                        window.history.replaceState(null, "", newUrl);
                       }
                     }}
                   >

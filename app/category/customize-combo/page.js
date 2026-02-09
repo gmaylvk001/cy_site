@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback, useMemo } from "react"; // Import 'use' from React
+import { useState, useEffect, useCallback, useMemo, Fragment } from "react"; // Import 'use' from React
 import CategoryComponent from "@/components/category/CategoryComponent";
 import { ToastContainer, toast } from "react-toastify";
 import ProductCard from "@/components/ProductCard";
@@ -9,6 +9,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { GrRadialSelected } from "react-icons/gr";
 import { v4 as uuidv4 } from "uuid";
+import { color } from "framer-motion";
 
 export default function customize_combo() {
   // Unwrap the params promise using React.use()
@@ -33,7 +34,8 @@ export default function customize_combo() {
   const router = useRouter();
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("Cycles for Women");
-
+  const [all_variants, setAll_variants] = useState([])
+  const [openColorProductId, setOpenColorProductId] = useState(null);
   const [categoryData, setCategoryData] = useState({
     category: null,
     brands: [],
@@ -50,22 +52,29 @@ export default function customize_combo() {
   };
 
   const totalPrice = useMemo(() => {
+    const getFinalPrice = (item) => {
+      if (item?.selectedVariant?.price != null) {
+        return Number(item.selectedVariant.price);
+      }
+      return Number(item?.special_price || 0);
+    };
+
     const cyclesTotal = (finalBycycles || []).reduce(
-      (sum, item) => sum + Number(item?.special_price || 0),
-      0,
+      (sum, item) => sum + getFinalPrice(item),
+      0
     );
 
     const accessoriesTotal = (finalAccessories || []).reduce(
-      (sum, item) => sum + Number(item?.special_price || 0),
-      0,
+      (sum, item) => sum + getFinalPrice(item),
+      0
     );
 
     const bagsTotal = (finalBags || []).reduce(
-      (sum, item) => sum + Number(item?.special_price || 0),
-      0,
+      (sum, item) => sum + getFinalPrice(item),
+      0
     );
 
-    return Number(cyclesTotal + accessoriesTotal + bagsTotal);
+    return cyclesTotal + accessoriesTotal + bagsTotal;
   }, [finalBycycles, finalAccessories, finalBags]);
 
   const discount = useMemo(() => {
@@ -74,6 +83,23 @@ export default function customize_combo() {
     }
     return 0; // no discount below 10000
   }, [totalPrice]);
+
+  useEffect(() => {
+
+
+    const fetchVariants = async () => {
+      try {
+        const res = await fetch(`/api/Variants/get_all`);
+        const data = await res.json();
+
+        setAll_variants(data.variants || []);
+      } catch (err) {
+        console.error("Failed to fetch variants:", err);
+      }
+    };
+    fetchVariants();
+  }, []);
+
 
   // const fetchFilteredProducts = useCallback(
   //   async (categoryData, pageNum = 1, initialLoad = false) => {
@@ -335,29 +361,42 @@ export default function customize_combo() {
           : `/api/custom_combo/get?guestId=${guestId}`,
         {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
-        },
+        }
       );
 
+      console.log('res', res);
       const data = await res.json();
-
-      // ✅ IMPORTANT NULL CHECK
+      if (data.message == 'Invalid token') {
+        localStorage.removeItem('token')
+        let guestId = localStorage.getItem("guestCartId") || uuidv4();
+        localStorage.setItem("guestCartId", guestId);
+      }
       if (data.success && data.products) {
-        setFinalBycycles(data.products.cycles || []);
-        setFinalAccessories(data.products.accessories || []);
-        setFinalBags(data.products.bags || []);
-        if (
-          (data.products.cycles?.length || 0) > 0 ||
-          (data.products.accessories?.length || 0) > 0 ||
-          (data.products.bags?.length || 0) > 0
-        ) {
+        // 🔹 Normalize data for frontend usage
+        const normalize = (items = []) =>
+          items.map((item) => ({
+            ...item.productId,              // actual product
+            selectedVariant: item.selectedVariant || {},
+            selectedColor: item.selectedVariant?.color || null,
+          }));
+
+        const cycles = normalize(data.products.cycles);
+        const accessories = normalize(data.products.accessories);
+        const bags = normalize(data.products.bags);
+
+        setFinalBycycles(cycles);
+        setFinalAccessories(accessories);
+        setFinalBags(bags);
+
+        if (cycles.length || accessories.length || bags.length) {
           setCustom_combo(true);
         }
       } else {
-        // No combo yet → reset state
+        // No combo → reset
         setFinalBycycles([]);
         setFinalAccessories([]);
         setFinalBags([]);
-        setCustom_combo(true);
+        setCustom_combo(false);
       }
     } catch (err) {
       console.error("Failed to fetch combo", err);
@@ -365,6 +404,7 @@ export default function customize_combo() {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchCombo();
   }, []);
@@ -384,9 +424,9 @@ export default function customize_combo() {
     alert("Buying Combo!");
   };
 
-  const handleproductSelect = (product = null) => {
+  const handleproductSelect = (product = null, variant = null, variant_info = {}) => {
     if (!product?._id) return;
-
+    console.log(product, 'product', variant, 'variant', variant_info, 'variant info');
     const alreadySelected = selectedProducts.some((p) => p._id === product._id);
 
     // ❌ Block adding more than 3 (only when adding)
@@ -402,9 +442,13 @@ export default function customize_combo() {
       if (exists) {
         return prev.filter((p) => p._id !== product._id);
       }
-
+      const newProduct = {
+        ...product,
+        selectedColor: variant?.color || null,
+        selectedVariant: variant_info || {},
+      };
       // add
-      return [...prev, product];
+      return [...prev, newProduct];
     });
   };
 
@@ -490,22 +534,33 @@ export default function customize_combo() {
       guestId = localStorage.getItem("guestCartId") || uuidv4();
       localStorage.setItem("guestCartId", guestId);
     }
-    const res = await fetch("/api/custom_combo/delete", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-      body: JSON.stringify({
-        item,
-        type,
-        guestId,
-      }),
-    });
-    if (res.success == 1) {
-      fetchCombo();
+
+    try {
+      const res = await fetch("/api/custom_combo/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          item,
+          type,
+          guestId,
+        }),
+      });
+
+      const data = await res.json(); // ✅ REQUIRED
+
+      if (data?.success === 1) {
+        fetchCombo(); // ✅ sync frontend with backend
+      } else {
+        console.error("Delete failed", data);
+      }
+    } catch (err) {
+      console.error("Delete error", err);
     }
   };
+
   const handle_search = async (e) => {
     if (bycyclePOP) {
       const search_filter = cycleProducts.filter((product) => {
@@ -601,7 +656,7 @@ export default function customize_combo() {
         </div>
       </section>
 
-      {custom_combo && (
+      {true && (
         <section className="py-8">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -642,79 +697,101 @@ export default function customize_combo() {
                       </div>
                       {/* Selected Bicycles */}
 
-                      {finalBycycles.map((cycle) => (
-                        <div
-                          key={cycle._id}
-                          className="relative bg-white rounded-lg shadow p-4 h-[384px]"
-                        >
-                          {/* ❌ Close Button */}
-                          <button
-                            onClick={() => {
-                              setFinalBycycles((prev) => {
-                                return prev.filter(
-                                  (pre) => pre._id !== cycle._id,
-                                );
-                              });
-                              handledelete(cycle, "bycycle");
-                            }}
-                            className="absolute top-1 right-3 text-gray-500 hover:text-black text-xl"
+                      {finalBycycles.map((cycle, ind) => {
+                        console.log(cycle, 'dycle')
+                        return (
+                          <div
+                            key={ind}
+                            className="relative bg-white rounded-lg shadow p-4 h-[384px]"
                           >
-                            ✕
-                          </button>
+                            {/* ❌ Close Button */}
+                            <button
+                              onClick={() => {
+                                // setFinalBycycles((prev) => {
+                                //   return prev.filter(
+                                //     (pre) => pre._id !== cycle._id,
+                                //   );
+                                // });
+                                // handledelete(cycle, "bycycle");
 
-                          {/* Image */}
-                          {cycle.images?.[0] && (
-                            <div className="relative w-full h-48 mb-4">
-                              <Image
-                                src={
-                                  cycle.images[0].startsWith("http")
-                                    ? cycle.images[0]
-                                    : `/uploads/products/${cycle.images[0]}`
-                                }
-                                alt={cycle.name}
-                                fill
-                                className="object-contain mt-3"
-                                unoptimized
-                              />
-                            </div>
-                          )}
+                                handledelete(cycle, "bycycle");
 
-                          {/* Product Name */}
-                          <h3
-                            className="text-lg font-bold uppercase mb-3 hover:text-[#A3CA43]"
-                            onClick={() =>
-                              router.push(`/product/${cycle.slug}`)
-                            }
-                          >
-                            {cycle.name}
-                          </h3>
+                              }}
+                              className="absolute top-1 right-3 text-gray-500 hover:text-black text-xl"
+                            >
+                              ✕
+                            </button>
 
-                          {/* Features */}
+                            {/* Image */}
+                            {(cycle.selectedVariant?.images?.[0] || cycle.images?.[0]) && (
+                              <div className="relative w-full h-48 mb-4">
+                                <Image
+                                  src={(() => {
+                                    const img =
+                                      cycle.selectedVariant?.images?.[0] || cycle.images?.[0];
 
-                          {/* Price Section */}
-                          {cycle.price > cycle.special_price ? (
-                            <div className="space-y-1">
-                              <div className="text-xl font-bold">
-                                ₹{cycle.special_price}
+                                    return img.startsWith("http")
+                                      ? img
+                                      : `/uploads/products/${img}`;
+                                  })()}
+                                  alt={cycle.name}
+                                  fill
+                                  className="object-contain mt-3"
+                                  unoptimized
+                                />
                               </div>
+                            )}
 
-                              <div className="text-sm text-gray-500">
-                                MRP :
-                                <span className="line-through ml-1">
-                                  ₹{cycle.price}
-                                </span>
-                                <span className="text-green-600 font-semibold ml-2">
-                                  {cycle.price - cycle.special_price}₹ OFF
-                                </span>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-xl font-bold">
-                              ₹{cycle.special_price}
-                            </div>
-                          )}
-                        </div>
-                      ))}
+
+                            {/* Product Name */}
+                            <h3
+                              className="text-lg font-bold uppercase mb-3 hover:text-[#A3CA43]"
+                              onClick={() =>
+                                router.push(`/product/${cycle.slug}`)
+                              }
+                            >
+                              {cycle.name}
+                            </h3>
+
+                            {/* Features */}
+
+                            {/* Price Section */}
+
+                            {(() => {
+                              const hasVariantPrice = cycle.selectedVariant?.price != null;
+                              const finalPrice = hasVariantPrice
+                                ? cycle.selectedVariant.price
+                                : cycle.special_price;
+                              const mrp = cycle.price;
+
+                              return mrp > finalPrice ? (
+                                <div className="space-y-1">
+                                  <div className="text-xl font-bold">
+                                    ₹{finalPrice}
+                                  </div>
+
+                                  <div className="text-sm text-gray-500">
+                                    MRP :
+                                    <span className="line-through ml-1">
+                                      ₹{mrp}
+                                    </span>
+                                    <span className="text-green-600 font-semibold ml-2">
+                                      ₹{mrp - finalPrice} OFF
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-xl font-bold">
+                                  ₹{finalPrice}
+                                </div>
+                              );
+                            })()}
+
+                          </div>
+                        )
+                      }
+
+                      )}
 
                       {/* ➕ Add Bicycle (Always LAST) */}
                       <div
@@ -917,8 +994,8 @@ export default function customize_combo() {
                   <div className="font-bold text-lg mb-4">Custom Combo</div>
                   <hr className="my-3" />
 
-                  {finalBycycles.map((item) => (
-                    <div key={item._id} className="flex items-start gap-3 py-2">
+                  {finalBycycles.map((item, ind) => (
+                    <div key={ind} className="flex items-start gap-3 py-2">
                       {/* Icon */}
                       <GrRadialSelected
                         className="mt-1 shrink-0"
@@ -931,7 +1008,7 @@ export default function customize_combo() {
                           {item.name}
                         </h4>
                         <span className="text-green-600 font-semibold text-sm">
-                          ₹{item.special_price}/-
+                          ₹{item.selectedVariant.price || item.special_price}/-
                         </span>
                       </div>
                     </div>
@@ -949,7 +1026,7 @@ export default function customize_combo() {
                           {item.name}
                         </h4>
                         <span className="text-green-600 font-semibold text-sm">
-                          ₹{item.special_price}/-
+                          ₹{item.selectedVariant.price || item.special_price}/-
                         </span>
                       </div>
                     </div>
@@ -967,7 +1044,7 @@ export default function customize_combo() {
                           {item.name}
                         </h4>
                         <span className="text-green-600 font-semibold text-sm">
-                          ₹{item.special_price}/-
+                          ₹{item.selectedVariant.price || item.special_price}/-
                         </span>
                       </div>
                     </div>
@@ -1065,8 +1142,8 @@ export default function customize_combo() {
       )}
 
       {(bycyclePOP || accessoriesPOP || bagPOP) && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-          <div className="bg-white w-[95%] max-w-6xl h-[90vh] rounded-xl shadow-xl flex flex-col relative">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center rounded-md">
+          <div className="bg-white w-[95%] max-w-6xl h-[90vh] rounded-xl shadow-xl flex flex-col relative ">
             {/* ❌ Close */}
             <button
               onClick={() => {
@@ -1074,13 +1151,13 @@ export default function customize_combo() {
                 handleAccessoriesPOP();
                 handleBagPOP();
               }}
-              className="absolute top-1 right-1 text-xl font-bold z-50"
+              className="absolute top-[-1.25rem] right-[1.25rem] text-xl font-bold z-50 h-[35px] w-[35px] rounded-full bg-white"
             >
               ✕
             </button>
 
             {/* ================= HEADER ================= */}
-            <div className="sticky top-0 bg-white z-20 border-b px-6 py-4">
+            <div className="sticky top-0 bg-white z-20 border-b px-6 py-4 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                 <h3 className="text-lg font-semibold">
                   {(bycyclePOP && "Select Bicycles") ||
@@ -1167,32 +1244,69 @@ export default function customize_combo() {
                   const isSelected = selectedProducts.some(
                     (p) => p._id === product._id,
                   );
-
+                  let selected_pro = selectedProducts.find((p) => p?._id === product?._id)
+                  console.log(selected_pro, 'testing')
+                  console.log(all_variants, 'test all variants')
+                  const filterVariant = all_variants?.find(
+                    vari => vari.parent_id === product._id
+                  );
+                  let filterVariant_info;
+                  let colors = [];
+                  let sizes = [];
+                  if (filterVariant) {
+                    filterVariant.variants.forEach((vari) => {
+                      vari.variant_arr.forEach((v) => {
+                        if (v.variant_attribute_name == 'color') {
+                          if (v.options == selected_pro?.selectedColor) {
+                            filterVariant_info = vari
+                          }
+                          colors.push(v.options)
+                        }
+                        else if (v.variant_attribute_name == 'size') {
+                          sizes.push(v.options);
+                        }
+                      })
+                    });
+                  }
                   return (
                     <div
                       key={product._id}
                       className={`relative rounded-lg overflow-hidden shadow-sm hover:shadow-md
-                                  ${
-                                    isSelected
-                                      ? "border-2 border-blue-500"
-                                      : "border border-gray-200"
-                                  }
+                                  ${isSelected
+                          ? "border-2 border-blue-500"
+                          : "border border-gray-200"
+                        }
                                 `}
                     >
                       {/* Product image */}
                       <div
-                        onClick={() => handleproductSelect(product)}
-                        // className={`relative cursor-pointer ${
-                        //   isSelected ? "blur-sm opacity-40" : ""
-                        // }`}
+                        onClick={() => {
+                          console.log('testing', colors.length)
+                          handleproductSelect(product)
+
+                          // if (colors.length === 0) {
+                          //   handleproductSelect(product)
+                          // }
+                          // else {
+                          //   if(selectedProducts.find((p)=>p?._id === product?._id)?.selectedColor){
+                          //      handleproductSelect(product)
+                          //   }
+                          //   else{
+                          //     setOpenColorProductId(product._id);
+                          //   }
+                          // }
+                        }
+                        }
+                      // className={`relative cursor-pointer ${
+                      //   isSelected ? "blur-sm opacity-40" : ""
+                      // }`}
                       >
                         <div className="relative w-full aspect-square bg-white">
                           {product.images?.[0] && (
                             <Image
                               src={
-                                product.images[0].startsWith("http")
-                                  ? product.images[0]
-                                  : `/uploads/products/${product.images[0]}`
+                                filterVariant_info?.images?.[0] ? `/uploads/products/${filterVariant_info.images[0]}` :
+                                  product.images[0].startsWith("http") ? product.images[0] : `/uploads/products/${product.images[0]}`
                               }
                               alt={product.name}
                               fill
@@ -1205,30 +1319,91 @@ export default function customize_combo() {
                       </div>
 
                       {/* Color picker */}
-                      {/* {isSelected && (
+                      {/* {openColorProductId === product._id && (colors.length > 0) && (
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
-                          <select
+                          <div
                             // onChange={(e) =>
                             //   setProductColor(product._id, e.target.value)
                             // }
-                            className="bg-white px-4 py-2 rounded-lg text-sm"
+                            className="inline-block"
                           >
-                            <option>Select Color</option>
-                            {product.colors?.map((color) => (
-                              <option key={color}>{color}</option>
-                            ))}
-                          </select>
+
+                            {colors?.map((color, index) => {
+                              const [c1, c2] = color.split("/");
+
+                              return (
+                                <span
+                                  key={index}
+                                  className="w-6 h-6 inline-block rounded-full border border-gray-300 shadow-sm m-2 cursor-pointer mb-0"
+                                  style={{
+                                    background: `linear-gradient(135deg, ${c1} 50%, ${c2} 50%)`,
+                                  }}
+                                  onClick={() => {
+                                    handleproductSelect(product, { color: color })
+                                    setOpenColorProductId(null);
+                                  }}
+                                ></span>
+                              );
+                            })}
+
+                          </div>
                         </div>
                       )} */}
 
                       {/* Info */}
-                      <div className="p-3 border-t">
+                      <div className="p-3 border-t relative">
                         <h4 className="text-sm font-semibold line-clamp-2">
                           {product.name}
                         </h4>
                         <p className="text-sm font-bold mt-1">
-                          ₹{product.special_price.toLocaleString()}
+                          ₹{filterVariant_info?.special_price || product.special_price.toLocaleString()}
                         </p>
+                        <div className="absolute top-1/2 right-2 -translate-y-1/2 flex gap-2">
+
+                          {colors.map((color, key) => {
+                            const [c1, c2 = c1] = color.split('/');
+                            let info;
+                            if (filterVariant) {
+                              filterVariant.variants.forEach((vari) => {
+                                vari.variant_arr.forEach((v) => {
+                                  if (v.variant_attribute_name == 'color') {
+                                    if (v.options == color) {
+                                      info = vari
+                                    }
+                                  }
+                                })
+                              });
+                            }
+                            const variantInfo = {
+                              color: color,             // selected color
+                              frame: null, // optional
+                              size: null,   // optional
+                              price: info.special_price || product.special_price,        // optional
+                              images: info.images || [],        // optional
+                            };
+                            return (
+                              <span
+                                key={key}
+                                className={`
+                                    w-4 h-4 rounded-full cursor-pointer mb-1
+                                    border border-gray-300
+                                    ${selected_pro?.selectedColor === color
+                                    ? "ring-2 ring-blue-500 ring-offset-2"
+                                    : ""}
+                                  `}
+                                style={{
+                                  background: `linear-gradient(135deg, ${c1} 50%, ${c2} 50%)`,
+                                }}
+                                onClick={() => {
+                                  // if()
+                                  console.log(selected_pro?.selectedColor, 'tstinpadf')
+                                  handleproductSelect(product, { color }, variantInfo);
+                                }}
+                              />
+
+                            )
+                          })}
+                        </div>
                       </div>
                     </div>
                   );
@@ -1237,7 +1412,7 @@ export default function customize_combo() {
             </div>
 
             {/* ================= FOOTER ================= */}
-            <div className="sticky bottom-0 bg-white border-t px-6 py-3 flex items-center justify-between">
+            <div className="sticky bottom-0 bg-white border-t px-6 py-3 flex items-center justify-between rounded-lg">
               <span className="text-sm">
                 <b>{selectedProducts.length}</b>{" "}
                 {(bycyclePOP && "bicycles Selected") ||

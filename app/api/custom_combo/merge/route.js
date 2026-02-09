@@ -5,27 +5,20 @@ import { NextResponse } from "next/server";
 
 export async function POST(req) {
   await dbConnect();
-  console.log("---------------------------------------------------------------------------------")
+
   const { guestId } = await req.json();
   const authHeader = req.headers.get("Authorization");
   const token = authHeader?.split(" ")[1];
-  console.log('token    : ',token);
-  console.log('guest id',guestId)
+
   if (!token || !guestId) {
-    return NextResponse.json(
-      { message: "Unauthorized" },
-      { status: 401 }
-    );
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   let decoded;
   try {
     decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch {
-    return NextResponse.json(
-      { message: "Invalid token" },
-      { status: 401 }
-    );
+    return NextResponse.json({ message: "Invalid token" }, { status: 401 });
   }
 
   const userId = decoded.userId;
@@ -40,11 +33,11 @@ export async function POST(req) {
     });
   }
 
-  // 2️⃣ Fetch or create user combo
+  // 2️⃣ Fetch user combo
   let userCombo = await custom_combo.findOne({ userId });
 
+  // 🔥 If user combo doesn't exist → convert guest combo
   if (!userCombo) {
-    // 🔥 Convert guest combo into user combo
     guestCombo.userId = userId;
     guestCombo.guestId = null;
     await guestCombo.save();
@@ -55,12 +48,21 @@ export async function POST(req) {
     });
   }
 
-  // 3️⃣ Merge arrays (avoid duplicates)
+  // 3️⃣ Merge arrays by productId (KEEP selectedVariant)
   const mergeUnique = (userArr = [], guestArr = []) => {
     const map = new Map();
-    [...userArr, ...guestArr].forEach((id) => {
-      map.set(id.toString(), id);
+
+    userArr.forEach((item) => {
+      map.set(item.productId.toString(), item);
     });
+
+    guestArr.forEach((item) => {
+      const key = item.productId.toString();
+      if (!map.has(key)) {
+        map.set(key, item);
+      }
+    });
+
     return Array.from(map.values());
   };
 
@@ -73,7 +75,7 @@ export async function POST(req) {
 
   await userCombo.save();
 
-  // 4️⃣ Delete guest combo
+  // 4️⃣ Remove guest combo
   await custom_combo.deleteOne({ guestId });
 
   return NextResponse.json({

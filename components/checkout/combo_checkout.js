@@ -285,12 +285,47 @@ export default function Custom_Combo_Checkout() {
     //     }
 
     fetchData();
+    console.log(combo, 'combo')
   }, []);
 
   const guestId =
     typeof window !== "undefined" ? localStorage.getItem("guestCartId") : null;
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  const normalizeCycles = (cycles = []) =>
+    cycles.map((item) => {
+      const product = item.productId || {};
+
+      return {
+        ...product, // flatten product fields
+
+        // keep variant info
+        selectedVariant: item.selectedVariant || null,
+
+        // unified fields for UI usage
+        price:
+          item.selectedVariant?.price ??
+          product.special_price ??
+          product.price ??
+          0,
+
+        overview_image:
+          item.selectedVariant?.images?.[0] ||
+          product.overview_image ||
+          product.images?.[0] ||
+          "",
+      };
+    });
+  const normalizeProduct = (item, type) => {
+    return {
+      ...item,
+      // _id: `${type}_${item._id || item.id}`, // 🔥 force unique
+      productType: type,                    // 🔥 identify later
+      originalProduct: item.originalProduct || item,
+    };
+  };
+
 
   const fetchData = async (confi) => {
     if (!token) {
@@ -304,25 +339,60 @@ export default function Custom_Combo_Checkout() {
       const userId = decoded.userId;
 
       // ✅ Only fetch cart if no items already set
-      if (combo.length === 0 || confi) {
+      if ((Array.isArray(combo) && combo.length === 0) || confi) {
         const response = await fetch("/api/custom_combo/get", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        const res = await response.json();
-
-        if (res.success !== 1) {
+        // 🚨 handle empty / non-JSON response
+        if (!response.ok) {
           throw new Error("Failed to fetch customized combo data");
         }
 
+        const text = await response.text();
+        if (!text) return; // backend returned nothing
+
+        const res = await JSON.parse(text);
+
+        if (res?.success !== 1) {
+          throw new Error("Failed to fetch customized combo data");
+        }
+
+        const products = await res.products || {};
+
+        const normalizedCycles = Array.isArray(products.cycles)
+          ? normalizeCycles(products.cycles).map((c) =>
+            normalizeProduct(c, "cycle")
+          )
+          : [];
+
+        const normalizedAccessories = Array.isArray(products.accessories)
+          ?
+
+          normalizeCycles(products.accessories).map((a) =>
+            normalizeProduct(a, "accessory")
+          )
+          : [];
+
+        const normalizedBags = Array.isArray(products.bags)
+          ? normalizeCycles(products.bags).map((b) =>
+            normalizeProduct(b, "bag")
+          )
+          : [];
+
+        console.log(normalizedAccessories, 'accessories')
         setCombo([
-          ...(res.products?.cycles || []),
-          ...(res.products?.accessories || []),
-          ...(res.products?.bags || []),
+          ...normalizedCycles,
+          ...normalizedAccessories,
+          ...normalizedBags,
         ]);
+
+
+
       }
+
 
       // Fetch user address
       const addressResponse = await fetch(`/api/useraddress?user_id=${userId}`);
@@ -534,21 +604,28 @@ export default function Custom_Combo_Checkout() {
   // combo.reduce((sum, item) => sum + (item.discount ?? 0), 0) || 1000;
 
   // Calculate totals
-  const { subtotal, totalDiscount, grandTotal } = useMemo(() => {
-    // Calculate subtotal from combo items
-    const subtotal = combo.reduce(
-      (sum, item) => sum + (item.special_price ?? item.price ?? 0),
-      0,
-    );
+const { subtotal, totalDiscount, grandTotal } = useMemo(() => {
+  const subtotal = combo.reduce((sum, item) => {
+    const variantPrice = item?.selectedVariant?.price;
 
-    // Calculate discount: 10% if subtotal >= 10000
-    const totalDiscount = subtotal >= 10000 ? subtotal * 0.1 : 0;
+    const price =
+      variantPrice !== null &&
+      variantPrice !== undefined &&
+      variantPrice !== ""
+        ? Number(variantPrice)
+        : Number(item?.special_price ?? item?.price ?? 0);
 
-    // Grand total after discount
-    const grandTotal = subtotal - totalDiscount;
+    return sum + price;
+  }, 0);
 
-    return { subtotal, totalDiscount, grandTotal };
-  }, [combo]);
+  // 🔹 10% discount if subtotal >= 10000
+  const totalDiscount = subtotal >= 10000 ? subtotal * 0.1 : 0;
+
+  const grandTotal = subtotal - totalDiscount;
+
+  return { subtotal, totalDiscount, grandTotal };
+}, [combo]);
+
 
   useEffect(() => {
     setOrderSummary({
@@ -603,15 +680,15 @@ export default function Custom_Combo_Checkout() {
       const addressData =
         useSavedAddress && selectedAddress !== null
           ? {
-              ...useraddress[selectedAddress],
-              state: useraddress[selectedAddress].state || "Tamilnadu",
-              country: useraddress[selectedAddress].country || "India",
-            }
+            ...useraddress[selectedAddress],
+            state: useraddress[selectedAddress].state || "Tamilnadu",
+            country: useraddress[selectedAddress].country || "India",
+          }
           : {
-              ...formData,
-              state: formData.state || "Tamilnadu",
-              country: formData.country || "India",
-            };
+            ...formData,
+            state: formData.state || "Tamilnadu",
+            country: formData.country || "India",
+          };
 
       // Validation Checks (only if not using saved address)
       if (!useSavedAddress || selectedAddress === null) {
@@ -759,7 +836,7 @@ export default function Custom_Combo_Checkout() {
           pickup_store:
             formData.deliveryType === "store"
               ? stores.find((s) => s._id === formData.selectedStore)
-                  ?.organisation_name
+                ?.organisation_name
               : undefined,
           payment_id: paymentData._id,
           payment_status: paymentData.status,
@@ -768,7 +845,8 @@ export default function Custom_Combo_Checkout() {
             item_code: `ITEM${item.item_code}`,
             product_id: item.id,
             product_name: item.name,
-            product_price: item.price,
+            product_price:item.special_price || item.price,
+            selected_variant: item?.selectedVariant || null,
             model: "N/A",
             user_id: userId,
             coupondiscount: 0,
@@ -902,9 +980,8 @@ export default function Custom_Combo_Checkout() {
         const name = addressData.firstName + " " + addressData.lastName;
         const itemsHtml = orderData.order.order_item
           .map((item) => {
-            return `<li>${item.name} - ₹${Number(item.price).toFixed(2)} x ${
-              item.length || 1
-            }</li>`;
+            return `<li>${item.name} - ₹${Number(item.price).toFixed(2)} x ${item.length || 1
+              }</li>`;
           })
           .join("");
         const itemHtml = `<ul style="padding-left: 20px; color: #555555;">${itemsHtml}</ul>`;
@@ -1106,11 +1183,10 @@ export default function Custom_Combo_Checkout() {
                         required
                       />
                       <span
-                        className={`absolute left-2 transition-all duration-200 ${
-                          formData.phonenumber
-                            ? "top-1 text-xs text-gray-500"
-                            : "top-3 text-gray-400"
-                        }`}
+                        className={`absolute left-2 transition-all duration-200 ${formData.phonenumber
+                          ? "top-1 text-xs text-gray-500"
+                          : "top-3 text-gray-400"
+                          }`}
                       >
                         Phone Number
                       </span>
@@ -1125,11 +1201,10 @@ export default function Custom_Combo_Checkout() {
                         required
                       />
                       <span
-                        className={`absolute left-2 transition-all duration-200 ${
-                          formData.email
-                            ? "top-1 text-xs text-gray-500"
-                            : "top-3 text-gray-400"
-                        }`}
+                        className={`absolute left-2 transition-all duration-200 ${formData.email
+                          ? "top-1 text-xs text-gray-500"
+                          : "top-3 text-gray-400"
+                          }`}
                       >
                         Email Address
                       </span>
@@ -1152,11 +1227,10 @@ export default function Custom_Combo_Checkout() {
                       required
                     />
                     <span
-                      className={`absolute left-2 transition-all duration-200 ${
-                        formData.country
-                          ? "top-1 text-xs text-gray-500"
-                          : "top-3 text-gray-400"
-                      }`}
+                      className={`absolute left-2 transition-all duration-200 ${formData.country
+                        ? "top-1 text-xs text-gray-500"
+                        : "top-3 text-gray-400"
+                        }`}
                     >
                       Country
                     </span>
@@ -1173,11 +1247,10 @@ export default function Custom_Combo_Checkout() {
                         required
                       />
                       <span
-                        className={`absolute left-2 transition-all duration-200 ${
-                          formData.firstName
-                            ? "top-1 text-xs text-gray-500"
-                            : "top-3 text-gray-400"
-                        }`}
+                        className={`absolute left-2 transition-all duration-200 ${formData.firstName
+                          ? "top-1 text-xs text-gray-500"
+                          : "top-3 text-gray-400"
+                          }`}
                       >
                         First Name
                       </span>
@@ -1192,11 +1265,10 @@ export default function Custom_Combo_Checkout() {
                         required
                       />
                       <span
-                        className={`absolute left-2 transition-all duration-200 ${
-                          formData.lastName
-                            ? "top-1 text-xs text-gray-500"
-                            : "top-3 text-gray-400"
-                        }`}
+                        className={`absolute left-2 transition-all duration-200 ${formData.lastName
+                          ? "top-1 text-xs text-gray-500"
+                          : "top-3 text-gray-400"
+                          }`}
                       >
                         Last Name
                       </span>
@@ -1213,11 +1285,10 @@ export default function Custom_Combo_Checkout() {
                       required
                     />
                     <span
-                      className={`absolute left-2 transition-all duration-200 ${
-                        formData.businessName
-                          ? "top-1 text-xs text-gray-500"
-                          : "top-3 text-gray-400"
-                      }`}
+                      className={`absolute left-2 transition-all duration-200 ${formData.businessName
+                        ? "top-1 text-xs text-gray-500"
+                        : "top-3 text-gray-400"
+                        }`}
                     >
                       Company Name (Optional)
                     </span>
@@ -1233,11 +1304,10 @@ export default function Custom_Combo_Checkout() {
                       required
                     />
                     <span
-                      className={`absolute left-2 transition-all duration-200 pointer-events-none ${
-                        formData.address
-                          ? "top-1 text-xs text-gray-500"
-                          : "top-3 text-gray-400"
-                      }`}
+                      className={`absolute left-2 transition-all duration-200 pointer-events-none ${formData.address
+                        ? "top-1 text-xs text-gray-500"
+                        : "top-3 text-gray-400"
+                        }`}
                     >
                       House number and street name
                     </span>
@@ -1253,11 +1323,10 @@ export default function Custom_Combo_Checkout() {
                       required
                     />
                     <span
-                      className={`absolute left-2 transition-all duration-200 ${
-                        formData.landmark
-                          ? "top-1 text-xs text-gray-500"
-                          : "top-3 text-gray-400"
-                      }`}
+                      className={`absolute left-2 transition-all duration-200 ${formData.landmark
+                        ? "top-1 text-xs text-gray-500"
+                        : "top-3 text-gray-400"
+                        }`}
                     >
                       Landmark, suite, unit, etc. (Optional)
                     </span>
@@ -1316,11 +1385,10 @@ export default function Custom_Combo_Checkout() {
                         ))}
                       </select>
                       <span
-                        className={`absolute left-2 transition-all duration-200 pointer-events-none ${
-                          formData.city
-                            ? "top-1 text-xs text-gray-500"
-                            : "top-3 text-gray-400"
-                        }`}
+                        className={`absolute left-2 transition-all duration-200 pointer-events-none ${formData.city
+                          ? "top-1 text-xs text-gray-500"
+                          : "top-3 text-gray-400"
+                          }`}
                       >
                         City
                       </span>
@@ -1337,11 +1405,10 @@ export default function Custom_Combo_Checkout() {
                       required
                     />
                     <span
-                      className={`absolute left-2 transition-all duration-200 ${
-                        formData.postCode
-                          ? "top-1 text-xs text-gray-500"
-                          : "top-3 text-gray-400"
-                      }`}
+                      className={`absolute left-2 transition-all duration-200 ${formData.postCode
+                        ? "top-1 text-xs text-gray-500"
+                        : "top-3 text-gray-400"
+                        }`}
                     >
                       Post Code
                     </span>
@@ -1375,11 +1442,10 @@ export default function Custom_Combo_Checkout() {
                       {useraddress.map((item, index) => (
                         <div
                           key={`address-${index}`}
-                          className={`border p-4 rounded-lg cursor-pointer transition-all ${
-                            selectedAddress === index
-                              ? "border-orange-500 bg-orange-50"
-                              : "hover:border-gray-300"
-                          }`}
+                          className={`border p-4 rounded-lg cursor-pointer transition-all ${selectedAddress === index
+                            ? "border-orange-500 bg-orange-50"
+                            : "hover:border-gray-300"
+                            }`}
                           onClick={() => setSelectedAddress(index)}
                         >
                           <div className="flex justify-between items-start">
@@ -1498,59 +1564,109 @@ export default function Custom_Combo_Checkout() {
               <div className="relative pb-3 mb-3">
                 {/* Scrollable List */}
                 <div className="max-h-64 overflow-y-auto pr-2 scroll-smooth scrollbar-hide">
-                  {combo.map((item,ind) => (
-                    <div
-                      key={`order-item-${ind}`}
-                      className="flex items-start justify-between gap-3 text-gray-700 mb-4 border"
-                    >
-                      {/* Product Image */}
-                      <div className="relative w-16 h-16 flex-shrink-0 border rounded overflow-hidden p-2">
-                        <img
-                          src={`/uploads/products/${item.overview_image}`}
-                          alt={item.name}
-                          className="w-full h-full object-contain"
-                        />
+                  {combo.map((item, ind) => {
+                    const price =
+                      item?.price ??
+                      item?.special_price ??
+                      0;
 
-                        {/* Quantity Badge */}
-                        {/* <div className="absolute top-0 right-0 bg-gray-700 text-white text-[10px] px-1.5 py-0.5 rounded-full">
-                          {item.quantity}
-                        </div> */}
-                      </div>
+                    // // ✅ Pick image in correct priority order
+                    // const rawImage =
+                    //   item?.selectedVariant?.images?.[0] || // 🥇 variant image (cycles)
+                    //   item?.overview_image ||               // 🥈 main product image
+                    //   item?.images?.[0] ||                  // 🥉 fallback
+                    //   "";
 
-                      {/* Product Details */}
-                      <div className="flex-1 mt-4">
-                        <div
-                          title={item.name}
-                          className="leading-snug text-xs sm:text-sm font-medium text-[#0069c6] hover:text-[#00badb] line-clamp-3 min-h-[40px]"
-                        >
-                          {item.name}
+                    // // ✅ Normalize to string
+                    // const image =
+                    //   typeof rawImage === "string"
+                    //     ? rawImage
+                    //     : rawImage?.url ||
+                    //     rawImage?.filename ||
+                    //     "";
+
+                    // const imageSrc =
+                    //   image && image.startsWith("http")
+                    //     ? image
+                    //     : image
+                    //       ? `/uploads/products/${image}`
+                    //       : "";
+
+                    return (
+                      <div
+                        key={`order-item-${item._id || ind}`}
+                        className="flex items-start justify-between gap-3 text-gray-700 mb-4 border p-2"
+                      >
+                        {/* Product Image */}
+                        <div className="relative w-16 h-16 flex-shrink-0 border rounded overflow-hidden p-2">
+                          {(() => {
+                            const rawImage =
+                              item?.selectedVariant?.images?.[0] || // 🔥 variant image (cycles)
+                              item?.overview_image?.[0] ||          // 🔥 main image (array case)
+                              item?.images?.[0] ||                  // fallback
+                              "";
+
+                            if (!rawImage) return null;
+
+                            const imageSrc =
+                              typeof rawImage === "string" && rawImage.startsWith("http")
+                                ? rawImage
+                                : `/uploads/products/${rawImage}`;
+
+                            return (
+                              <img
+                                src={imageSrc}
+                                alt={item.name}
+                                className="w-full h-full object-contain"
+                              />
+                            );
+                          })()}
                         </div>
 
-                        {/* <div className="text-xs mt-1 text-gray-600">
-                          Qty: <span className="text-red-600">{item.quantity}</span>
-                        </div> */}
-                      </div>
 
-                      {/* Price */}
-                      <div className="text-sm whitespace-nowrap text-base font-semibold text-red-600 mt-4">
-                        ₹
-                        {item.special_price > 0
-                          ? item.special_price
-                          : item.price}
-                      </div>
+                        {/* Product Details */}
+                        <div className="flex-1 mt-2">
+                          <div
+                            title={item.name}
+                            className="leading-snug text-xs sm:text-sm font-medium text-[#0069c6] hover:text-[#00badb] line-clamp-3 min-h-[40px]"
+                          >
+                            {item.name}
+                          </div>
 
-                      <div className="relative bg-slate-400 w-4 flex justify-end">
-                        <button
-                          onClick={() => {
-                            handledelete(item);
-                          }}
-                          className="absolute text-gray-500 hover:text-black text-xl"
-                        >
-                          ✕
-                        </button>
+                          {/* Variant info – cycles only */}
+                          {item?.selectedVariant && (
+                            <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                              {item.selectedVariant.color && (
+                                <div>Color: {item.selectedVariant.color}</div>
+                              )}
+                              {item.selectedVariant.size && (
+                                <div>Size: {item.selectedVariant.size}</div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Price */}
+                        <div className="text-sm whitespace-nowrap font-semibold text-red-600 mt-2">
+                          ₹{price}
+                        </div>
+
+                        {/* Delete */}
+                        <div className="relative w-4 flex justify-end">
+                          <button
+                            onClick={() => handledelete(item)}
+                            className="absolute text-gray-500 hover:text-black text-xl"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
+
+
+
+
                 </div>
 
                 {/* Scroll for More Items Overlay */}
@@ -1663,14 +1779,13 @@ export default function Custom_Combo_Checkout() {
                     combo.length === 0 ||
                     !isDeliverySaved
                   }
-                  className={`mt-6 w-1/2 md:w-1/3 text-white font-semibold py-2 rounded-lg transition  ${
-                    isSubmitting ||
+                  className={`mt-6 w-1/2 md:w-1/3 text-white font-semibold py-2 rounded-lg transition  ${isSubmitting ||
                     loading ||
                     combo.length === 0 ||
                     !isDeliverySaved
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-red-500 hover:bg-red-600"
-                  }`}
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-red-500 hover:bg-red-600"
+                    }`}
                 >
                   {isSubmitting ? (
                     <span className="flex items-center justify-center">
