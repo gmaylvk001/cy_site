@@ -229,7 +229,7 @@ export default function BicycleFilterSection() {
       try {
         const res = await fetch("/api/Variants/get_all");
         const data = await res.json();
-        console.log("Variants Data:", data);
+        // console.log("Variants Data:", data);
         setVariants(data.variants || []);
       } catch (err) {
         console.log("Fetch error:", err);

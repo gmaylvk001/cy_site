@@ -364,7 +364,7 @@ export default function customize_combo() {
         }
       );
 
-      console.log('res', res);
+      // console.log('res', res);
       const data = await res.json();
       if (data.message == 'Invalid token') {
         localStorage.removeItem('token')
@@ -426,7 +426,7 @@ export default function customize_combo() {
 
   const handleproductSelect = (product = null, variant = null, variant_info = {}) => {
     if (!product?._id) return;
-    console.log(product, 'product', variant, 'variant', variant_info, 'variant info');
+    // console.log(product, 'product', variant, 'variant', variant_info, 'variant info');
     const alreadySelected = selectedProducts.some((p) => p._id === product._id);
 
     // ❌ Block adding more than 3 (only when adding)
@@ -698,7 +698,7 @@ export default function customize_combo() {
                       {/* Selected Bicycles */}
 
                       {finalBycycles.map((cycle, ind) => {
-                        console.log(cycle, 'dycle')
+                        // console.log(cycle, 'dycle')
                         return (
                           <div
                             key={ind}
@@ -1245,8 +1245,8 @@ export default function customize_combo() {
                     (p) => p._id === product._id,
                   );
                   let selected_pro = selectedProducts.find((p) => p?._id === product?._id)
-                  console.log(selected_pro, 'testing')
-                  console.log(all_variants, 'test all variants')
+                  // console.log(selected_pro, 'testing')
+                  // console.log(all_variants, 'test all variants')
                   const filterVariant = all_variants?.find(
                     vari => vari.parent_id === product._id
                   );
@@ -1281,7 +1281,7 @@ export default function customize_combo() {
                       {/* Product image */}
                       <div
                         onClick={() => {
-                          console.log('testing', colors.length)
+                          // console.log('testing', colors.length)
                           handleproductSelect(product)
 
                           // if (colors.length === 0) {
@@ -1396,7 +1396,7 @@ export default function customize_combo() {
                                 }}
                                 onClick={() => {
                                   // if()
-                                  console.log(selected_pro?.selectedColor, 'tstinpadf')
+                                  // console.log(selected_pro?.selectedColor, 'tstinpadf')
                                   handleproductSelect(product, { color }, variantInfo);
                                 }}
                               />

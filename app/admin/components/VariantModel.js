@@ -168,7 +168,7 @@ export default function VariantModal({ open, onClose, initialVariant, onSubmit }
 
 
     const errors = (fieldKey = null, data = variant) => {
-        console.log("Validating :", data, " FieldKey: ", fieldKey);
+        // console.log("Validating :", data, " FieldKey: ", fieldKey);
 
         let newError = {};
 

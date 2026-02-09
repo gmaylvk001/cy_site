@@ -480,7 +480,7 @@ const updateOrderStatusWithDeliveryDate = async () => {
                               setOldStatus(prevStatus);
                               setShowDeliveryDateModal(true);
                               e.target.value = prevStatus; // Reset dropdown until confirmed
-                              console.log("hai");
+                              // console.log("hai");
                               return;
                             }
 

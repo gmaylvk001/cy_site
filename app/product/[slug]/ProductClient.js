@@ -1250,7 +1250,7 @@ export default function ProductClient() {
                           key={ind}
                           onClick={() => {
                             if (selectedColor === c) {
-                              console.log(selectedColor, c, 'testing')
+                              // console.log(selectedColor, c, 'testing')
                               setSelectedColor(null);
                               set_options(variantData)
                               const params = new URLSearchParams(searchParams.toString());

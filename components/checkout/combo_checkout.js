@@ -285,7 +285,7 @@ export default function Custom_Combo_Checkout() {
     //     }
 
     fetchData();
-    console.log(combo, 'combo')
+    // console.log(combo, 'combo')
   }, []);
 
   const guestId =
