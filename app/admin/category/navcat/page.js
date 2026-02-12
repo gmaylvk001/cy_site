@@ -85,7 +85,7 @@ export default function CategoryNavPage() {
       }
       
       const result = await response.json();
-      console.log("Positions updated successfully:", result);
+      // console.log("Positions updated successfully:", result);
       
       // Update the original categories to match the current order
       setOriginalCategories(JSON.parse(JSON.stringify(categories)));

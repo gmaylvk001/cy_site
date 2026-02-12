@@ -27,7 +27,7 @@ export async function POST(req) {
     const worksheet = workbook.Sheets[sheetName];
     const data = XLSX.utils.sheet_to_json(worksheet);
 
-    console.log("Data from Excel:", data);
+    // console.log("Data from Excel:", data);
 
     if (!data || data.length === 0) {
       return NextResponse.json({ error: "No data found in file" }, { status: 400 });

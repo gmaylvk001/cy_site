@@ -68,7 +68,7 @@ export async function POST(req) {
                 await coupon_track.save();
                 if(couponid){
                   const updatecoupon = await Coupon.findOne({couponid});
-                  console.log(updatecoupon);
+                  // console.log(updatecoupon);
                   if(updatecoupon){
                     updatecoupon.used_by +=1;
                     updatecoupon.save();
@@ -76,7 +76,7 @@ export async function POST(req) {
                 }
 
               }
-              console.log(product);
+              // console.log(product);
               if (product && product.quantity > 0) {
                 product.quantity = product.quantity - item.quantity;
                 await product.save();

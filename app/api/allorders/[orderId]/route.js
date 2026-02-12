@@ -22,14 +22,14 @@ export async function GET(req, { params }) {
       return item.item_code;
     });
 
-    console.log("Trimmed Item codes:", productItemCodes);
+    // console.log("Trimmed Item codes:", productItemCodes);
 
     const products = await Product.find({ item_code: { $in: productItemCodes } })
       .select("slug item_code")
       .lean();
 
     // Log the fetched products to check if a match was found
-    console.log("Fetched Products:", products);
+//     console.log("Fetched Products:", products);
 
     order.order_details = order.order_details.map(item => {
       // Find the corresponding product using the original item_code
@@ -41,7 +41,7 @@ export async function GET(req, { params }) {
       return { ...item, slug: product?.slug || null };
     });
 
-    console.log("Order with Slugs:", order);
+    // console.log("Order with Slugs:", order);
     
     return NextResponse.json(order);
   } catch (err) {

@@ -158,7 +158,7 @@ export default function CategoryBrandComponent({ categorySlug, brandSlug }) {
     const categorySlugName = parts[2]; // "televisions"
     const brandSlugName = parts[3];    // "samsung"
 
-    console.log(categorySlugName, brandSlugName);
+    // console.log(categorySlugName, brandSlugName);
 
     // Assign to query or use anywhere
     query.set('categorySlug', categorySlugName);
@@ -176,7 +176,7 @@ export default function CategoryBrandComponent({ categorySlug, brandSlug }) {
     const res = await fetch(`/api/product/filter/category-brand/main?${query}`);
    
     const { products, pagination: paginationData } = await res.json();
-console.log("Fetched products:", products);
+// console.log("Fetched products:", products);
     setProducts(products || []);
 
     if ((!products || products.length === 0) && pageNum === 1) {

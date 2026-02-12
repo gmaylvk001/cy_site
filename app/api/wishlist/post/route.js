@@ -8,14 +8,14 @@ import Wishlist from "@/models/ecom_wishlist_info";
 export async function POST(req) {
   try {
     const token = req.headers.get('authorization');
-    console.log(token);
+    // console.log(token);
     const authtoken = token.replace('Bearer ', '');
     if (!authtoken) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     const { userId } = verifyToken(authtoken); // Implement your verifyToken logic
-    console.log("user",userId);
+    // console.log("user",userId);
     const body = await req.json();
     const { productId } = body;
     if (!productId) {

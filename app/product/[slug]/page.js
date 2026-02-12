@@ -5,9 +5,10 @@ import { redirect } from "next/navigation"; // ✅ add this
 
 //import { useParams } from "next/navigation";
 
-export async function generateMetadata({ params,searchParams  }) {
+export async function generateMetadata(props) {
+  const { params, searchParams } = await props;
   // const color = searchParams.get("color"); // "red-blue"
-  const slug = params.slug;
+  const slug = params?.slug;
   const color = searchParams?.color;
   // Always use absolute URL
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;

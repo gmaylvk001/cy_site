@@ -44,9 +44,9 @@ export async function POST(req) {
     }
     const coupon_id = coupon._id.toString();
  const userObjectId = new mongoose.Types.ObjectId(userId);
- console.log(coupon._id,userObjectId);
+//  console.log(coupon._id,userObjectId);
     const usedcoupon = await Usedcoupon.findOne({   coupon_id: coupon._id,user_id: userObjectId });
-    console.log(usedcoupon);
+    // console.log(usedcoupon);
     if(usedcoupon){
       return NextResponse.json({ message: 'This user already used' }, { status: 400 });
     }

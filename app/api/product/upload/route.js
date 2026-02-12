@@ -7,7 +7,7 @@ import { writeFile } from "fs/promises";
 
 export async function POST(req) {
     const formData = await req.formData();
-    console.log(formData);
+    // console.log(formData);
     const imageFiles = formData.getAll("image");
     const savedImages = [];
     if (!imageFiles.length) {

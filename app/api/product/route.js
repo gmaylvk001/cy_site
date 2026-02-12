@@ -11,8 +11,8 @@ export async function POST(request) {
     const body = await request.json();
     const { _id, ...updateData } = body;
 
-    console.log('Updating product with ID:', _id);
-    console.log('Update data:', updateData);
+    // console.log('Updating product with ID:', _id);
+    // console.log('Update data:', updateData);
 
     // 3. Validate required fields
     if (!_id) {

@@ -7,7 +7,7 @@ export async function GET(req) {
   await dbConnect();
 
   try {
-    console.log("hai");
+    // console.log("hai");
     const { searchParams } = new URL(req.url);
     const authHeader = req.headers.get('authorization');
     const token = authHeader && authHeader.split(' ')[1];
@@ -24,7 +24,7 @@ export async function GET(req) {
     const userId = decoded.userId;
     const status = searchParams.get("status");
     const order_number = searchParams.get("order_number");
-    console.log(order_number);
+    // console.log(order_number);
     let query = {};
 
     if (status && status !== "all") {
@@ -35,7 +35,7 @@ export async function GET(req) {
       query.order_number = order_number;
     }
 
-    console.log(query);
+    // console.log(query);
     const orders = await Order.find(query).sort({ createdAt: -1 });
     
     if (order_number && orders.length === 0) {

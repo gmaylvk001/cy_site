@@ -47,7 +47,7 @@ export async function POST(req) {
         });
         const existingBrand = await Brand.findOne({  brand_name: { $regex: new RegExp(`^${item.brand}$`, "i") } });
         const brand_id = existingBrand?._id?.toString() || null;
-        console.log(item.brand,existingBrand,brand_id);
+        // console.log(item.brand,existingBrand,brand_id);
         if (existingProduct) {
             // await Product.updateOne(
             //     {

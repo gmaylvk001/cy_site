@@ -20,7 +20,7 @@ const RelatedProducts = ({ currentProductId,categoryId }) => {
       setLoading(true);
       const res = await fetch(`/api/product/related?category=${categoryId}&exclude=${currentProductId}&limit=5`);
       const data = await res.json();
-      console.log("Related products data:", data);
+      // console.log("Related products data:", data);
       if (res.ok) {
   if (data.success && data.products) {
     setRelatedProducts(data.products);

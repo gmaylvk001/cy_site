@@ -1234,6 +1234,7 @@ export default function ProductClient() {
                 </div>
               </div>
             )} */}
+            {colorOptions.length > 0 && (
             <div className="relative z-0 w-full rounded-xl border border-gray-200 bg-white px-6 py-4">
               <div className="flex items-center gap-6">
                 <h4 className="text-lg font-semibold text-black">Colour :</h4>
@@ -1306,6 +1307,7 @@ export default function ProductClient() {
                 </div>
               </div>
             </div>
+            )}
             {/* Size section */}
             <div className="relative z-0 w-full rounded-xl border border-gray-200 bg-white px-6 py-4 mt-3">
               <div className="flex items-center gap-6">

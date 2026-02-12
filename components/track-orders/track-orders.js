@@ -48,7 +48,7 @@ const LebdingPartners = () => {
     if (!validate()) return;
 
     // ✅ API call can go here
-    console.log("Tracking order:", form);
+    // console.log("Tracking order:", form);
   };
 
   return (

@@ -45,7 +45,7 @@ export async function POST(req) {
       while (true) {
         const imageKey = `variant_${i}_image_${imgIndex}`;
         const imageFile = formData.get(imageKey);
-        console.log(imageFile);
+        // console.log(imageFile);
         if (!imageFile) break;
         
         // Process and save the image
@@ -63,7 +63,7 @@ export async function POST(req) {
       variant.images = variantImages;
     }
   }
-  console.log(".............................................");
+  // console.log(".............................................");
     const uploadDir = path.join(process.cwd(), "public/uploads/products");
     if (!fs.existsSync(uploadDir)) {
         await fs.promises.mkdir(uploadDir, { recursive: true });

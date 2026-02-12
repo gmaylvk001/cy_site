@@ -830,7 +830,7 @@ const renderFlatItem = (item, hoveredCategory) => {
                                     className={`block w-full text-left px-2 py-1 rounded cursor-pointer ${selectedCategory === 'All Categories' ? 'bg-blue-100' : ''}`}
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        console.log('All categories clicked');
+                                        // console.log('All categories clicked');
                                         setSelectedCategory('All Categories');
                                         setIsMobileMenuOpen(false);
                                         setTimeout(() => {
@@ -844,11 +844,11 @@ const renderFlatItem = (item, hoveredCategory) => {
                                     // console.log('Rendering category:', cat.category_name, 'URL:', url);
                                     
                                     const handleCategoryClick = () => {
-                                        console.log('Category clicked:', cat.category_name, 'navigating to:', url);
+                                        // console.log('Category clicked:', cat.category_name, 'navigating to:', url);
                                         setSelectedCategory(cat.category_name);
                                         setIsMobileMenuOpen(false);
                                         setTimeout(() => {
-                                            console.log('Navigating now to:', url);
+                                            // console.log('Navigating now to:', url);
                                             window.location.href = url;
                                         }, 50);
                                     };
@@ -862,13 +862,13 @@ const renderFlatItem = (item, hoveredCategory) => {
                                             onClick={handleCategoryClick}
                                             onTouchEnd={(e) => {
                                                 e.preventDefault();
-                                                console.log('Touch event on category:', cat.category_name);
+                                                // console.log('Touch event on category:', cat.category_name);
                                                 handleCategoryClick();
                                             }}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter' || e.key === ' ') {
                                                     e.preventDefault();
-                                                    console.log('Keyboard event on category:', cat.category_name);
+                                                    // console.log('Keyboard event on category:', cat.category_name);
                                                     handleCategoryClick();
                                                 }
                                             }}>

@@ -56,7 +56,7 @@ export async function POST(req) {
                 // Extract product IDs
                 finalOfferProduct = activeProducts.map(product => product._id.toString());
                 
-                console.log(`Found ${finalOfferProduct.length} active products from selected categories`);
+                // console.log(`Found ${finalOfferProduct.length} active products from selected categories`);
                 
             } catch (error) {
                 console.error("Error fetching products from categories:", error);

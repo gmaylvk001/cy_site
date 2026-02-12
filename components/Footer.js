@@ -286,7 +286,7 @@ const capitalizeFirstLetter = (str) =>
 
   return (
     <>
-      <footer className="bg-[#2e2a2a] text-gray-300 text-sm py-5 md:px-4 p-6">
+      <footer className="bg-[#2e2a2a] text-gray-300 text-sm py-5 md:px-4 p-6 w-full h-full">
         <div className="bg-[#2e2a2a] text-gray-400  border-white ">
           <div className="w-full flex justify-center">
             <div className="w-full container mx-auto px-3  grid grid-cols-1 md:grid-cols-3 gap-16 justify-between">

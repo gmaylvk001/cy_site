@@ -7,14 +7,14 @@ export async function DELETE(req) {
 
   try {
     const { id } = await req.json(); // Parse JSON body
-    console.log("Request ID:", id);
+    // console.log("Request ID:", id);
 
     if (!id) {
       return Response.json({ success: false, message: "Offer ID is required" });
     }
 
     const deletedOffer = await Offer.findByIdAndDelete(id);
-    console.log("Deleted Offer:", deletedOffer);
+    // console.log("Deleted Offer:", deletedOffer);
 
     if (!deletedOffer) {
       return Response.json({ success: false, message: "Offer not found" });

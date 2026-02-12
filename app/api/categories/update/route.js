@@ -95,7 +95,7 @@ export async function PUT(req) {
     let nav_image_url = existingNavImage;
     const navFile = formData.get("navImage");
     if (navFile) {
-      console.log('navFile:', navFile);
+      // console.log('navFile:', navFile);
       if (nav_image_url) {
         try {
           const oldNavImagePath = path.join(
@@ -113,7 +113,7 @@ export async function PUT(req) {
       const fileName = `category_nav_${Date.now()}${path.extname(navFile.name)}`;
       await writeFile(path.join(uploadDir, fileName), buffer);
       nav_image_url = `http://localhost:3000/uploads/categories/${fileName}`;
-      console.log('nav_image_url:', nav_image_url);
+      // console.log('nav_image_url:', nav_image_url);
     }
 
     // UPDATE FILTERS LOGIC - Same as product filters
@@ -134,7 +134,7 @@ export async function PUT(req) {
             })
           );
           await Promise.all(filterPromises);
-          console.log(`Updated ${filterIds.length} filters for category ${_id}`);
+          // console.log(`Updated ${filterIds.length} filters for category ${_id}`);
         }
       } catch (error) {
         console.error("Error updating filters:", error);
@@ -143,7 +143,7 @@ export async function PUT(req) {
     } else {
       // If no filters are provided, remove all existing filters
       await CategoryFilter.deleteMany({ category_id: _id });
-      console.log(`Removed all filters for category ${_id}`);
+      // console.log(`Removed all filters for category ${_id}`);
     }
 
     // ✅ Update category with content and other fields

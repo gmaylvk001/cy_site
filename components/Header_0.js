@@ -18,7 +18,7 @@ export default function Header() {
 
   useEffect(() => {
     if (session) {
-      console.log("User session:", session);
+      // console.log("User session:", session);
       alert(`Welcome, ${session.user.email}`);
     }
   }, [session]);

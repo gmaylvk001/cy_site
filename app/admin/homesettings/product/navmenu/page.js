@@ -33,7 +33,7 @@ export default function ProductCategoryPage() {
         .sort((a, b) => (a.position || 0) - (b.position || 0));
       
       setCategories(activeCategories);
-      console.log("Fetched categories:", activeCategories);
+      // console.log("Fetched categories:", activeCategories);
       setOriginalCategories(JSON.parse(JSON.stringify(activeCategories)));
       setHasChanges(false);
     } catch (error) {

@@ -49,7 +49,7 @@ const OrderDetails = () => {
   }, [orderId]);
 
   if (!order) return <p className="text-center mt-10">Loading...</p>;
-  console.log('Order:', order);
+  // console.log('Order:', order);
 
   const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
 

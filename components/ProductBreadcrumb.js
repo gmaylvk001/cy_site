@@ -16,14 +16,14 @@ export default function ProductBreadcrumb({ product }) {
           return;
         }
 
-        console.log('Building hierarchy for category ID:', product.category);
-        console.log('Sub category ID:', product.sub_category);
+        // console.log('Building hierarchy for category ID:', product.category);
+        // console.log('Sub category ID:', product.sub_category);
 
         // Fetch all categories
         const allCategoriesRes = await fetch('/api/categories/breadcrumb');
         const allCategories = await allCategoriesRes.json();
         
-        console.log('All categories from API:', allCategories);
+        // console.log('All categories from API:', allCategories);
 
         // Helper function to find category by ID
         const findCategoryById = (id) => {
@@ -85,7 +85,7 @@ export default function ProductBreadcrumb({ product }) {
           allCategories
         );
 
-        console.log('Final hierarchy:', hierarchy);
+        // console.log('Final hierarchy:', hierarchy);
         setCategories(hierarchy);
 
       } catch (error) {

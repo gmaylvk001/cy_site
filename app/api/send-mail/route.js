@@ -9,7 +9,7 @@ import path from 'path';
 export async function POST(req) {
 
   const { products, offerId, subject, message } = await req.json();
-console.log(products,offerId, subject, message);
+// console.log(products,offerId, subject, message);
   try {
     await dbConnect();
       // Read logo file
@@ -30,7 +30,7 @@ console.log(products,offerId, subject, message);
     });
     
 const offer = await Offer.findOne({ _id: new mongoose.Types.ObjectId(offerId) });
-    console.log(offer);
+    // console.log(offer);
     const usersResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/get`);
     const users = await usersResponse.json();
 
@@ -39,7 +39,7 @@ const offer = await Offer.findOne({ _id: new mongoose.Types.ObjectId(offerId) })
     const recipients = users.filter(user => 
       offer.selected_users.includes(user._id) || offer.selected_users.includes("all")
     );
- console.log(recipients);
+//  console.log(recipients);
     // Send email to each recipient
     const mailPromises = recipients.map(user => {
       const mailOptions = {

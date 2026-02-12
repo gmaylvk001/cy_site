@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 export async function POST(req) {
   try {
     const body = await req.json();
-    console.log("Received body:", body); // Debug log
+    // console.log("Received body:", body); // Debug log
 
     const { name, mobile, email, password } = body;
     if (!name || !email || !password) {
@@ -14,7 +14,7 @@ export async function POST(req) {
     }
 
     await connectDB();
-    console.log("Database connected successfully"); // Debug log
+    // console.log("Database connected successfully"); // Debug log
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -22,11 +22,11 @@ export async function POST(req) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log("Password hashed successfully"); // Debug log
+    // console.log("Password hashed successfully"); // Debug log
 
     const newUser = new User({ name, mobile, email, password: hashedPassword });
     await newUser.save();
-    console.log("User saved successfully"); // Debug log
+    // console.log("User saved successfully"); // Debug log
 
     return NextResponse.json({ message: "User registered successfully" }, { status: 201 });
 

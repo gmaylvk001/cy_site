@@ -152,7 +152,7 @@ export async function PUT(req) {
     const normalizedStatus =
       pickStatus(fest_offer_status2, fest_offer_status, status) ??
       pickStatus(existingOffer.fest_offer_status) ?? "inactive";
-    console.log("Normalized Status:", normalizedStatus);
+    // console.log("Normalized Status:", normalizedStatus);
 
     // Ensure ObjectIds and de-dup for product/user arrays without deprecated constructor
     const toObjectIds = (arr = []) =>
@@ -191,7 +191,7 @@ export async function PUT(req) {
       },
       { new: true }
     );
-    console.log("Updated Offer:", updatedOffer.fest_offer_status);
+    // console.log("Updated Offer:", updatedOffer.fest_offer_status);
 
     if (!updatedOffer) {
       return NextResponse.json(

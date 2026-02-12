@@ -185,7 +185,7 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
   useEffect(() => {
     if (activeTab === "overview") {
       const timer = setTimeout(() => {
-        console.log("[Flix] overview tab effect -> initializeFlixMedia()");
+        // console.log("[Flix] overview tab effect -> initializeFlixMedia()");
         initializeFlixMedia();
       }, 300);
       return () => clearTimeout(timer);
@@ -197,7 +197,7 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
     if (activeTab === 'overview' && (flixLoaded || flixInitializedRef.current)) {
       try {
         if (typeof window !== 'undefined' && window.FlixMedia && typeof window.FlixMedia.load === 'function') {
-          console.log('[Flix] overview re-activate -> FlixMedia.load() only (no append)');
+          // console.log('[Flix] overview re-activate -> FlixMedia.load() only (no append)');
           window.FlixMedia.load();
         }
       } catch {}
@@ -210,7 +210,7 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
       flixLoadAttemptedRef.current = true;
       setTimeout(() => {
         if (!flixInitializedRef.current) {
-          console.log("[Flix] fallback mount init -> initializeFlixMedia()");
+          // console.log("[Flix] fallback mount init -> initializeFlixMedia()");
           initializeFlixMedia();
         }
       }, 500);
@@ -271,7 +271,7 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
     //   return;
     // }
 
-    console.log("Initializing FlixMedia with brand:", brandName);
+    // console.log("Initializing FlixMedia with brand:", brandName);
 
     // Clean up existing empty containers only
     const existingInpage = document.getElementById("flix-inpage");
@@ -288,7 +288,7 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
       inpageDiv.id = "flix-inpage";
       inpageDiv.className = "flix-inpage-container w-full";
       overviewTab.prepend(inpageDiv);
-      console.log("Created flix-inpage container");
+      // console.log("Created flix-inpage container");
     }
 
     if (keyFea && !document.getElementById("flix-minisite")) {
@@ -296,7 +296,7 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
       miniSiteDiv.id = "flix-minisite";
       miniSiteDiv.className = "flix-minisite-container w-full";
       keyFea.insertAdjacentElement("afterend", miniSiteDiv);
-      console.log("Created flix-minisite container");
+      // console.log("Created flix-minisite container");
     }
 
     // Start observing once containers exist
@@ -310,12 +310,12 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
 
     const fallbackTimeout = setTimeout(() => {
       if (!flixInitializedRef.current) {
-        console.log("FlixMedia failed to load, showing fallback message");
+        // console.log("FlixMedia failed to load, showing fallback message");
         showFallbackMessage();
       }
     }, 3000);
 
-    console.log("[Flix] initialize -> calling loadFlixScript(fallbackTimeout)");
+    // console.log("[Flix] initialize -> calling loadFlixScript(fallbackTimeout)");
     loadFlixScript(fallbackTimeout);
   };
 
@@ -330,10 +330,10 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
   const l = "in";
   // NEW: primary identifier selection with logging
   const primaryCode = (opts && opts.code) || p.brand_code || p.item_code || null;
-  console.log("[Flix] primary identifier selected (brand_code || item_code):", primaryCode, {
-    brand_code: p?.brand_code,
-    item_code: p?.item_code,
-  });
+  // console.log("[Flix] primary identifier selected (brand_code || item_code):", primaryCode, {
+  //   brand_code: p?.brand_code,
+  //   item_code: p?.item_code,
+  // });
   const params = new URLSearchParams({
     url: "/clamps/modularvnew/js/service.js",
     v: "32",
@@ -358,24 +358,24 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
   // OPTIONAL: pass brand name if available
   if (opts.brandName) params.append("brand", opts.brandName);
   const finalUrl = `https://media.flixcar.com/modular/js/minify/${distId}/?${params.toString()}`;
-    console.log("[Flix] minify url:", finalUrl);
+    // console.log("[Flix] minify url:", finalUrl);
     return finalUrl;
   };
   const loadFlixScript = (fallbackTimeout) => {
     const headID = document.getElementsByTagName("head")[0];
-    console.log(brandName, product);
+    // console.log(brandName, product);
 
     // NEW: avoid duplicate script tags for same src
     const code = product?.brand_code || product?.item_code || null;
-    console.log("[Flix] using identifier code for request:", code, {
-      brand_code: product?.brand_code,
-      item_code: product?.item_code,
-    });
+    // console.log("[Flix] using identifier code for request:", code, {
+    //   brand_code: product?.brand_code,
+    //   item_code: product?.item_code,
+    // });
     const src = buildFlixMinifyUrl(product, { brandName, code });
 
     const existing = document.querySelector(`script[data-flix="true"][data-flix-src="${src}"]`);
     if (existing) {
-      console.log("[Flix] script already present, reusing and checking content");
+      // console.log("[Flix] script already present, reusing and checking content");
       flixScriptRef.current = existing;
       clearTimeout(fallbackTimeout);
       // give it a moment then check content
@@ -391,8 +391,8 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
     flixScript.src = src;
 
     flixScript.onload = () => {
-      console.log(brandName, product);
-      console.log("FlixMedia script loaded with brand:", brandName);
+      // console.log(brandName, product);
+      // console.log("FlixMedia script loaded with brand:", brandName);
       clearTimeout(fallbackTimeout);
       // start observer to catch async injection
       startFlixObserver();
@@ -410,7 +410,7 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
 
     setTimeout(() => {
       if (window.FlixMedia && typeof window.FlixMedia.load === 'function') {
-        console.log("Manually triggering FlixMedia.load()");
+        // console.log("Manually triggering FlixMedia.load()");
         window.FlixMedia.load();
       }
     }, 500);
@@ -452,7 +452,7 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
       if (fallbackMessage) fallbackMessage.remove();
       // NEW: hide the overview placeholder once we have content
       hideFlixPlaceholder();
-      console.log("FlixMedia content loaded successfully");
+      // console.log("FlixMedia content loaded successfully");
       // Do not append custom content; Flix manages DOM itself.
       // appendFlixInpageContent();
     };
@@ -471,7 +471,7 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
           const finalHasMinisite = finalCheckMinisite && finalCheckMinisite.children.length > 0;
 
           if (!finalHasInpage && !finalHasMinisite) {
-            console.log("No FlixMedia content found for this product");
+            // console.log("No FlixMedia content found for this product");
             showFallbackMessage();
           } else {
             applySuccess();
@@ -576,7 +576,7 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
     flixInitializedRef.current = false;
   };
   const cleanupFlixMedia = () => {
-    console.log("Cleaning up FlixMedia...");
+    // console.log("Cleaning up FlixMedia...");
     // NEW: disconnect observer
     if (flixObserverRef.current) {
       try { flixObserverRef.current.disconnect(); } catch {}

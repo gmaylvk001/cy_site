@@ -192,7 +192,7 @@ export async function POST(req) {
     if (selectedFilters) {
       try {
         filterIds = JSON.parse(selectedFilters);
-        console.log(`Adding ${filterIds.length} filters for new category ${newCategory._id}:`, filterIds);
+        // console.log(`Adding ${filterIds.length} filters for new category ${newCategory._id}:`, filterIds);
         
         if (filterIds.length > 0) {
           const filterPromises = filterIds.map(filterId => 

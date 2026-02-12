@@ -61,7 +61,7 @@ export async function POST(req) {
     const timestamp = format(new Date(), 'yyyyMMdd_HHmmss');
 
     await writeFile(join(uploadDir, `uploaded-products_${timestamp}.xlsx`), excelBuffer);
-    console.log(products);
+    // console.log(products);
     // Extract Images ZIP
     const imagesBuffer = Buffer.from(await imagesZip.arrayBuffer());
     const imagesZipInstance = new AdmZip(imagesBuffer);

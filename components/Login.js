@@ -25,13 +25,13 @@ export default function Login() {
     setMessage("");
 
     try {
-      console.log(data);
+      // console.log(data);
       const res = await fetch("/api/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: data && JSON.stringify(data),
         });
-        console.log(res);
+        // console.log(res);
 
       const result = await res.json();
 

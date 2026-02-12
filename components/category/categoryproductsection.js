@@ -47,7 +47,7 @@ const CategoryProductCard = ({ product }) => {
   const handleWishlistToggle = (productId) => {
     setIsWishlisted(!isWishlisted);
     // Add your wishlist logic here
-    console.log('Wishlist toggle for:', productId);
+    // console.log('Wishlist toggle for:', productId);
   };
 
   return (
@@ -258,11 +258,11 @@ const CategoryProductsSection = ({
       
       const data = await res.json();
       
-      console.log('📦 API Response for', mainCategory.category_name, ':', {
-        productsCount: data.products?.length || 0,
-        pagination: data.pagination,
-        rawData: data
-      });
+      // console.log('📦 API Response for', mainCategory.category_name, ':', {
+      //   productsCount: data.products?.length || 0,
+      //   pagination: data.pagination,
+      //   rawData: data
+      // });
       
       setCategoryProducts(data.products || []);
       setHasFetched(true);

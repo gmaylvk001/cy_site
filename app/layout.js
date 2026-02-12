@@ -27,7 +27,7 @@ export default function RootLayout({ children }) {
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ClientLayout>{children}</ClientLayout>
         {/* ✅ Tracking Script */}
-        <Script id="adtarbo-tracking" strategy="afterInteractive">
+        {/* <Script id="adtarbo-tracking" strategy="afterInteractive">
           {`(function(dd, ss, idd) {
               var js, ajs = dd.getElementsByTagName(ss)[0];
               if (dd.getElementById(idd)) {return;}
@@ -37,7 +37,7 @@ export default function RootLayout({ children }) {
               js.src = "https://pixel.adtarbo.com/pixelTrack1.js";
               ajs.parentNode.insertBefore(js, ajs);
           }(document, 'script', 'adtarbo-js-v2'));`}
-        </Script>
+        </Script> */}
          {/*insta_video */}
         <Script async src="https://www.instagram.com/embed.js"></Script>
       </body>

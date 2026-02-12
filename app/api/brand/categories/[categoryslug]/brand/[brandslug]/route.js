@@ -49,7 +49,7 @@ export async function GET(request, { params }) {
     await dbConnect();
  
     const { categoryslug, brandslug } = await params;
-    console.log("Fetching data for:", categoryslug, brandslug);
+    // console.log("Fetching data for:", categoryslug, brandslug);
    
     // Fetch category
     const category = await ecom_category_info.findOne({ category_slug: categoryslug });
@@ -65,7 +65,7 @@ export async function GET(request, { params }) {
 
     // Get ALL category IDs in the current category tree
     const allCategoryIdsInTree = await getAllSubCategoryIds(category._id);
-    console.log("Category tree IDs:", allCategoryIdsInTree);
+    // console.log("Category tree IDs:", allCategoryIdsInTree);
  
     // Get products ONLY from the current category tree
     const products = await Product.find({
@@ -131,8 +131,7 @@ export async function GET(request, { params }) {
       filter_group: filter.filter_group?._id
     }));
 
-    console.log(`Found ${formattedFilters.length} filters for category tree`);
-    console.log("Filter groups:", [...new Set(formattedFilters.map(f => f.filter_group_name))]);
+    // console.log(`Found ${formattedFilters.length} fisdFilters.map(f => f.filter_group_name))]);
  
     return Response.json({
       category,

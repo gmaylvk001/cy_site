@@ -12,7 +12,7 @@ export async function GET(request, { params }) {
     
     // 2. Get slug from URL parameters
     const { slug } = params;
-    console.log('Fetching product for slug:', slug);
+    // console.log('Fetching product for slug:', slug);
 
     // 3. Find product by slug or ID
     const product = await Product.findOne({
@@ -21,7 +21,7 @@ export async function GET(request, { params }) {
     }).lean();
 
     if (!product) {
-      console.log('Product not found for slug:', slug);
+      // console.log('Product not found for slug:', slug);
       return NextResponse.json(
         { success: false, message: "Product not found" },
         { status: 404 }

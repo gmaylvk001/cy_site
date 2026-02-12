@@ -2,7 +2,7 @@
 import Link from "next/link";
 import Image from 'next/image';
 import { FiMenu, FiX, FiPhoneCall, FiMessageSquare, FiChevronRight } from "react-icons/fi";
-import { FaBars, FaShoppingBag, FaUserShield, FaSearch,FaUser,FaShoppingCart,FaHeart } from "react-icons/fa";
+import { FaBars, FaShoppingBag, FaUserShield, FaSearch, FaUser, FaShoppingCart, FaHeart } from "react-icons/fa";
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import { IoLogOut } from "react-icons/io5";
 import { useCart } from '@/context/CartContext';
@@ -13,7 +13,7 @@ import 'swiper/css/navigation';
 import { useRouter } from 'next/navigation';
 import { Play } from "lucide-react";
 import { Navigation } from 'swiper/modules';
-import { useHeaderdetails } from "@/context/HeaderContext"; 
+import { useHeaderdetails } from "@/context/HeaderContext";
 import { getProducts } from '@/lib/productApi';
 
 // ADD: alphaSortString - case-insensitive, null-safe string comparator
@@ -87,583 +87,553 @@ const prepareFlatListAlpha = (flatList = []) => {
 };
 
 const Header = () => {
-    const router = useRouter();
-    // REMOVED: unused pathname
-    // const pathname = usePathname();
-    const [category, setCategory] = useState('All Category');
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const { wishlistCount } = useWishlist();
-    const { cartCount, updateCartCount } = useCart();
-    const [openMenu, setOpenMenu] = useState(null);
+  const router = useRouter();
+  // REMOVED: unused pathname
+  // const pathname = usePathname();
+  const [category, setCategory] = useState('All Category');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { wishlistCount } = useWishlist();
+  const { cartCount, updateCartCount } = useCart();
+  const [openMenu, setOpenMenu] = useState(null);
 
-    // ADD: Cross-tab cart sync helpers
-    const CART_COUNT_KEY = 'cartCount';
-    // ADD: new key for cart data list
-    const CART_DATA_KEY = 'cartData';
+  // ADD: Cross-tab cart sync helpers
+  const CART_COUNT_KEY = 'cartCount';
+  // ADD: new key for cart data list
+  const CART_DATA_KEY = 'cartData';
 
-    // ADD: track latest cartCount for safe comparisons in effects/handlers
-    const cartCountRef = useRef(cartCount);
-    useEffect(() => {
-      cartCountRef.current = cartCount;
-    }, [cartCount]);
+  // ADD: track latest cartCount for safe comparisons in effects/handlers
+  const cartCountRef = useRef(cartCount);
+  useEffect(() => {
+    cartCountRef.current = cartCount;
+  }, [cartCount]);
 
-    // ADD: local cartData + ref
-    const [cartData, setCartData] = useState(null);
-    const cartDataRef = useRef(null);
-    useEffect(() => { cartDataRef.current = cartData; }, [cartData]);
+  // ADD: local cartData + ref
+  const [cartData, setCartData] = useState(null);
+  const cartDataRef = useRef(null);
+  useEffect(() => { cartDataRef.current = cartData; }, [cartData]);
 
-    const setCartCountSynced = useCallback((count) => {
-      // Update context + propagate to other tabs
-      updateCartCount(count);
-      try {
-        localStorage.setItem(CART_COUNT_KEY, String(Number.isFinite(count) ? count : 0));
-      } catch { /* ignore quota */ }
-    }, [updateCartCount]);
+  const setCartCountSynced = useCallback((count) => {
+    // Update context + propagate to other tabs
+    updateCartCount(count);
+    try {
+      localStorage.setItem(CART_COUNT_KEY, String(Number.isFinite(count) ? count : 0));
+    } catch { /* ignore quota */ }
+  }, [updateCartCount]);
 
-    // ADD: helpers for cartData storage + compare
-    const safeParse = (s) => { try { return JSON.parse(s); } catch { return null; } };
-    const isSameCartObj = (a, b) => {
-      try { return JSON.stringify(a) === JSON.stringify(b); } catch { return false; }
-    };
-    const persistCartData = (data) => {
-      try {
-        const nextStr = JSON.stringify(data ?? null);
-        const prevStr = localStorage.getItem(CART_DATA_KEY);
-        if (nextStr !== prevStr) {
-          localStorage.setItem(CART_DATA_KEY, nextStr);
-        }
-      } catch { /* ignore */ }
-    };
-    const ensureGuestCartId = () => {
-      try {
-        let id = localStorage.getItem('guestCartId');
-        if (!id) {
-          id = (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`);
-          localStorage.setItem('guestCartId', id);
-        }
-        return id;
-      } catch {
-        return 'guest-' + Date.now();
+  // ADD: helpers for cartData storage + compare
+  const safeParse = (s) => { try { return JSON.parse(s); } catch { return null; } };
+  const isSameCartObj = (a, b) => {
+    try { return JSON.stringify(a) === JSON.stringify(b); } catch { return false; }
+  };
+  const persistCartData = (data) => {
+    try {
+      const nextStr = JSON.stringify(data ?? null);
+      const prevStr = localStorage.getItem(CART_DATA_KEY);
+      if (nextStr !== prevStr) {
+        localStorage.setItem(CART_DATA_KEY, nextStr);
       }
-    };
-
-    // ADD: fetch latest cart from API (auth or guest), sync cartData and cartCount
-    const fetchCartLatest = useCallback(async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const headers = token
-          ? { Authorization: `Bearer ${token}` }
-          : { guestCartId: ensureGuestCartId() };
-
-        const res = await fetch('/api/cart', { method: 'GET', headers });
-        if (!res.ok) {
-          // if token invalid, do not overwrite local cartData here
-          return;
-        }
-        const payload = await res.json();
-        const latestCart = payload?.cart || null;
-
-        // Sync cartCount if server value differs
-        if (typeof latestCart?.totalItems === 'number' && latestCart.totalItems !== (cartCountRef.current ?? 0)) {
-          setCartCountSynced(latestCart.totalItems);
-        }
-
-        // Only update state if changed
-        if (!isSameCartObj(latestCart, cartDataRef.current)) {
-          setCartData(latestCart);
-          persistCartData(latestCart);
-        }
-      } catch (e) {
-        // ignore fetch errors
+    } catch { /* ignore */ }
+  };
+  const ensureGuestCartId = () => {
+    try {
+      let id = localStorage.getItem('guestCartId');
+      if (!id) {
+        id = (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`);
+        localStorage.setItem('guestCartId', id);
       }
-    }, [setCartCountSynced]);
+      return id;
+    } catch {
+      return 'guest-' + Date.now();
+    }
+  };
 
-    // Initialize from localStorage on mount (so tabs align immediately)
-    useEffect(() => {
-      try {
-        const raw = localStorage.getItem(CART_COUNT_KEY);
-        if (raw != null) {
-          const val = parseInt(raw, 10);
-          if (!Number.isNaN(val)) {
-            if (val !== (typeof cartCount === 'number' ? cartCount : 0)) {
-              updateCartCount(val);
-            }
-          }
-        }
-      } catch { /* ignore */ }
-      // run only once
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+  // ADD: fetch latest cart from API (auth or guest), sync cartData and cartCount
+  const fetchCartLatest = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = token
+        ? { Authorization: `Bearer ${token}` }
+        : { guestCartId: ensureGuestCartId() };
 
-    // ADD: init cartData from storage; if missing but count > 0 fetch latest
-    useEffect(() => {
-      try {
-        const raw = localStorage.getItem(CART_DATA_KEY);
-        const cached = safeParse(raw);
-        if (cached && !isSameCartObj(cached, cartDataRef.current)) {
-          setCartData(cached);
-        } else if (!cached && (cartCountRef.current ?? 0) > 0) {
-          // no cached cart but we have items -> fetch once
-          fetchCartLatest();
-        }
-      } catch { /* ignore */ }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    // Persist to localStorage whenever cartCount changes in this tab (existing)
-    useEffect(() => {
-      try {
-        const next = String(Number.isFinite(cartCount) ? cartCount : 0);
-        // avoid redundant writes
-        if (localStorage.getItem(CART_COUNT_KEY) !== next) {
-          localStorage.setItem(CART_COUNT_KEY, next);
-        }
-      } catch { /* ignore quota */ }
-    }, [cartCount]);
-
-    // ADD: whenever cartCount changes, refresh latest cart (covers add/remove/order)
-    useEffect(() => {
-      fetchCartLatest();
-    }, [cartCount, fetchCartLatest]);
-
-    // ADD: persist cartData on change (avoid redundant writes)
-    useEffect(() => {
-      if (cartData !== undefined) {
-        persistCartData(cartData);
-      }
-    }, [cartData]);
-
-    // Listen to other tabs' updates
-    useEffect(() => {
-      const onStorage = (e) => {
-        if (e.key === CART_COUNT_KEY) {
-          const next = parseInt(e.newValue || '0', 10);
-          if (!Number.isNaN(next) && next !== cartCountRef.current) {
-            updateCartCount(next);
-          }
-        }
-        if (e.key === CART_DATA_KEY) {
-          const nextCart = e.newValue ? safeParse(e.newValue) : null;
-          if (!isSameCartObj(nextCart, cartDataRef.current)) {
-            setCartData(nextCart);
-          }
-        }
-      };
-      window.addEventListener('storage', onStorage);
-      return () => window.removeEventListener('storage', onStorage);
-    }, [updateCartCount]);
-    
-    const dropdownRef = useRef(null);
-    const [activeTab, setActiveTab] = useState('login');
-    // const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [showMenu, setShowMenu] = useState(false);
-    // const [userData, setUserData] = useState(null);
-    const [hasMounted, setHasMounted] = useState(false);
-
-    const { userData, isLoggedIn, setIsLoggedIn, setUserData, isAdmin, setIsAdmin } = useHeaderdetails();
-    const [dropdownOpen, setDropdownOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState("");
-      const [selectedCategory, setSelectedCategory] = useState("All Category");
-    const [placeholder, setPlaceholder] = useState("Search for");
-    const [typedPreview, setTypedPreview] = useState("");
-    const [words, setWords] = useState([]);
-    const [categorieslist, setCategorieslist] = useState([]);
-    const wordIndex = useRef(0);
-    const charIndex = useRef(0);
-    const isDeleting = useRef(false);
-    const getSortedProducts = () => {
-    const sortedProducts = [...products];
-    switch(sortOption) {
-      case 'price-low-high':
-          return sortedProducts.sort((a, b) => (a.special_price ?? a.price) - (b.special_price ?? b.price));
-      case 'price-high-low':
-          return sortedProducts.sort((a, b) => (b.special_price ?? b.price) - (a.special_price ?? a.price));
-      case 'name-a-z':
-          return sortedProducts.sort((a, b) => a.name.localeCompare(b.name));
-      case 'name-z-a':
-          return sortedProducts.sort((a, b) => b.name.localeCompare(a.name));
-      default:
-          return sortedProducts;
-      }
-    };
-
-    // --- Add cache helpers after your state declarations (place near other consts) ---
-    const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
-    const loadCache = (key) => {
-      // returns null if not found or parse error
-      try {
-        const raw = localStorage.getItem(key);
-        if (!raw) return null;
-        const obj = JSON.parse(raw);
-        if (!obj || !obj.ts || !obj.data) return null;
-        return obj;
-      } catch (e) {
-        console.warn('Cache parse error for', key, e);
-        return null;
-      }
-    };
-    const saveCache = (key, data) => {
-      try {
-        localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data }));
-      } catch (e) {
-        // ignore storage errors (quota)
-        console.warn('Cache save failed for', key, e);
-      }
-    };
-
-    // ADD: robust extractors + fallback words
-    const extractCategoryArray = (payload) => {
-      try {
-        if (Array.isArray(payload)) return payload;
-        if (payload && Array.isArray(payload.data)) return payload.data;
-        if (payload && Array.isArray(payload.categories)) return payload.categories;
-      } catch {}
-      return [];
-    };
-    const ensureWordsNotEmpty = (names) => {
-      const cleaned = (names || []).filter(Boolean);
-      if (cleaned.length > 0) return cleaned;
-      return ['Bicycles','Mountain Bike','Road Bike','Electric Cycle','Kids Cycle','Hybrid Bike'];
-    };
-
-    useEffect(() => {
-      const key = 'categories_raw_cache';
-      let mounted = true;
-
-      const useCachedOrFetch = async () => {
-        // try cache first
-        try {
-          const cached = loadCache(key);
-          if (cached && (Date.now() - cached.ts) < CACHE_TTL_MS) {
-            if (!mounted) return;
-            const data = cached.data;
-            // CHANGED: extract array safely + fallback
-            const arr = extractCategoryArray(data);
-            setCategorieslist(arr);
-            setWords(ensureWordsNotEmpty(arr.map((cat) => cat.category_name)));
-            return;
-          }
-        } catch (err) {
-          console.warn('Error reading categories cache', err);
-        }
-
-        // fallback to fetch and then cache
-        try {
-          const response = await fetch("/api/categories/get");
-          const raw = await response.json();
-          if (!mounted) return;
-          // CHANGED: extract array safely + fallback
-          const arr = extractCategoryArray(raw);
-          setCategorieslist(arr);
-          setWords(ensureWordsNotEmpty(arr.map((cat) => cat.category_name)));
-          saveCache(key, raw);
-        } catch (error) {
-          console.error("Error fetching categories:", error);
-          // Fallback words if fetch fails
-          if (mounted) setWords(ensureWordsNotEmpty([]));
-        }
-      };
-
-      useCachedOrFetch();
-      return () => { mounted = false; };
-    }, []);
-
-    useEffect(() => {
-        const rawKey = 'categories_raw_cache';
-        const nestedKey = 'categories_nested_cache';
-        let mounted = true;
-
-        const buildNestedAndCache = (rawData) => {
-        // Keep only active categories
-          const activeCategories = Array.isArray(rawData) ? rawData.filter(cat => cat.status === "Active") : [];
-
-          const categoryMap = {};
-          activeCategories.forEach((cat) => {
-            // ensure subcategories array exists
-            categoryMap[cat._id] = { ...cat, subcategories: [] };
-          });
-
-          const nestedCategories = [];
-          activeCategories.forEach((cat) => {
-            if (cat.parentid === "none") {
-              // use the mapped object to ensure same reference
-              nestedCategories.push(categoryMap[cat._id]);
-            } else if (categoryMap[cat.parentid]) {
-              categoryMap[cat.parentid].subcategories.push(categoryMap[cat._id]);
-            }
-          });
-
-          // cache nested structure
-          saveCache(nestedKey, nestedCategories);
-          return nestedCategories;
-        };
-
-        const setupCategories = async () => {
-          try {
-            // Try nested cache first
-            const nestedCached = loadCache(nestedKey);
-            if (nestedCached && (Date.now() - nestedCached.ts) < CACHE_TTL_MS) {
-              if (!mounted) return;
-              setCategories(nestedCached.data);
-            } else {
-              // Get raw data from cache or fetch
-              let raw = null;
-              const rawCached = loadCache(rawKey);
-              if (rawCached && (Date.now() - rawCached.ts) < CACHE_TTL_MS) {
-                raw = rawCached.data;
-              } else {
-                const res = await fetch("/api/categories/get");
-                raw = await res.json();
-                saveCache(rawKey, raw);
-              }
-
-              if (!mounted) return;
-              const nested = buildNestedAndCache(raw);
-              setCategories(nested);
-            }
-          } catch (err) {
-            console.error("Failed to fetch or build categories:", err);
-            // fallback: ensure auth check still runs
-          }
-          // always check auth status after categories settled
-          try { checkAuthStatus(); } catch (e) { /* ignore */ }
-        };
-
-      setupCategories();
-      return () => { mounted = false; };
-      }, []);
-
-    useEffect(() => {
-      // CHANGED: add cancellation to avoid orphaned timers
-      let cancelled = false;
-
-      const typeEffect = () => {
-        if (cancelled || words.length === 0) return;
-
-        const currentWord = words[wordIndex.current] || '';
-        const updatedText = isDeleting.current
-          ? currentWord.substring(0, Math.max(0, charIndex.current - 1))
-          : currentWord.substring(0, Math.min(currentWord.length, charIndex.current + 1));
-
-        // Count words in updatedText
-        const wordCount = updatedText.trim().split(/\s+/).filter(Boolean).length;
-
-        if (wordCount <= 4) {
-          setTypedPreview(updatedText || "");
-        }
-
-        charIndex.current = isDeleting.current
-          ? Math.max(0, charIndex.current - 1)
-          : Math.min(currentWord.length, charIndex.current + 1);
-
-        let delay = isDeleting.current ? 60 : 100;
-
-        if (!isDeleting.current && charIndex.current === currentWord.length) {
-          isDeleting.current = true;
-          delay = 1000; // pause before deleting
-        } else if (isDeleting.current && charIndex.current === 0) {
-          isDeleting.current = false;
-          wordIndex.current = (wordIndex.current + 1) % words.length;
-          delay = 1000; // pause before typing next
-        }
-
-        setTimeout(() => {
-          if (!cancelled) typeEffect();
-        }, delay);
-      };
-
-
-      typeEffect();
-      return () => { cancelled = true; };
-    }, [words]);
-
-    const [showAuthModal, setShowAuthModal] = useState(false);
-    const { headerdetails, updateHeaderdetails } = useHeaderdetails();
-
-    const [offers, setOffers] = useState([]);
-    const [categories, setCategories] = useState([]);
-    const [products, setProducts] = useState([]);
-    const [sortOption, setSortOption] = useState('');
-    const [hoveredCategory, setHoveredCategory] = useState(null);
-    const [dropdownLeft, setDropdownLeft] = useState(0);
-    const [dropdownTop, setDropdownTop] = useState(0);
-    const [dropdownCenterX, setDropdownCenterX] = useState(null);
-    const [dropdownUseTranslate, setDropdownUseTranslate] = useState(false);
-    const slideRefs = useRef({});
-    const [suggestions, setSuggestions] = useState([]);
-    // refs & state for search dropdown positioning
-    const searchInputRef = useRef(null);
-    // ADD missing state
-    const [searchContext, setSearchContext] = useState(null);
-    const debounceRef = useRef(null);
-    const searchDropdownRef = useRef(null);
-    const [searchDropdownVisible, setSearchDropdownVisible] = useState(false);
-    const [searchDropdownLeft, setSearchDropdownLeft] = useState(0);
-    const [searchDropdownTop, setSearchDropdownTop] = useState(0);
-    const [searchDropdownWidth, setSearchDropdownWidth] = useState(0);
-    const [openCategoryMenu, setOpenCategoryMenu] = useState({});
-    // Toggle mobile menu
-    const toggleMobileMenu = () => {
-        setIsMobileMenuOpen(!isMobileMenuOpen);
-    };
-    // Track step
-    const [forgotStep, setForgotStep] = useState(1); // 1: enter email, 2: enter OTP and new password
-    const [resetStep, setResetStep] = useState(1);// 1: enter email, 2: enter OTP, 3: new password
-    const [resetEmail, setResetEmail] = useState('');
-    const [resetOtp, setResetOtp] = useState('');
-    const [resetPassword, setResetPassword] = useState('');
-    const [resetConfirmPassword, setResetConfirmPassword] = useState('');
-    const [resetError, setResetError] = useState('');
-    const [resetMessage, setResetMessage] = useState('');
-    const [resetLoading, setResetLoading] = useState(false);
-    const [showResetModal, setShowResetModal] = useState(false);
-    // OTP input
-    const [forgotOTP, setForgotOTP] = useState('');
-
-    // New password inputs
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    // Close mobile menu when clicking outside
-
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-          setDropdownOpen(false);
-      }
-    };
-
-    useEffect(() => {
-      document.addEventListener('mousedown', handleClickOutside);
-
-      return () => {
-          document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }, []);
-
-    const checkAuthStatus = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            const response = await fetch('/api/auth/check', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setIsLoggedIn(true);
-                if (data.role == "admin") {
-                    setIsAdmin(true);
-                } else {
-                    setIsAdmin(false);
-                }
-                setUserData(data.user);
-            } else {
-                localStorage.removeItem('token');
-                setIsLoggedIn(false);
-            }
-        } catch (error) {
-            console.error("Error checking auth status:", error);
-        }
-    };
-    const handleSearch = () => {
-
-      if (!searchQuery.trim() && selectedCategory === "All Category") return;
-
-      const params = new URLSearchParams();
-      if (searchQuery.trim()) params.append("query", searchQuery.trim());
-        if (selectedCategory !== "All Category") {
-          params.append("category", selectedCategory);
-        }
-        router.push(`/search?${params.toString()}`);
-    };
-    const handleSearchBtnClick = () => {
-        if (!searchQuery.trim() && selectedCategory === "All Category") return;
-        const params = new URLSearchParams();
-        if (searchQuery.trim()) params.append("query", searchQuery.trim());
-        if (selectedCategory !== "All Category") {
-          params.append("category", selectedCategory);
-        }
-        
-        router.push(`/search?${params.toString()}`);
-    };
-    // Load products once using shared util (for instant local filtering)
-    useEffect(() => {
-      let mounted = true;
-      const loadProducts = async () => {
-        try {
-          const data = await getProducts();
-          if (!mounted) return;
-          setProducts(Array.isArray(data) ? data : (data?.data || []));
-        } catch (err) {
-          console.error('Error loading products in header', err);
-        }
-      };
-      loadProducts();
-      return () => { mounted = false; };
-    }, []);
-
-    // Memoized sorted products using existing getSortedProducts flow
-    const sortedProducts = useMemo(() => getSortedProducts(), [products, sortOption]);
-
-    // ADD: clearSearch helper for new mobile search design (from reference mobile view)
-    const clearSearch = useCallback(() => {
-      setSearchQuery('');
-      setSuggestions([]);
-      setTypedPreview('');
-      setSearchDropdownVisible(false);
-      if (searchInputRef.current) searchInputRef.current.blur();
-    }, []);
-
-    // helper to fetch suggestions (safe JSON handling) - now uses local products for instant results
-    const fetchSuggestions = useCallback(async (q) => {
-      if (!q || q.trim().length < 1) {
-        setSuggestions([]);
+      const res = await fetch('/api/cart', { method: 'GET', headers });
+      if (!res.ok) {
+        // if token invalid, do not overwrite local cartData here
         return;
       }
+      const payload = await res.json();
+      const latestCart = payload?.cart || null;
 
-      // Use local products (sorted) for instant client-side suggestions
-      try {
-        if (Array.isArray(sortedProducts) && sortedProducts.length > 0) {
-          const ql = q.toLowerCase();
-          const filtered = sortedProducts.filter(p => {
-            const name = (p.name || '').toLowerCase();
-            const code = (p.item_code || '').toLowerCase();
-            const brand = ((p.brand_name || p.brand || '') + '').toLowerCase();
-            return name.includes(ql) || code.includes(ql) || brand.includes(ql);
-          }).slice(0, 12);
+      // Sync cartCount if server value differs
+      if (typeof latestCart?.totalItems === 'number' && latestCart.totalItems !== (cartCountRef.current ?? 0)) {
+        setCartCountSynced(latestCart.totalItems);
+      }
 
-          setSuggestions(filtered);
-          setSearchDropdownVisible(true);
+      // Only update state if changed
+      if (!isSameCartObj(latestCart, cartDataRef.current)) {
+        setCartData(latestCart);
+        persistCartData(latestCart);
+      }
+    } catch (e) {
+      // ignore fetch errors
+    }
+  }, [setCartCountSynced]);
 
-          if (searchInputRef.current) {
-            const rect = searchInputRef.current.getBoundingClientRect();
-            setSearchDropdownLeft(rect.left);
-            setSearchDropdownTop(rect.bottom + window.scrollY);
-            setSearchDropdownWidth(rect.width);
+  // Initialize from localStorage on mount (so tabs align immediately)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(CART_COUNT_KEY);
+      if (raw != null) {
+        const val = parseInt(raw, 10);
+        if (!Number.isNaN(val)) {
+          if (val !== (typeof cartCount === 'number' ? cartCount : 0)) {
+            updateCartCount(val);
           }
+        }
+      }
+    } catch { /* ignore */ }
+    // run only once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ADD: init cartData from storage; if missing but count > 0 fetch latest
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(CART_DATA_KEY);
+      const cached = safeParse(raw);
+      if (cached && !isSameCartObj(cached, cartDataRef.current)) {
+        setCartData(cached);
+      } else if (!cached && (cartCountRef.current ?? 0) > 0) {
+        // no cached cart but we have items -> fetch once
+        fetchCartLatest();
+      }
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist to localStorage whenever cartCount changes in this tab (existing)
+  useEffect(() => {
+    try {
+      const next = String(Number.isFinite(cartCount) ? cartCount : 0);
+      // avoid redundant writes
+      if (localStorage.getItem(CART_COUNT_KEY) !== next) {
+        localStorage.setItem(CART_COUNT_KEY, next);
+      }
+    } catch { /* ignore quota */ }
+  }, [cartCount]);
+
+  // ADD: whenever cartCount changes, refresh latest cart (covers add/remove/order)
+  useEffect(() => {
+    fetchCartLatest();
+  }, [cartCount, fetchCartLatest]);
+
+  // ADD: persist cartData on change (avoid redundant writes)
+  useEffect(() => {
+    if (cartData !== undefined) {
+      persistCartData(cartData);
+    }
+  }, [cartData]);
+
+  // Listen to other tabs' updates
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === CART_COUNT_KEY) {
+        const next = parseInt(e.newValue || '0', 10);
+        if (!Number.isNaN(next) && next !== cartCountRef.current) {
+          updateCartCount(next);
+        }
+      }
+      if (e.key === CART_DATA_KEY) {
+        const nextCart = e.newValue ? safeParse(e.newValue) : null;
+        if (!isSameCartObj(nextCart, cartDataRef.current)) {
+          setCartData(nextCart);
+        }
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [updateCartCount]);
+
+  const dropdownRef = useRef(null);
+  const [activeTab, setActiveTab] = useState('login');
+  // const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  // const [userData, setUserData] = useState(null);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  const { userData, isLoggedIn, setIsLoggedIn, setUserData, isAdmin, setIsAdmin } = useHeaderdetails();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All Category");
+  const [placeholder, setPlaceholder] = useState("Search for");
+  const [typedPreview, setTypedPreview] = useState("");
+  const [words, setWords] = useState([]);
+  const [categorieslist, setCategorieslist] = useState([]);
+  const wordIndex = useRef(0);
+  const charIndex = useRef(0);
+  const isDeleting = useRef(false);
+  const getSortedProducts = () => {
+    const sortedProducts = [...products];
+    switch (sortOption) {
+      case 'price-low-high':
+        return sortedProducts.sort((a, b) => (a.special_price ?? a.price) - (b.special_price ?? b.price));
+      case 'price-high-low':
+        return sortedProducts.sort((a, b) => (b.special_price ?? b.price) - (a.special_price ?? a.price));
+      case 'name-a-z':
+        return sortedProducts.sort((a, b) => a.name.localeCompare(b.name));
+      case 'name-z-a':
+        return sortedProducts.sort((a, b) => b.name.localeCompare(a.name));
+      default:
+        return sortedProducts;
+    }
+  };
+
+  // --- Add cache helpers after your state declarations (place near other consts) ---
+  const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+  const loadCache = (key) => {
+    // returns null if not found or parse error
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      if (!obj || !obj.ts || !obj.data) return null;
+      return obj;
+    } catch (e) {
+      console.warn('Cache parse error for', key, e);
+      return null;
+    }
+  };
+  const saveCache = (key, data) => {
+    try {
+      localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data }));
+    } catch (e) {
+      // ignore storage errors (quota)
+      console.warn('Cache save failed for', key, e);
+    }
+  };
+
+  // ADD: robust extractors + fallback words
+  const extractCategoryArray = (payload) => {
+    try {
+      if (Array.isArray(payload)) return payload;
+      if (payload && Array.isArray(payload.data)) return payload.data;
+      if (payload && Array.isArray(payload.categories)) return payload.categories;
+    } catch { }
+    return [];
+  };
+  const ensureWordsNotEmpty = (names) => {
+    const cleaned = (names || []).filter(Boolean);
+    if (cleaned.length > 0) return cleaned;
+    return ['Bicycles', 'Mountain Bike', 'Road Bike', 'Electric Cycle', 'Kids Cycle', 'Hybrid Bike'];
+  };
+
+  useEffect(() => {
+    const key = 'categories_raw_cache';
+    let mounted = true;
+
+    const useCachedOrFetch = async () => {
+      // try cache first
+      try {
+        const cached = loadCache(key);
+        if (cached && (Date.now() - cached.ts) < CACHE_TTL_MS) {
+          if (!mounted) return;
+          const data = cached.data;
+          // CHANGED: extract array safely + fallback
+          const arr = extractCategoryArray(data);
+          setCategorieslist(arr);
+          setWords(ensureWordsNotEmpty(arr.map((cat) => cat.category_name)));
           return;
         }
       } catch (err) {
-        console.error('Local filter error', err);
+        console.warn('Error reading categories cache', err);
       }
 
-      // Fallback: server-side suggestions
+      // fallback to fetch and then cache
       try {
-        const res = await fetch(`/api/search/suggestions?q=${encodeURIComponent(q)}`);
-        if (!res.ok) {
-          setSuggestions([]);
-          return;
+        const response = await fetch("/api/categories/get");
+        const raw = await response.json();
+        if (!mounted) return;
+        // CHANGED: extract array safely + fallback
+        const arr = extractCategoryArray(raw);
+        setCategorieslist(arr);
+        setWords(ensureWordsNotEmpty(arr.map((cat) => cat.category_name)));
+        saveCache(key, raw);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        // Fallback words if fetch fails
+        if (mounted) setWords(ensureWordsNotEmpty([]));
+      }
+    };
+
+    useCachedOrFetch();
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    const rawKey = 'categories_raw_cache';
+    const nestedKey = 'categories_nested_cache';
+    let mounted = true;
+
+    const buildNestedAndCache = (rawData) => {
+      // Keep only active categories
+      const activeCategories = Array.isArray(rawData) ? rawData.filter(cat => cat.status === "Active") : [];
+
+      const categoryMap = {};
+      activeCategories.forEach((cat) => {
+        // ensure subcategories array exists
+        categoryMap[cat._id] = { ...cat, subcategories: [] };
+      });
+
+      const nestedCategories = [];
+      activeCategories.forEach((cat) => {
+        if (cat.parentid === "none") {
+          // use the mapped object to ensure same reference
+          nestedCategories.push(categoryMap[cat._id]);
+        } else if (categoryMap[cat.parentid]) {
+          categoryMap[cat.parentid].subcategories.push(categoryMap[cat._id]);
         }
-        const text = await res.text();
-        if (!text) { setSuggestions([]); return; }
-        let data;
-        try { data = JSON.parse(text); } catch { setSuggestions([]); return; }
-        const items = Array.isArray(data) ? data : (data?.results || []);
-        setSuggestions(items.slice(0, 12));
+      });
+
+      // cache nested structure
+      saveCache(nestedKey, nestedCategories);
+      return nestedCategories;
+    };
+
+    const setupCategories = async () => {
+      try {
+        // Try nested cache first
+        const nestedCached = loadCache(nestedKey);
+        if (nestedCached && (Date.now() - nestedCached.ts) < CACHE_TTL_MS) {
+          if (!mounted) return;
+          setCategories(nestedCached.data);
+        } else {
+          // Get raw data from cache or fetch
+          let raw = null;
+          const rawCached = loadCache(rawKey);
+          if (rawCached && (Date.now() - rawCached.ts) < CACHE_TTL_MS) {
+            raw = rawCached.data;
+          } else {
+            const res = await fetch("/api/categories/get");
+            raw = await res.json();
+            saveCache(rawKey, raw);
+          }
+
+          if (!mounted) return;
+          const nested = buildNestedAndCache(raw);
+          setCategories(nested);
+        }
+      } catch (err) {
+        console.error("Failed to fetch or build categories:", err);
+        // fallback: ensure auth check still runs
+      }
+      // always check auth status after categories settled
+      try { checkAuthStatus(); } catch (e) { /* ignore */ }
+    };
+
+    setupCategories();
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    if (words.length === 0) return;
+
+    let timeoutId;
+
+    const typeEffect = () => {
+      const currentWord = words[wordIndex.current] || '';
+
+      const updatedText = isDeleting.current
+        ? currentWord.substring(0, charIndex.current - 1)
+        : currentWord.substring(0, charIndex.current + 1);
+
+      const wordCount = updatedText.trim().split(/\s+/).filter(Boolean).length;
+
+      if (wordCount <= 4) {
+        setTypedPreview(updatedText || "");
+      }
+
+      charIndex.current = isDeleting.current
+        ? Math.max(0, charIndex.current - 1)
+        : Math.min(currentWord.length, charIndex.current + 1);
+
+      let delay = isDeleting.current ? 60 : 100;
+
+      if (!isDeleting.current && charIndex.current === currentWord.length) {
+        isDeleting.current = true;
+        delay = 1000;
+      } else if (isDeleting.current && charIndex.current === 0) {
+        isDeleting.current = false;
+        wordIndex.current = (wordIndex.current + 1) % words.length;
+        delay = 1000;
+      }
+
+      timeoutId = setTimeout(typeEffect, delay);
+    };
+
+    timeoutId = setTimeout(typeEffect, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [words]);
+
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { headerdetails, updateHeaderdetails } = useHeaderdetails();
+
+  const [offers, setOffers] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [sortOption, setSortOption] = useState('');
+  const [hoveredCategory, setHoveredCategory] = useState(null);
+  const [dropdownLeft, setDropdownLeft] = useState(0);
+  const [dropdownTop, setDropdownTop] = useState(0);
+  const [dropdownCenterX, setDropdownCenterX] = useState(null);
+  const [dropdownUseTranslate, setDropdownUseTranslate] = useState(false);
+  const slideRefs = useRef({});
+  const [suggestions, setSuggestions] = useState([]);
+  // refs & state for search dropdown positioning
+  const searchInputRef = useRef(null);
+  // ADD missing state
+  const [searchContext, setSearchContext] = useState(null);
+  const debounceRef = useRef(null);
+  const searchDropdownRef = useRef(null);
+  const [searchDropdownVisible, setSearchDropdownVisible] = useState(false);
+  const [searchDropdownLeft, setSearchDropdownLeft] = useState(0);
+  const [searchDropdownTop, setSearchDropdownTop] = useState(0);
+  const [searchDropdownWidth, setSearchDropdownWidth] = useState(0);
+  const [openCategoryMenu, setOpenCategoryMenu] = useState({});
+  // Toggle mobile menu
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+  // Track step
+  const [forgotStep, setForgotStep] = useState(1); // 1: enter email, 2: enter OTP and new password
+  const [resetStep, setResetStep] = useState(1);// 1: enter email, 2: enter OTP, 3: new password
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetOtp, setResetOtp] = useState('');
+  const [resetPassword, setResetPassword] = useState('');
+  const [resetConfirmPassword, setResetConfirmPassword] = useState('');
+  const [resetError, setResetError] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  // OTP input
+  const [forgotOTP, setForgotOTP] = useState('');
+
+  // New password inputs
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  // Close mobile menu when clicking outside
+
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setDropdownOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch('/api/auth/check', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsLoggedIn(true);
+        if (data.role == "admin") {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+        setUserData(data.user);
+      } else {
+        localStorage.removeItem('token');
+        setIsLoggedIn(false);
+      }
+    } catch (error) {
+      console.error("Error checking auth status:", error);
+    }
+  };
+  const handleSearch = () => {
+
+    if (!searchQuery.trim() && selectedCategory === "All Category") return;
+
+    const params = new URLSearchParams();
+    if (searchQuery.trim()) params.append("query", searchQuery.trim());
+    if (selectedCategory !== "All Category") {
+      params.append("category", selectedCategory);
+    }
+    router.push(`/search?${params.toString()}`);
+  };
+  const handleSearchBtnClick = () => {
+    if (!searchQuery.trim() && selectedCategory === "All Category") return;
+    const params = new URLSearchParams();
+    if (searchQuery.trim()) params.append("query", searchQuery.trim());
+    if (selectedCategory !== "All Category") {
+      params.append("category", selectedCategory);
+    }
+
+    router.push(`/search?${params.toString()}`);
+  };
+  // Load products once using shared util (for instant local filtering)
+  useEffect(() => {
+    let mounted = true;
+    const loadProducts = async () => {
+      try {
+        const data = await getProducts();
+        if (!mounted) return;
+        setProducts(Array.isArray(data) ? data : (data?.data || []));
+      } catch (err) {
+        console.error('Error loading products in header', err);
+      }
+    };
+    loadProducts();
+    return () => { mounted = false; };
+  }, []);
+
+  // Memoized sorted products using existing getSortedProducts flow
+  const sortedProducts = useMemo(() => getSortedProducts(), [products, sortOption]);
+
+  // ADD: clearSearch helper for new mobile search design (from reference mobile view)
+  const clearSearch = useCallback(() => {
+    setSearchQuery('');
+    setSuggestions([]);
+    setTypedPreview('');
+    setSearchDropdownVisible(false);
+    if (searchInputRef.current) searchInputRef.current.blur();
+  }, []);
+
+  // helper to fetch suggestions (safe JSON handling) - now uses local products for instant results
+  const fetchSuggestions = useCallback(async (q) => {
+    if (!q || q.trim().length < 1) {
+      setSuggestions([]);
+      return;
+    }
+
+    // Use local products (sorted) for instant client-side suggestions
+    try {
+      if (Array.isArray(sortedProducts) && sortedProducts.length > 0) {
+        const ql = q.toLowerCase();
+        const filtered = sortedProducts.filter(p => {
+          const name = (p.name || '').toLowerCase();
+          const code = (p.item_code || '').toLowerCase();
+          const brand = ((p.brand_name || p.brand || '') + '').toLowerCase();
+          return name.includes(ql) || code.includes(ql) || brand.includes(ql);
+        }).slice(0, 12);
+
+        setSuggestions(filtered);
         setSearchDropdownVisible(true);
 
         if (searchInputRef.current) {
@@ -672,641 +642,575 @@ const Header = () => {
           setSearchDropdownTop(rect.bottom + window.scrollY);
           setSearchDropdownWidth(rect.width);
         }
-      } catch (err) {
-        console.error('Error fetching suggestions:', err);
-        setSuggestions([]);
-      }
-    }, [sortedProducts]);
-  
-    // Debounced effect: call fetchSuggestions while typing
-    useEffect(() => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      const q = searchQuery.trim();
-      if (!q) {
-        setSuggestions([]);
-        setSearchDropdownVisible(false);
         return;
       }
+    } catch (err) {
+      console.error('Local filter error', err);
+    }
 
-      // Ensure dropdown becomes visible as soon as user types (even for one char)
+    // Fallback: server-side suggestions
+    try {
+      const res = await fetch(`/api/search/suggestions?q=${encodeURIComponent(q)}`);
+      if (!res.ok) {
+        setSuggestions([]);
+        return;
+      }
+      const text = await res.text();
+      if (!text) { setSuggestions([]); return; }
+      let data;
+      try { data = JSON.parse(text); } catch { setSuggestions([]); return; }
+      const items = Array.isArray(data) ? data : (data?.results || []);
+      setSuggestions(items.slice(0, 12));
       setSearchDropdownVisible(true);
 
-      // Immediate fetch for the first character, otherwise debounce for performance
-      if (q.length === 1) {
-        fetchSuggestions(q);
-        return;
+      if (searchInputRef.current) {
+        const rect = searchInputRef.current.getBoundingClientRect();
+        setSearchDropdownLeft(rect.left);
+        setSearchDropdownTop(rect.bottom + window.scrollY);
+        setSearchDropdownWidth(rect.width);
       }
+    } catch (err) {
+      console.error('Error fetching suggestions:', err);
+      setSuggestions([]);
+    }
+  }, [sortedProducts]);
 
-      debounceRef.current = setTimeout(() => fetchSuggestions(q), 200);
-      return () => clearTimeout(debounceRef.current);
-    }, [searchQuery, fetchSuggestions]);
-  
-    // Close search dropdown when clicking outside input or dropdown
-    useEffect(() => {
-      const handler = (e) => {
-        const target = e.target;
-        if (
-          searchDropdownVisible &&
-          searchInputRef.current &&
-          searchDropdownRef.current &&
-          !searchInputRef.current.contains(target) &&
-          !searchDropdownRef.current.contains(target)
-        ) {
-          setSearchDropdownVisible(false);
-        }
-      };
-      document.addEventListener('mousedown', handler);
-      return () => document.removeEventListener('mousedown', handler);
-    }, [searchDropdownVisible]);
-    // Modify the search button to use the handler
-    // Also make the search work when pressing Enter in the input field
-    const handleKeyPress = (e) => {
-        if (e.key === 'Enter') {
-            handleSearch();
-        }
-    };
-    const isValidEmail = (email) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
-    const isValidMobile = (mobile) => /^[0-9]{10}$/.test(mobile);
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        mobile: '',
-        password: ''
-    });
-    const [loadingAuth, setLoadingAuth] = useState(false);
-    const [formError, setFormError] = useState('');
-    const [error, setError] = useState('');
-    const [errors, setErrors] = useState({
-      login: { email: "", password: "" },
-      register: { name: "", email: "", mobile: "", password: "" },
-    });
-
-    // ADD: define missing auth states to avoid ReferenceError
-    const [loginData, setLoginData] = useState({ email: "", password: "" });
-    const [registerData, setRegisterData] = useState({ name: "", email: "", mobile: "", password: "" });
-
-    const handleAuthSubmit = async (e) => {
-      e.preventDefault();
-      setLoadingAuth(false);
-
-      // SAFE CHECKS: prevent "ReferenceError: loginData is not defined"
-      if (activeTab === "login" && !(typeof loginData !== "undefined" && loginData)) {
-        setFormError("Login form is not ready. Please try again.");
-        return;
-      }
-      if (activeTab === "register" && !(typeof registerData !== "undefined" && registerData)) {
-        setFormError("Register form is not ready. Please try again.");
-        return;
-      }
-
-      // pick correct state depending on tab
-      const currentData = activeTab === "login" ? loginData : registerData;
-
-      // reset errors for current tab only
-      setErrors((prev) => ({
-        ...prev,
-        [activeTab]: { name: "", email: "", mobile: "", password: "" },
-      }));
-
-      let newErrors = {};
-
-      // ---------- REGISTER VALIDATION ----------
-      if (activeTab === "register") {
-        if (!currentData.name) newErrors.name = "Name must be filled";
-
-        if (!currentData.mobile) {
-          newErrors.mobile = "Mobile must be filled";
-        } else if (!isValidMobile(currentData.mobile)) {
-          newErrors.mobile = "Enter a valid mobile number";
-        }
-      }
-
-      // ---------- COMMON (LOGIN + REGISTER) ----------
-      if (!currentData.email) {
-        newErrors.email = "Email must be filled";
-      } else if (!isValidEmail(currentData.email)) {
-        newErrors.email = "Enter a valid email";
-      }
-
-      if (currentData.password.length < 6) {
-        newErrors.password = "Password must be at least 6 characters";
-      }
-
-      // If errors exist, update state and stop
-      if (Object.keys(newErrors).length > 0) {
-        setErrors((prev) => ({
-          ...prev,
-          [activeTab]: { ...prev[activeTab], ...newErrors },
-        }));
-        return;
-      }
-
-
-      // ---------- API CALL ----------
-      if (
-        (activeTab === "login" &&
-          currentData.email &&
-          currentData.password.length >= 6) ||
-        (activeTab === "register" &&
-          currentData.name &&
-          currentData.email &&
-          currentData.mobile &&
-          currentData.password.length >= 6)
-      ) {
-        try {
-          setLoadingAuth(true);
-          setFormError("");
-          setError("");
-          const guestId = localStorage.getItem("guestCartId");
-          const endpoint =
-            activeTab === "login" ? "/api/auth/login" : "/api/auth/register";
-
-          const response = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...currentData, guestId }), 
-          });
-
-          const data = await response.json();
-
-          if (!response.ok) {
-            setError(
-              <span className="text-red-500">
-                {data.message || "Password Mismatch"}
-              </span>
-            );
-            return;
-          }
-
-          if (data.token) {
-            localStorage.setItem("token", data.token);
-            setIsLoggedIn(true);
-            setIsAdmin(data.user.role === "admin");
-            setUserData(data.user);
-            setShowAuthModal(false);
-
-            // reset states
-            setLoginData({ email: "", password: "" });
-            setRegisterData({ name: "", email: "", mobile: "", password: "" });
-
-            // update cart
-            const cartResponse = await fetch("/api/cart/count", {
-              headers: { Authorization: `Bearer ${data.token}` },
-            });
-            if (cartResponse.ok) {
-              const cartDataCount = await cartResponse.json();
-              // CHANGE: broadcast count to all tabs
-              setCartCountSynced(cartDataCount.count);
-            }
-
-            // ADD: fetch and broadcast latest cartData after login/merge
-            try { await fetchCartLatest(); } catch {}
-
-            // 👇 Optional: clear guestId after merge
-            localStorage.removeItem("guestCartId");
-            location.reload();
-          } else {
-            setShowAuthModal(true);
-            setActiveTab("login");
-          }
-        } catch (err) {
-          setError(err.message);
-        } finally {
-          setLoadingAuth(false);
-        }
-      } else {
-        return;
-      }
-    };
-    useEffect(() => {
-        setHasMounted(true);
-    }, []);
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        setIsLoggedIn(false);
-        setUserData(null);
-        // CHANGE: broadcast clear to all tabs
-        setCartCountSynced(0);
-        // ADD: clear cartData everywhere
-        try { localStorage.removeItem(CART_DATA_KEY); } catch {}
-        setCartData(null);
-        location.reload();
-    };
-    useEffect(() => {
-        const fetchOffers = async () => {
-            try {
-                const response = await fetch("/api/offers/get");
-                const result = await response.json();
-
-                // Process and format dates before setting state
-                const activeOffers = result.data
-                    .filter((offer) => offer.fest_offer_status === "active")
-                setOffers(activeOffers);
-            } catch (err) {
-                console.error("Failed to fetch offers", err);
-            }
-        };
-        fetchOffers();
-    }, []);
-    const hideTimeout = useRef(null);
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const response = await fetch("/api/categories/get");
-                const data = await response.json();
-
-                // Keep only active categories
-                const activeCategories = data.filter(cat => cat.status === "Active");
-
-                const categoryMap = {};
-                activeCategories.forEach((cat) => {
-                    cat.subcategories = [];
-                    categoryMap[cat._id] = cat;
-                });
-
-                const nestedCategories = [];
-                activeCategories.forEach((cat) => {
-                    if (cat.parentid === "none") {
-                        nestedCategories.push(cat);
-                    } else if (categoryMap[cat.parentid]) {
-                        categoryMap[cat.parentid].subcategories.push(cat);
-                    }
-                });
-
-                setCategories(nestedCategories);
-            } catch (err) {
-                console.error("Failed to fetch categories", err);
-            }
-        };
-
-        fetchCategories();
-        checkAuthStatus();
-    }, []);
-    const flattenTree = (cat, rootCategory, level = 0) => {
-        let result = [];
-        
-        // Add the category itself
-        result.push({ ...cat, rootCategory, level, type: 'category' });
-
-        // Add subcategories
-        if (cat.subcategories?.length > 0) {
-            cat.subcategories.forEach(child => {
-                result = result.concat(flattenTree(child, rootCategory, level + 1));
-            });
-        }
-        
-        return result;
-    };
-    // Flatten all starting from actual visible categories (like Refrigerator, AC…)
-    const flattenAllCategories = (cats) => {
-        let result = [];
-        let brandCounter = 0; // Counter for unique keys
-
-        // Use a Map to dedupe brands by a normalized key (slug/name/id)
-        const brandMap = new Map();
-
-        const normalizeKey = (s) => {
-            if (!s && s !== 0) return '';
-            return String(s).toLowerCase().replace(/\s+/g, ' ').trim().replace(/[^a-z0-9]/g, '');
-        };
-
-        cats.forEach(cat => {
-            // Add the category and its subcategories
-            result = result.concat(flattenTree(cat, cat.category_slug, 0));
-
-            // Collect brands for this category and add to map if unique
-            if (Array.isArray(cat.brands) && cat.brands.length > 0) {
-                cat.brands.forEach(brand => {
-                    // try multiple fields for a stable identifier
-                    const candidate = brand.brand_slug || brand.slug || brand.brand_name || brand.name || brand._id || '';
-                    const key = normalizeKey(candidate);
-                    if (!key) return; // skip invalid
-
-                    if (!brandMap.has(key)) {
-                        // store first occurrence and include a stable uniqueKey
-                        brandMap.set(key, {
-                            ...brand,
-                            type: 'brand',
-                            sourceCategory: cat.category_name,
-                            uniqueKey: `${brand._id || key}-${brandCounter++}`
-                        });
-                    } else {
-                        // already present: optionally we could merge sourceCategory info
-                        const existing = brandMap.get(key);
-                        if (existing && existing.sourceCategory !== cat.category_name) {
-                            existing.sourceCategory = existing.sourceCategory + ", " + cat.category_name;
-                        }
-                    }
-                });
-            }
-        });
-
-        const allBrands = Array
-          .from(brandMap.values())
-          // ADDED: alphabetical sort (case-insensitive) for brand listing
-          .sort((a, b) =>
-            (a.brand_name || '').localeCompare(b.brand_name || '', undefined, { sensitivity: 'base' })
-          );
-
-        // Add a single brands header at the end
-        if (allBrands.length > 0) { 
-            result.push({
-                _id: 'all-brands-header',
-                type: 'brands-header',
-                category_name: 'Brands',
-                level: 0,
-                uniqueKey: 'all-brands-header'
-            });
-
-            result = result.concat(allBrands.map(brand => ({
-                ...brand,
-                level: 1,
-                uniqueKey: brand.uniqueKey
-            })));
-        }
-
-        return result;
-    };
-    const chunkFlatList = (flatList, size = 11) => {
-        const chunks = [];
-        if (!Array.isArray(flatList) || flatList.length === 0) return chunks;
-
-        for (let i = 0; i < flatList.length; i += size) {
-            chunks.push(flatList.slice(i, i + size));
-        }
-
-        return chunks;
-    };
-    const cancelHide = () => {
-        if (hideTimeout.current) {
-            clearTimeout(hideTimeout.current);
-            hideTimeout.current = null;
-        }
-    };
-    const startHide = (delay = 100) => {
-        cancelHide();
-        hideTimeout.current = setTimeout(() => {
-            setHoveredCategory(null);
-        }, delay);
-    };
-    const handleMouseEnter = (categoryId) => {
-        cancelHide();
-        const cat = categories.find((c) => c._id === categoryId);
-        if (!cat) return;
-        setHoveredCategory(cat);
-
-        const el = slideRefs.current[categoryId];
-        if (!el) return;
-
-        const rect = el.getBoundingClientRect();
-        // Using fixed positioning => use viewport coords (rect.left / rect.bottom)
-        setDropdownLeft(rect.left);
-        setDropdownTop(rect.bottom);
-        setDropdownCenterX(rect.left + rect.width / 2);
-    };
-    // After dropdown mounts, measure and adjust so it never overflows screen or hides under arrows
-    useLayoutEffect(() => {
-        if (!hoveredCategory || !dropdownRef.current) return;
-        const ddRect = dropdownRef.current.getBoundingClientRect();
-        const screenWidth = window.innerWidth;
-        let left = dropdownLeft;
-
-        // Center dropdown based on parent center when available
-        if (dropdownCenterX != null && ddRect.width) {
-            left = dropdownCenterX - ddRect.width / 2;
-            // Clamp to viewport
-            if (left < 8) left = 8;
-            if (left + ddRect.width > screenWidth - 10) left = Math.max(10, screenWidth - ddRect.width - 10);
-        } else {
-            // If dropdown would overflow right edge, shift it left
-            if (left + ddRect.width > screenWidth - 10) {
-                left = Math.max(10, screenWidth - ddRect.width - 10);
-            }
-        }
-
-        // Ensure dropdown is at least after prev arrow
-        const prevBtn = document.querySelector(".custom-swiper-prev");
-        const prevRight = prevBtn?.getBoundingClientRect().right || 0;
-        if (left < prevRight + 8) left = prevRight + 8;
-
-        // Ensure dropdown doesn't go too far left
-        if (left < 8) left = 8;
-
-        // Only update if it actually changes (prevents render thrash)
-        if (Math.round(left) !== Math.round(dropdownLeft)) setDropdownLeft(left);
-        // include dropdownLeft so we compare against current value
-    }, [hoveredCategory, dropdownCenterX, dropdownLeft]);
-    // cleanup hide timeout on unmount
-    useEffect(() => {
-        return () => {
-            if (hideTimeout.current) clearTimeout(hideTimeout.current);
-        };
-    }, []);
-    const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
-    const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
-    const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
-    const [forgotPasswordError, setForgotPasswordError] = useState('');
-    const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
-    // Add this function to handle forgot password submission
-    const handleForgotPassword = async (e) => {
-        e.preventDefault();
-        setForgotPasswordError('');
-        setForgotPasswordMessage('');
-        setForgotPasswordLoading(true);
-        try {
-            const response = await fetch('/api/auth/forgot-password', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email: forgotPasswordEmail }),
-            });
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.message || 'Failed to send reset link');
-            }
-            setForgotPasswordMessage(data.message || 'Password reset link sent to your email');
-        } catch (err) {
-            setForgotPasswordError(err.message);
-        } finally {
-            setForgotPasswordLoading(false);
-        }
-    };
-    // Render flattened category/brand item
-    const renderFlatItem = (item, hoveredCategory) => {
-        const itemKey = item.uniqueKey || item._id;
-        const paddingLeft = `${(item.level || 0) * 12}px`;
-        let content = null;
-        if (item.type === "brands-header") {
-          content = (
-              <h3 className="flex items-center justify-between mb-1 text-sm font-semibold text-blue-600 ml-1">
-                  {item.category_name}
-              </h3>
-          );
-        }else if (item.type === "brand") {
-          const href = `/category/brand/${encodeURIComponent(hoveredCategory.category_slug)}/${encodeURIComponent(item.brand_slug)}`;
-              
-
-          content = (
-            <Link
-              href={href}
-              className="flex items-center mb-1 text-sm text-[#8c8c8c] p-[5px] hover:text-[#0e54e6]"
-            >
-              <span className="font-normal">{item.brand_name}</span>
-            </Link>
-          );
-        }else {
-          const href =
-            item.level === 0
-              ? `/category/${encodeURIComponent(hoveredCategory?.category_slug || "")}/${encodeURIComponent(item.category_slug || "")}`
-              : `/category/${encodeURIComponent(hoveredCategory?.category_slug || "")}/${encodeURIComponent(item.rootCategory || "")}/${encodeURIComponent(item.category_slug || "")}`;
-            content = (
-              <Link
-                href={href}
-                className={`flex items-center justify-between mb-1 text-sm ${
-                  item.level === 0
-                    ? "font-semibold text-blue-600"
-                    : "text-[#8c8c8c] !p-[5px] hover:text-[#0e54e6]"
-                }`}
-              >
-                <span className={item.level === 0 ? "font-bold" : "font-normal"}>
-                  {item.category_name}
-                </span>
-                {item.level === 0 && (
-                  <Play
-                    size={14}
-                    strokeWidth={0}
-                    className="text-blue-600 fill-blue-600"
-                  />
-                )}
-              </Link>
-            );
-        }
-        return (
-          <div key={itemKey} style={{ paddingLeft }}>
-            {content}
-          </div>
-        );
-    };
-
-    // Price formatter
-    const formatPrice = (value) => {
-      if (value === undefined || value === null || value === '') return '';
-      const num = Number(value);
-      if (Number.isNaN(num)) return '';
-      return '₹' + num.toLocaleString('en-IN');
-    };
-    // FIX: renderSuggestionItem slug bug
-    const renderSuggestionItem = useCallback((item, idx) => {
-      const id = item._id || item.id || idx;
-      const slug = item.slug || item._id || item.id || ''; // added slug definition
-      const price = item.special_price ?? item.price;
-      const imageSrc = item.image || (Array.isArray(item.images) && item.images.length > 0 ? `/uploads/products/${item.images[0]}` : null);
-      return (
-        <Link
-          key={id}
-          href={`/product/${encodeURIComponent(slug)}`}
-          onClick={() => setSearchDropdownVisible(false)}
-          className="group block mb-2 last:mb-0 rounded-lg bg-[#e9e9ec] hover:bg-white border border-transparent hover:border-blue-300 shadow-sm hover:shadow transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-400/40"
-        >
-          <div className="flex items-center gap-3 px-3 py-2">
-            <div className="w-12 h-12 rounded-md overflow-hidden bg-white ring-1 ring-gray-200 flex items-center justify-center shrink-0">
-              {imageSrc ? (
-                <img
-                  src={imageSrc}
-                  alt={imageSrc || 'Product'}
-                  className="object-contain w-full h-full"
-                  loading="lazy"
-                />
-              ) : (
-                <span className="text-[10px] text-gray-400">NO IMG</span>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[12px] font-semibold text-gray-800 leading-snug line-clamp-2 uppercase group-hover:text-blue-700">
-                {item.name || 'Unnamed'}
-              </div>
-              <div className="mt-1 flex items-center gap-2">
-                {price !== undefined && price !== null && (
-                  <span className="text-[12px] font-medium text-gray-700 group-hover:text-blue-700">
-                    {formatPrice(price)}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </Link>
-      );
-    }, [setSearchDropdownVisible]);
-
-    // ADD state (place with other useState declarations)
-    const [activeSuggestion, setActiveSuggestion] = useState(-1);
-
-    // RESET active suggestion when list changes or dropdown closes
-    useEffect(() => {
-      if (!searchDropdownVisible) setActiveSuggestion(-1);
-      else setActiveSuggestion(-1);
-    }, [suggestions, searchDropdownVisible]);
-
-    // SELECT helper
-    const selectSuggestion = useCallback((index) => {
-      if (index < 0 || index >= suggestions.length) return;
-      const item = suggestions[index];
-      const slug = item.slug || item._id || item.id;
-      if (!slug) return;
+  // Debounced effect: call fetchSuggestions while typing
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const q = searchQuery.trim();
+    if (!q) {
+      setSuggestions([]);
       setSearchDropdownVisible(false);
-      router.push(`/product/${encodeURIComponent(slug)}`);
-    }, [suggestions, router]);
+      return;
+    }
 
-    // DESKTOP key handling (keep existing handleKeyPress for mobile inputs)
-    const handleDesktopKeyDown = (e) => {
-      if (!suggestions.length) {
-        if (e.key === 'Enter') handleSearch();
-        return;
-      }
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setActiveSuggestion(p => (p + 1) % suggestions.length);
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setActiveSuggestion(p => (p - 1 + suggestions.length) % suggestions.length);
-      } else if (e.key === 'Enter') {
-        if (activeSuggestion >= 0) {
-          e.preventDefault();
-          selectSuggestion(activeSuggestion);
-        } else {
-          handleSearch();
-        }
-      } else if (e.key === 'Escape') {
+    // Ensure dropdown becomes visible as soon as user types (even for one char)
+    setSearchDropdownVisible(true);
+
+    // Immediate fetch for the first character, otherwise debounce for performance
+    if (q.length === 1) {
+      fetchSuggestions(q);
+      return;
+    }
+
+    debounceRef.current = setTimeout(() => fetchSuggestions(q), 200);
+    return () => clearTimeout(debounceRef.current);
+  }, [searchQuery, fetchSuggestions]);
+
+  // Close search dropdown when clicking outside input or dropdown
+  useEffect(() => {
+    const handler = (e) => {
+      const target = e.target;
+      if (
+        searchDropdownVisible &&
+        searchInputRef.current &&
+        searchDropdownRef.current &&
+        !searchInputRef.current.contains(target) &&
+        !searchDropdownRef.current.contains(target)
+      ) {
         setSearchDropdownVisible(false);
       }
     };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [searchDropdownVisible]);
+  // Modify the search button to use the handler
+  // Also make the search work when pressing Enter in the input field
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+  const isValidEmail = (email) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+  const isValidMobile = (mobile) => /^[0-9]{10}$/.test(mobile);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    mobile: '',
+    password: ''
+  });
+  const [loadingAuth, setLoadingAuth] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({
+    login: { email: "", password: "" },
+    register: { name: "", email: "", mobile: "", password: "" },
+  });
 
-    // DESKTOP specific renderer (keep existing renderSuggestionItem for mobile contexts)
-    function renderDesktopSuggestionItem(item, idx) {
-      const id = item._id || item.id || idx;
-      const price = item.special_price ?? item.price;
-      const isActive = idx === activeSuggestion;
-      const imageSrc =
-        item.image ||
-        (Array.isArray(item.images) && item.images.length > 0
-          ? `/uploads/products/${item.images[0]}`
-          : null);
+  // ADD: define missing auth states to avoid ReferenceError
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
+  const [registerData, setRegisterData] = useState({ name: "", email: "", mobile: "", password: "" });
 
-      return (
-        <div
-          key={id}
-          role="option"
-          aria-selected={isActive}
-          onMouseEnter={() => setActiveSuggestion(idx)}
-          onMouseDown={() => selectSuggestion(idx)}
-          className={`flex gap-4 px-4 py-3 cursor-pointer rounded-md transition-colors group bg-[#f2f2f2]`}
+  const handleAuthSubmit = async (e) => {
+    e.preventDefault();
+    setLoadingAuth(false);
+
+    // SAFE CHECKS: prevent "ReferenceError: loginData is not defined"
+    if (activeTab === "login" && !(typeof loginData !== "undefined" && loginData)) {
+      setFormError("Login form is not ready. Please try again.");
+      return;
+    }
+    if (activeTab === "register" && !(typeof registerData !== "undefined" && registerData)) {
+      setFormError("Register form is not ready. Please try again.");
+      return;
+    }
+
+    // pick correct state depending on tab
+    const currentData = activeTab === "login" ? loginData : registerData;
+
+    // reset errors for current tab only
+    setErrors((prev) => ({
+      ...prev,
+      [activeTab]: { name: "", email: "", mobile: "", password: "" },
+    }));
+
+    let newErrors = {};
+
+    // ---------- REGISTER VALIDATION ----------
+    if (activeTab === "register") {
+      if (!currentData.name) newErrors.name = "Name must be filled";
+
+      if (!currentData.mobile) {
+        newErrors.mobile = "Mobile must be filled";
+      } else if (!isValidMobile(currentData.mobile)) {
+        newErrors.mobile = "Enter a valid mobile number";
+      }
+    }
+
+    // ---------- COMMON (LOGIN + REGISTER) ----------
+    if (!currentData.email) {
+      newErrors.email = "Email must be filled";
+    } else if (!isValidEmail(currentData.email)) {
+      newErrors.email = "Enter a valid email";
+    }
+
+    if (currentData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    // If errors exist, update state and stop
+    if (Object.keys(newErrors).length > 0) {
+      setErrors((prev) => ({
+        ...prev,
+        [activeTab]: { ...prev[activeTab], ...newErrors },
+      }));
+      return;
+    }
+
+
+    // ---------- API CALL ----------
+    if (
+      (activeTab === "login" &&
+        currentData.email &&
+        currentData.password.length >= 6) ||
+      (activeTab === "register" &&
+        currentData.name &&
+        currentData.email &&
+        currentData.mobile &&
+        currentData.password.length >= 6)
+    ) {
+      try {
+        setLoadingAuth(true);
+        setFormError("");
+        setError("");
+        const guestId = localStorage.getItem("guestCartId");
+        const endpoint =
+          activeTab === "login" ? "/api/auth/login" : "/api/auth/register";
+
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...currentData, guestId }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(
+            <span className="text-red-500">
+              {data.message || "Password Mismatch"}
+            </span>
+          );
+          return;
+        }
+
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+          setIsLoggedIn(true);
+          setIsAdmin(data.user.role === "admin");
+          setUserData(data.user);
+          setShowAuthModal(false);
+
+          // reset states
+          setLoginData({ email: "", password: "" });
+          setRegisterData({ name: "", email: "", mobile: "", password: "" });
+
+          // update cart
+          const cartResponse = await fetch("/api/cart/count", {
+            headers: { Authorization: `Bearer ${data.token}` },
+          });
+          if (cartResponse.ok) {
+            const cartDataCount = await cartResponse.json();
+            // CHANGE: broadcast count to all tabs
+            setCartCountSynced(cartDataCount.count);
+          }
+
+          // ADD: fetch and broadcast latest cartData after login/merge
+          try { await fetchCartLatest(); } catch { }
+
+          // 👇 Optional: clear guestId after merge
+          localStorage.removeItem("guestCartId");
+          location.reload();
+        } else {
+          setShowAuthModal(true);
+          setActiveTab("login");
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoadingAuth(false);
+      }
+    } else {
+      return;
+    }
+  };
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setIsLoggedIn(false);
+    setUserData(null);
+    // CHANGE: broadcast clear to all tabs
+    setCartCountSynced(0);
+    // ADD: clear cartData everywhere
+    try { localStorage.removeItem(CART_DATA_KEY); } catch { }
+    setCartData(null);
+    location.reload();
+  };
+  useEffect(() => {
+    const fetchOffers = async () => {
+      try {
+        const response = await fetch("/api/offers/get");
+        const result = await response.json();
+
+        // Process and format dates before setting state
+        const activeOffers = result.data
+          .filter((offer) => offer.fest_offer_status === "active")
+        setOffers(activeOffers);
+      } catch (err) {
+        console.error("Failed to fetch offers", err);
+      }
+    };
+    fetchOffers();
+  }, []);
+  const hideTimeout = useRef(null);
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/api/categories/get");
+        const data = await response.json();
+
+        // Keep only active categories
+        const activeCategories = data.filter(cat => cat.status === "Active");
+
+        const categoryMap = {};
+        activeCategories.forEach((cat) => {
+          cat.subcategories = [];
+          categoryMap[cat._id] = cat;
+        });
+
+        const nestedCategories = [];
+        activeCategories.forEach((cat) => {
+          if (cat.parentid === "none") {
+            nestedCategories.push(cat);
+          } else if (categoryMap[cat.parentid]) {
+            categoryMap[cat.parentid].subcategories.push(cat);
+          }
+        });
+
+        setCategories(nestedCategories);
+      } catch (err) {
+        console.error("Failed to fetch categories", err);
+      }
+    };
+
+    fetchCategories();
+    checkAuthStatus();
+  }, []);
+  const flattenTree = (cat, rootCategory, level = 0) => {
+    let result = [];
+
+    // Add the category itself
+    result.push({ ...cat, rootCategory, level, type: 'category' });
+
+    // Add subcategories
+    if (cat.subcategories?.length > 0) {
+      cat.subcategories.forEach(child => {
+        result = result.concat(flattenTree(child, rootCategory, level + 1));
+      });
+    }
+
+    return result;
+  };
+  // Flatten all starting from actual visible categories (like Refrigerator, AC…)
+  const flattenAllCategories = (cats) => {
+    let result = [];
+    let brandCounter = 0; // Counter for unique keys
+
+    // Use a Map to dedupe brands by a normalized key (slug/name/id)
+    const brandMap = new Map();
+
+    const normalizeKey = (s) => {
+      if (!s && s !== 0) return '';
+      return String(s).toLowerCase().replace(/\s+/g, ' ').trim().replace(/[^a-z0-9]/g, '');
+    };
+
+    cats.forEach(cat => {
+      // Add the category and its subcategories
+      result = result.concat(flattenTree(cat, cat.category_slug, 0));
+
+      // Collect brands for this category and add to map if unique
+      if (Array.isArray(cat.brands) && cat.brands.length > 0) {
+        cat.brands.forEach(brand => {
+          // try multiple fields for a stable identifier
+          const candidate = brand.brand_slug || brand.slug || brand.brand_name || brand.name || brand._id || '';
+          const key = normalizeKey(candidate);
+          if (!key) return; // skip invalid
+
+          if (!brandMap.has(key)) {
+            // store first occurrence and include a stable uniqueKey
+            brandMap.set(key, {
+              ...brand,
+              type: 'brand',
+              sourceCategory: cat.category_name,
+              uniqueKey: `${brand._id || key}-${brandCounter++}`
+            });
+          } else {
+            // already present: optionally we could merge sourceCategory info
+            const existing = brandMap.get(key);
+            if (existing && existing.sourceCategory !== cat.category_name) {
+              existing.sourceCategory = existing.sourceCategory + ", " + cat.category_name;
+            }
+          }
+        });
+      }
+    });
+
+    const allBrands = Array
+      .from(brandMap.values())
+      // ADDED: alphabetical sort (case-insensitive) for brand listing
+      .sort((a, b) =>
+        (a.brand_name || '').localeCompare(b.brand_name || '', undefined, { sensitivity: 'base' })
+      );
+
+    // Add a single brands header at the end
+    if (allBrands.length > 0) {
+      result.push({
+        _id: 'all-brands-header',
+        type: 'brands-header',
+        category_name: 'Brands',
+        level: 0,
+        uniqueKey: 'all-brands-header'
+      });
+
+      result = result.concat(allBrands.map(brand => ({
+        ...brand,
+        level: 1,
+        uniqueKey: brand.uniqueKey
+      })));
+    }
+
+    return result;
+  };
+  const chunkFlatList = (flatList, size = 11) => {
+    const chunks = [];
+    if (!Array.isArray(flatList) || flatList.length === 0) return chunks;
+
+    for (let i = 0; i < flatList.length; i += size) {
+      chunks.push(flatList.slice(i, i + size));
+    }
+
+    return chunks;
+  };
+  const cancelHide = () => {
+    if (hideTimeout.current) {
+      clearTimeout(hideTimeout.current);
+      hideTimeout.current = null;
+    }
+  };
+  const startHide = (delay = 100) => {
+    cancelHide();
+    hideTimeout.current = setTimeout(() => {
+      setHoveredCategory(null);
+    }, delay);
+  };
+  const handleMouseEnter = (categoryId) => {
+    cancelHide();
+    const cat = categories.find((c) => c._id === categoryId);
+    if (!cat) return;
+    setHoveredCategory(cat);
+
+    const el = slideRefs.current[categoryId];
+    if (!el) return;
+
+    const rect = el.getBoundingClientRect();
+    // Using fixed positioning => use viewport coords (rect.left / rect.bottom)
+    setDropdownLeft(rect.left);
+    setDropdownTop(rect.bottom);
+    setDropdownCenterX(rect.left + rect.width / 2);
+  };
+  // After dropdown mounts, measure and adjust so it never overflows screen or hides under arrows
+  useLayoutEffect(() => {
+    if (!hoveredCategory || !dropdownRef.current) return;
+    const ddRect = dropdownRef.current.getBoundingClientRect();
+    const screenWidth = window.innerWidth;
+    let left = dropdownLeft;
+
+    // Center dropdown based on parent center when available
+    if (dropdownCenterX != null && ddRect.width) {
+      left = dropdownCenterX - ddRect.width / 2;
+      // Clamp to viewport
+      if (left < 8) left = 8;
+      if (left + ddRect.width > screenWidth - 10) left = Math.max(10, screenWidth - ddRect.width - 10);
+    } else {
+      // If dropdown would overflow right edge, shift it left
+      if (left + ddRect.width > screenWidth - 10) {
+        left = Math.max(10, screenWidth - ddRect.width - 10);
+      }
+    }
+
+    // Ensure dropdown is at least after prev arrow
+    const prevBtn = document.querySelector(".custom-swiper-prev");
+    const prevRight = prevBtn?.getBoundingClientRect().right || 0;
+    if (left < prevRight + 8) left = prevRight + 8;
+
+    // Ensure dropdown doesn't go too far left
+    if (left < 8) left = 8;
+
+    // Only update if it actually changes (prevents render thrash)
+    if (Math.round(left) !== Math.round(dropdownLeft)) setDropdownLeft(left);
+    // include dropdownLeft so we compare against current value
+  }, [hoveredCategory, dropdownCenterX, dropdownLeft]);
+  // cleanup hide timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hideTimeout.current) clearTimeout(hideTimeout.current);
+    };
+  }, []);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
+  const [forgotPasswordError, setForgotPasswordError] = useState('');
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+  // Add this function to handle forgot password submission
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setForgotPasswordError('');
+    setForgotPasswordMessage('');
+    setForgotPasswordLoading(true);
+    try {
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: forgotPasswordEmail }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to send reset link');
+      }
+      setForgotPasswordMessage(data.message || 'Password reset link sent to your email');
+    } catch (err) {
+      setForgotPasswordError(err.message);
+    } finally {
+      setForgotPasswordLoading(false);
+    }
+  };
+  // Render flattened category/brand item
+  const renderFlatItem = (item, hoveredCategory) => {
+    const itemKey = item.uniqueKey || item._id;
+    const paddingLeft = `${(item.level || 0) * 12}px`;
+    let content = null;
+    if (item.type === "brands-header") {
+      content = (
+        <h3 className="flex items-center justify-between mb-1 text-sm font-semibold text-blue-600 ml-1">
+          {item.category_name}
+        </h3>
+      );
+    } else if (item.type === "brand") {
+      const href = `/category/brand/${encodeURIComponent(hoveredCategory.category_slug)}/${encodeURIComponent(item.brand_slug)}`;
+
+
+      content = (
+        <Link
+          href={href}
+          className="flex items-center mb-1 text-sm text-[#8c8c8c] p-[5px] hover:text-[#0e54e6]"
         >
-          <div className="w-[50px] h-[50px] rounded-md overflow-hidden bg-white flex items-center justify-center border border-gray-200 shrink-0">
+          <span className="font-normal">{item.brand_name}</span>
+        </Link>
+      );
+    } else {
+      const href =
+        item.level === 0
+          ? `/category/${encodeURIComponent(hoveredCategory?.category_slug || "")}/${encodeURIComponent(item.category_slug || "")}`
+          : `/category/${encodeURIComponent(hoveredCategory?.category_slug || "")}/${encodeURIComponent(item.rootCategory || "")}/${encodeURIComponent(item.category_slug || "")}`;
+      content = (
+        <Link
+          href={href}
+          className={`flex items-center justify-between mb-1 text-sm ${item.level === 0
+            ? "font-semibold text-blue-600"
+            : "text-[#8c8c8c] !p-[5px] hover:text-[#0e54e6]"
+            }`}
+        >
+          <span className={item.level === 0 ? "font-bold" : "font-normal"}>
+            {item.category_name}
+          </span>
+          {item.level === 0 && (
+            <Play
+              size={14}
+              strokeWidth={0}
+              className="text-blue-600 fill-blue-600"
+            />
+          )}
+        </Link>
+      );
+    }
+    return (
+      <div key={itemKey} style={{ paddingLeft }}>
+        {content}
+      </div>
+    );
+  };
+
+  // Price formatter
+  const formatPrice = (value) => {
+    if (value === undefined || value === null || value === '') return '';
+    const num = Number(value);
+    if (Number.isNaN(num)) return '';
+    return '₹' + num.toLocaleString('en-IN');
+  };
+  // FIX: renderSuggestionItem slug bug
+  const renderSuggestionItem = useCallback((item, idx) => {
+    const id = item._id || item.id || idx;
+    const slug = item.slug || item._id || item.id || ''; // added slug definition
+    const price = item.special_price ?? item.price;
+    const imageSrc = item.image || (Array.isArray(item.images) && item.images.length > 0 ? `/uploads/products/${item.images[0]}` : null);
+    return (
+      <Link
+        key={id}
+        href={`/product/${encodeURIComponent(slug)}`}
+        onClick={() => setSearchDropdownVisible(false)}
+        className="group block mb-2 last:mb-0 rounded-lg bg-[#e9e9ec] hover:bg-white border border-transparent hover:border-blue-300 shadow-sm hover:shadow transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-400/40"
+      >
+        <div className="flex items-center gap-3 px-3 py-2">
+          <div className="w-12 h-12 rounded-md overflow-hidden bg-white ring-1 ring-gray-200 flex items-center justify-center shrink-0">
             {imageSrc ? (
               <img
                 src={imageSrc}
-                alt={item.name || 'Product'}
+                alt={imageSrc || 'Product'}
                 className="object-contain w-full h-full"
                 loading="lazy"
               />
@@ -1315,237 +1219,327 @@ const Header = () => {
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <div
-              className={`text-[14px] font-medium leading-snug line-clamp-2 ${
-                isActive ? 'text-blue-700' : 'text-gray-800 group-hover:text-gray-900'
-              }`}
-            >
+            <div className="text-[12px] font-semibold text-gray-800 leading-snug line-clamp-2 uppercase group-hover:text-blue-700">
               {item.name || 'Unnamed'}
             </div>
-            {price && (
-              <div className="text-[14px] font-semibold text-blue-600 mt-1">
-                ₹{price.toLocaleString('en-IN')}
-              </div>
-            )}
-          
-          </div>
-        </div>
-      );
-    };
-    // ADD: mobile accordion open-state + helpers
-    // FIX: replace wrong useState with real loader function + tracking map
-    const [loadedCategoryIds, setLoadedCategoryIds] = useState({});
-    const [openCategories, setOpenCategories] = useState({});
-
-    // NEW: unified nodes for mobile = categories + hoveredCategory.subcategories
-    const nodes = useMemo(() => {
-      const base = Array.isArray(categories) ? categories : [];
-      const extra = (hoveredCategory && Array.isArray(hoveredCategory.subcategories))
-        ? hoveredCategory.subcategories
-        : [];
-
-      if (!extra.length) return base;
-
-      const map = new Map();
-      base.forEach(n => { if (n && n._id) map.set(n._id, n); });
-      extra.forEach(n => { if (n && n._id && !map.has(n._id)) map.set(n._id, n); });
-      return Array.from(map.values());
-    }, [categories, hoveredCategory]);
-
-    // Ensures the subcategories for a category are present by rebuilding from cache/API if needed
-    const ensureSubcategories = useCallback(async (categoryId) => {
-      if (!categoryId) return;
-
-      // already ensured this id in this session
-      if (loadedCategoryIds[categoryId]) return;
-
-      // find node in current nested tree
-      const findNodeById = (list, id) => {
-        for (const n of list || []) {
-          if (n?._id === id) return n;
-          const hit = findNodeById(n?.subcategories || [], id);
-          if (hit) return hit;
-        }
-        return null;
-      };
-
-      const node = findNodeById(categories, categoryId);
-      if (node && Array.isArray(node.subcategories) && node.subcategories.length > 0) {
-        setLoadedCategoryIds((m) => ({ ...m, [categoryId]: true }));
-        return;
-      }
-
-      try {
-        // use raw cache if available, otherwise fetch
-        let raw = loadCache('categories_raw_cache')?.data;
-        if (!Array.isArray(raw) || raw.length === 0) {
-          const res = await fetch('/api/categories/get');
-          raw = await res.json();
-          saveCache('categories_raw_cache', raw);
-        }
-
-        // rebuild nested tree
-        const active = Array.isArray(raw) ? raw.filter((c) => c.status === 'Active') : [];
-        const map = {};
-        active.forEach((c) => { map[c._id] = { ...c, subcategories: [] }; });
-        active.forEach((c) => {
-          if (c.parentid && map[c.parentid]) map[c.parentid].subcategories.push(map[c._id]);
-        });
-
-        const nested = [];
-        active.forEach((c) => {
-          if (c.parentid === 'none' || !map[c.parentid]) nested.push(map[c._id]);
-        });
-
-        setCategories(nested);
-        saveCache('categories_nested_cache', nested);
-      } catch (e) {
-        console.error('ensureSubcategories failed:', e);
-      } finally {
-        setLoadedCategoryIds((m) => ({ ...m, [categoryId]: true }));
-      }
-    }, [categories, loadedCategoryIds]);
-
-    const toggleMobileCategory = useCallback(async (id) => {
-      await ensureSubcategories(id);
-      setOpenCategories((prev) => ({ ...prev, [id]: !prev[id] }));
-    }, [ensureSubcategories]);
-
-    // Add missing slug helpers used by renderCategoryLevel
-    const safeSlugify = (s, fallback = "") => {
-      const base = (s || "").toString().trim();
-      if (!base) return fallback;
-      return base.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-    };
-    const getCategorySlug = (cat) =>cat?.category_slug || cat?.slug || safeSlugify(cat?.category_name, cat?._id || "category");
-    // NEW: compute href for node based on level (parent/child)
-    const getNodeHref = (ancestorSlugs = [], nodeSlug) => {
-      // Join all ancestors + current node
-      const fullPath = [...ancestorSlugs, nodeSlug]
-        .map((slug) => encodeURIComponent(slug))
-        .join("/");
-
-      return `/category/${fullPath}`;
-    };
-    // Sidebar Menu
-    const toggleMenu = (menu) => {
-      setOpenMenu(openMenu === menu ? null : menu);
-     };
-
-     const toggleCategory = (id) => {
-      setOpenCategoryMenu((prev) => ({
-        ...prev,
-        [id]: !prev[id],
-      }));
-    };
-
-    const renderCategories = (nodes, level = 0, ancestorSlugs = []) => {
-      if (!Array.isArray(nodes) || nodes.length === 0) {
-        return (
-          <li className="text-gray-500 italic py-2 px-3">
-            No categories available.
-          </li>
-        );
-      }
-  
-      return nodes.map((node) => {
-        if (!node || !node._id || !node.category_name || !node.category_slug) {
-          return (
-            <li
-              key={node?._id || Math.random()} 
-              className="text-red-500 italic py-2 px-3"
-            >
-              Invalid category data.
-            </li>
-          );
-        }
-  
-        const hasChildren =
-          Array.isArray(node.subcategories) && node.subcategories.length > 0;
-        const isOpen = !!openCategoryMenu[node._id];
-  
-        // Full hierarchical path for category
-        const fullPath = "/category/" + [...ancestorSlugs, node.category_slug].join("/");
-  
-        return (
-          <li key={node._id}>
-            <div
-              className={`flex justify-between items-center border-b ${
-                level === 0 ? "py-2 px-3" : `pl-${level * 4} pr-3 py-1 text-sm`
-              }`}
-            >
-              <Link
-                href={fullPath}
-                className="flex-1 truncate"
-                onClick={() => {
-                  if (hasChildren) {
-                    toggleCategory(node._id); 
-                  } else {
-                    closeMobileMenu();        
-                  }
-                }}
-              >
-                {node.category_name}
-              </Link>
-  
-              {hasChildren && (
-                <button
-                  type="button"
-                  onClick={() => toggleCategory(node._id)}
-                  aria-label={isOpen ? "Collapse" : "Expand"}
-                  className="ml-2 text-lg select-none"
-                >
-                  {isOpen ? "−" : "+"}
-                </button>
+            <div className="mt-1 flex items-center gap-2">
+              {price !== undefined && price !== null && (
+                <span className="text-[12px] font-medium text-gray-700 group-hover:text-blue-700">
+                  {formatPrice(price)}
+                </span>
               )}
             </div>
-  
-            {hasChildren && isOpen && (
-              <ul className="pl-4 space-y-1">
-                {renderCategories(node.subcategories, level + 1, [
-                  ...ancestorSlugs,
-                  node.category_slug,
-                ])}
-              </ul>
-            )}
-          </li>
-        );
-      });
-    };
-  
-    // Validate categories prop
-    if (!categories) {
-      return (
-        <div className="p-4 text-red-600 font-semibold">
-          Error: Categories data is missing.
+          </div>
         </div>
-      );
-    }
-  
-    if (!Array.isArray(categories)) {
-      return (
-        <div className="p-4 text-red-600 font-semibold">
-          Error: Categories data is not an array.
-        </div>
-      );
-    }
+      </Link>
+    );
+  }, [setSearchDropdownVisible]);
 
-    const closeMobileMenu = () => {
-      setIsMobileMenuOpen(false);
-    };
+  // ADD state (place with other useState declarations)
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
 
-    const getCategoryImage = (category) => {
-      return (
-        category?.navImage ||
-        category?.image ||
-        "/images/placeholder-category-image.jpg"
-      );
-    };
+  // RESET active suggestion when list changes or dropdown closes
+  useEffect(() => {
+    if (!searchDropdownVisible) setActiveSuggestion(-1);
+    else setActiveSuggestion(-1);
+  }, [suggestions, searchDropdownVisible]);
+
+  // SELECT helper
+  const selectSuggestion = useCallback((index) => {
+    if (index < 0 || index >= suggestions.length) return;
+    const item = suggestions[index];
+    const slug = item.slug || item._id || item.id;
+    if (!slug) return;
+    setSearchDropdownVisible(false);
+    router.push(`/product/${encodeURIComponent(slug)}`);
+  }, [suggestions, router]);
+
+  // DESKTOP key handling (keep existing handleKeyPress for mobile inputs)
+  const handleDesktopKeyDown = (e) => {
+    if (!suggestions.length) {
+      if (e.key === 'Enter') handleSearch();
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveSuggestion(p => (p + 1) % suggestions.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveSuggestion(p => (p - 1 + suggestions.length) % suggestions.length);
+    } else if (e.key === 'Enter') {
+      if (activeSuggestion >= 0) {
+        e.preventDefault();
+        selectSuggestion(activeSuggestion);
+      } else {
+        handleSearch();
+      }
+    } else if (e.key === 'Escape') {
+      setSearchDropdownVisible(false);
+    }
+  };
+
+  // DESKTOP specific renderer (keep existing renderSuggestionItem for mobile contexts)
+  function renderDesktopSuggestionItem(item, idx) {
+    const id = item._id || item.id || idx;
+    const price = item.special_price ?? item.price;
+    const isActive = idx === activeSuggestion;
+    const imageSrc =
+      item.image ||
+      (Array.isArray(item.images) && item.images.length > 0
+        ? `/uploads/products/${item.images[0]}`
+        : null);
 
     return (
-      <>
-        <header className="sticky top-0 z-50">
-           <style jsx global>{`
+      <div
+        key={id}
+        role="option"
+        aria-selected={isActive}
+        onMouseEnter={() => setActiveSuggestion(idx)}
+        onMouseDown={() => selectSuggestion(idx)}
+        className={`flex gap-4 px-4 py-3 cursor-pointer rounded-md transition-colors group bg-[#f2f2f2]`}
+      >
+        <div className="w-[50px] h-[50px] rounded-md overflow-hidden bg-white flex items-center justify-center border border-gray-200 shrink-0">
+          {imageSrc ? (
+            <img
+              src={imageSrc}
+              alt={item.name || 'Product'}
+              className="object-contain w-full h-full"
+              loading="lazy"
+            />
+          ) : (
+            <span className="text-[10px] text-gray-400">NO IMG</span>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div
+            className={`text-[14px] font-medium leading-snug line-clamp-2 ${isActive ? 'text-blue-700' : 'text-gray-800 group-hover:text-gray-900'
+              }`}
+          >
+            {item.name || 'Unnamed'}
+          </div>
+          {price && (
+            <div className="text-[14px] font-semibold text-blue-600 mt-1">
+              ₹{price.toLocaleString('en-IN')}
+            </div>
+          )}
+
+        </div>
+      </div>
+    );
+  };
+  // ADD: mobile accordion open-state + helpers
+  // FIX: replace wrong useState with real loader function + tracking map
+  const [loadedCategoryIds, setLoadedCategoryIds] = useState({});
+  const [openCategories, setOpenCategories] = useState({});
+
+  // NEW: unified nodes for mobile = categories + hoveredCategory.subcategories
+  const nodes = useMemo(() => {
+    const base = Array.isArray(categories) ? categories : [];
+    const extra = (hoveredCategory && Array.isArray(hoveredCategory.subcategories))
+      ? hoveredCategory.subcategories
+      : [];
+
+    if (!extra.length) return base;
+
+    const map = new Map();
+    base.forEach(n => { if (n && n._id) map.set(n._id, n); });
+    extra.forEach(n => { if (n && n._id && !map.has(n._id)) map.set(n._id, n); });
+    return Array.from(map.values());
+  }, [categories, hoveredCategory]);
+
+  // Ensures the subcategories for a category are present by rebuilding from cache/API if needed
+  const ensureSubcategories = useCallback(async (categoryId) => {
+    if (!categoryId) return;
+
+    // already ensured this id in this session
+    if (loadedCategoryIds[categoryId]) return;
+
+    // find node in current nested tree
+    const findNodeById = (list, id) => {
+      for (const n of list || []) {
+        if (n?._id === id) return n;
+        const hit = findNodeById(n?.subcategories || [], id);
+        if (hit) return hit;
+      }
+      return null;
+    };
+
+    const node = findNodeById(categories, categoryId);
+    if (node && Array.isArray(node.subcategories) && node.subcategories.length > 0) {
+      setLoadedCategoryIds((m) => ({ ...m, [categoryId]: true }));
+      return;
+    }
+
+    try {
+      // use raw cache if available, otherwise fetch
+      let raw = loadCache('categories_raw_cache')?.data;
+      if (!Array.isArray(raw) || raw.length === 0) {
+        const res = await fetch('/api/categories/get');
+        raw = await res.json();
+        saveCache('categories_raw_cache', raw);
+      }
+
+      // rebuild nested tree
+      const active = Array.isArray(raw) ? raw.filter((c) => c.status === 'Active') : [];
+      const map = {};
+      active.forEach((c) => { map[c._id] = { ...c, subcategories: [] }; });
+      active.forEach((c) => {
+        if (c.parentid && map[c.parentid]) map[c.parentid].subcategories.push(map[c._id]);
+      });
+
+      const nested = [];
+      active.forEach((c) => {
+        if (c.parentid === 'none' || !map[c.parentid]) nested.push(map[c._id]);
+      });
+
+      setCategories(nested);
+      saveCache('categories_nested_cache', nested);
+    } catch (e) {
+      console.error('ensureSubcategories failed:', e);
+    } finally {
+      setLoadedCategoryIds((m) => ({ ...m, [categoryId]: true }));
+    }
+  }, [categories, loadedCategoryIds]);
+
+  const toggleMobileCategory = useCallback(async (id) => {
+    await ensureSubcategories(id);
+    setOpenCategories((prev) => ({ ...prev, [id]: !prev[id] }));
+  }, [ensureSubcategories]);
+
+  // Add missing slug helpers used by renderCategoryLevel
+  const safeSlugify = (s, fallback = "") => {
+    const base = (s || "").toString().trim();
+    if (!base) return fallback;
+    return base.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  };
+  const getCategorySlug = (cat) => cat?.category_slug || cat?.slug || safeSlugify(cat?.category_name, cat?._id || "category");
+  // NEW: compute href for node based on level (parent/child)
+  const getNodeHref = (ancestorSlugs = [], nodeSlug) => {
+    // Join all ancestors + current node
+    const fullPath = [...ancestorSlugs, nodeSlug]
+      .map((slug) => encodeURIComponent(slug))
+      .join("/");
+
+    return `/category/${fullPath}`;
+  };
+  // Sidebar Menu
+  const toggleMenu = (menu) => {
+    setOpenMenu(openMenu === menu ? null : menu);
+  };
+
+  const toggleCategory = (id) => {
+    setOpenCategoryMenu((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const renderCategories = (nodes, level = 0, ancestorSlugs = []) => {
+    if (!Array.isArray(nodes) || nodes.length === 0) {
+      return (
+        <li className="text-gray-500 italic py-2 px-3">
+          No categories available.
+        </li>
+      );
+    }
+
+    return nodes.map((node) => {
+      if (!node || !node._id || !node.category_name || !node.category_slug) {
+        return (
+          <li
+            key={node?._id || Math.random()}
+            className="text-red-500 italic py-2 px-3"
+          >
+            Invalid category data.
+          </li>
+        );
+      }
+
+      const hasChildren =
+        Array.isArray(node.subcategories) && node.subcategories.length > 0;
+      const isOpen = !!openCategoryMenu[node._id];
+
+      // Full hierarchical path for category
+      const fullPath = "/category/" + [...ancestorSlugs, node.category_slug].join("/");
+
+      return (
+        <li key={node._id}>
+          <div
+            className={`flex justify-between items-center border-b ${level === 0 ? "py-2 px-3" : `pl-${level * 4} pr-3 py-1 text-sm`
+              }`}
+          >
+            <Link
+              href={fullPath}
+              className="flex-1 truncate"
+              onClick={() => {
+                if (hasChildren) {
+                  toggleCategory(node._id);
+                } else {
+                  closeMobileMenu();
+                }
+              }}
+            >
+              {node.category_name}
+            </Link>
+
+            {hasChildren && (
+              <button
+                type="button"
+                onClick={() => toggleCategory(node._id)}
+                aria-label={isOpen ? "Collapse" : "Expand"}
+                className="ml-2 text-lg select-none"
+              >
+                {isOpen ? "−" : "+"}
+              </button>
+            )}
+          </div>
+
+          {hasChildren && isOpen && (
+            <ul className="pl-4 space-y-1">
+              {renderCategories(node.subcategories, level + 1, [
+                ...ancestorSlugs,
+                node.category_slug,
+              ])}
+            </ul>
+          )}
+        </li>
+      );
+    });
+  };
+
+  // Validate categories prop
+  if (!categories) {
+    return (
+      <div className="p-4 text-red-600 font-semibold">
+        Error: Categories data is missing.
+      </div>
+    );
+  }
+
+  if (!Array.isArray(categories)) {
+    return (
+      <div className="p-4 text-red-600 font-semibold">
+        Error: Categories data is not an array.
+      </div>
+    );
+  }
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
+  const getCategoryImage = (category) => {
+    return (
+      category?.navImage ||
+      category?.image ||
+      "/images/placeholder-category-image.jpg"
+    );
+  };
+
+  return (
+    <>
+      <header className="sticky top-0 z-50">
+        <style jsx global>{`
              .inset-shadow-sm {
              box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
              }
@@ -1557,754 +1551,762 @@ const Header = () => {
               }
               }
             `}</style>
-          {/* <div className="bg-white shadow-md"> */}
-          {/* <div className="shadow-md bg-gradient-to-r from-[#2a7b9b] via-[#57c785] to-[#eddd53]"> */}
-          <div
-            className="shadow-md"
-            style={{
-              background:
-                "linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(87,199,133,1) 50%, rgba(237,221,83,1) 100%)",
-            }}
-          >
-              {/* Main Header */}
-               {/* NEW MOBILE TOP ROW (from reference) */}
-                {/* DESKTOP ROW (unchanged original content) */}
-                <div className="flex flex-wrap items-center justify-between py-1 px-4 max-w-7xl mx-auto space-x-6">
+        {/* <div className="bg-white shadow-md"> */}
+        {/* <div className="shadow-md bg-gradient-to-r from-[#2a7b9b] via-[#57c785] to-[#eddd53]"> */}
+        <div
+          className="shadow-md"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(87,199,133,1) 50%, rgba(237,221,83,1) 100%)",
+          }}
+        >
+          {/* Main Header */}
+          {/* NEW MOBILE TOP ROW (from reference) */}
+          {/* DESKTOP ROW (unchanged original content) */}
+          <div className="flex flex-wrap items-center justify-between py-1 px-4 max-w-7xl mx-auto space-x-6">
 
-                    {/* Logo (Hidden on mobile) */}
-                    <div className="flex flex-shrink-0 items-center space-x-4">
-                       {/*Toggle Menu */}
-                     <button onClick={toggleMobileMenu} aria-label="Menu" className="relative">
-                        {isMobileMenuOpen ? <FiX size={22} /> : <FaBars size={22} />}
-                      </button>
+            {/* Logo (Hidden on mobile) */}
+            <div className="flex flex-shrink-0 items-center space-x-4">
+              {/*Toggle Menu */}
+              <button onClick={toggleMobileMenu} aria-label="Menu" className="relative">
+                {isMobileMenuOpen ? <FiX size={22} /> : <FaBars size={22} />}
+              </button>
 
-                        <Link href="/" className="mx-auto">
-                            <img src="/user/cw-logo.jpg" alt="Logo" width={83} />
-                        </Link>
-                    </div>
-                     <div className="flex items-center text-gray-700">
-                       <div className="hidden lg:flex items-center space-x-6">
-                        <Link href="https://supportcycleworld.zohodesk.in/portal/en/signin"  className="text-md hover:text-[#c7ff3e]">Support</Link>
-                        <Link href="/track-orders" className="text-md hover:text-[#c7ff3e]">Track Order</Link>
-                       </div>
-                     </div>
+              <Link href="/" className="mx-auto">
+                <Image
+                  src="/user/cw-logo.jpg"
+                  alt="Logo"
+                  width={83}
+                  height={40}   // 👈 must provide height
+                  priority      // 👈 use this if logo is above-the-fold
+                />
 
-                    {/* Search Bar (Hidden on mobile - will show in mobile menu) */}
-                    <div className="hidden md:flex items-center flex-1 max-w-lg bg-[#F5F5F5] rounded-full inset-shadow-sm overflow-hidden" role="search">
-                        {/* input wrapper with absolute overlay */}
-                        <div className="relative flex-1">
-                          <input
-                            type="search"
-                            name="q"
-                            id="q"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            ref={searchContext === 'desktop' ? searchInputRef : null}
-                            onFocus={() => {
-                              setSearchContext('desktop');
-                              setSearchDropdownVisible(true);
+              </Link>
+            </div>
+            <div className="flex items-center text-gray-700">
+              <div className="hidden lg:flex items-center space-x-6">
+                <Link href="https://supportcycleworld.zohodesk.in/portal/en/signin" className="text-md hover:text-[#c7ff3e]">Support</Link>
+                <Link href="/track-orders" className="text-md hover:text-[#c7ff3e]">Track Order</Link>
+              </div>
+            </div>
 
-                              setTimeout(() => {
-                                if (searchInputRef.current) {
-                                  const rect = searchInputRef.current.getBoundingClientRect();
-                                  setSearchDropdownLeft(rect.left);
-                                  setSearchDropdownTop(rect.bottom + window.scrollY);
-                                  setSearchDropdownWidth(rect.width);
-                                }
-                              }, 0);
+            {/* Search Bar (Hidden on mobile - will show in mobile menu) */}
+            <div className="hidden md:flex items-center flex-1 max-w-lg bg-[#F5F5F5] rounded-full inset-shadow-sm overflow-hidden" role="search">
+              {/* input wrapper with absolute overlay */}
+              <div className="relative flex-1">
+                <input
+                  type="search"
+                  name="q"
+                  id="q"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  ref={searchContext === 'desktop' ? searchInputRef : null}
+                  onFocus={() => {
+                    setSearchContext('desktop');
+                    setSearchDropdownVisible(true);
 
-                              if (searchQuery.trim().length >= 2) fetchSuggestions(searchQuery);
-                            }}
-                            onKeyDown={handleDesktopKeyDown}  // correct usage
-                            className={`w-full px-3 py-3 text-sm text-gray-700 placeholder-gray-500 outline-none bg-transparent ${searchQuery.trim() ? 'has-value' : ''}`}
-                            placeholder=" "
-                            aria-label="Search query"
-                          />
-                          {/* typed-overlay: "Search for" light gray, typedPreview black */}
-                          {searchQuery.trim() === "" && (
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none z-10">
-                              <span className="text-gray-400 text-sm">Search for</span>
-                              <span className="text-black text-sm">"{typedPreview }"</span>
-                            </div>
-                          )}
-                        </div>
-                        {/* CHANGE: wire desktop .search-btn to immediate redirect handler */}
-                        <button
-                          type="button"
-                          className="search-btns p-3 border-l-2"
-                          onClick={handleSearchBtnClick}
-                          aria-label="Search"
-                        >
-                          <FaSearch />
+                    setTimeout(() => {
+                      if (searchInputRef.current) {
+                        const rect = searchInputRef.current.getBoundingClientRect();
+                        setSearchDropdownLeft(rect.left);
+                        setSearchDropdownTop(rect.bottom + window.scrollY);
+                        setSearchDropdownWidth(rect.width);
+                      }
+                    }, 0);
+
+                    if (searchQuery.trim().length >= 2) fetchSuggestions(searchQuery);
+                  }}
+                  onKeyDown={handleDesktopKeyDown}  // correct usage
+                  className={`w-full px-3 py-3 text-sm text-gray-700 placeholder-gray-500 outline-none bg-transparent ${searchQuery.trim() ? 'has-value' : ''}`}
+                  placeholder=" "
+                  aria-label="Search query"
+                />
+                {/* typed-overlay: "Search for" light gray, typedPreview black */}
+                {searchQuery.trim() === "" && (
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none z-10">
+                    <span className="text-gray-400 text-sm">Search for</span>
+                    <span className="text-black text-sm">"{typedPreview}"</span>
+                  </div>
+                )}
+              </div>
+              {/* CHANGE: wire desktop .search-btn to immediate redirect handler */}
+              <button
+                type="button"
+                className="search-btns p-3 border-l-2"
+                onClick={handleSearchBtnClick}
+                aria-label="Search"
+              >
+                <FaSearch />
+              </button>
+              <div className="shimmer" aria-hidden="true"></div>
+              {/* DROPDOWN MOVED OUTSIDE TO SUPPORT MOBILE */}
+              {/* (was here previously) */}
+            </div>
+
+            {/* Text and Icons Group */}
+            <div className="flex items-center text-gray-700">
+
+              {/* TEXT MENU (DESKTOP ONLY) A3CA43*/}
+              <div className="hidden lg:flex items-center space-x-6 pr-3">
+
+                <Link href="/location" className="text-md hover:text-[#c7ff3e]">Store</Link>
+                <Link href="/franchise" className="text-md hover:text-[#c7ff3e]">Franchise</Link>
+              </div>
+
+              {/* Icons Group */}
+              <div className="flex items-center space-x-6 pl-3">
+                {/* Wishlist */}
+                <Link href="/wishlist" className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#333333] hover:bg-[#A3CA43] transition ">
+                  <FaHeart size={18} className="text-white m-1" />
+                  {/* {wishlistCount > 0 && ( */}
+                  <span className="absolute -top-2 -right-1 text-[10px] bg-[#A3CA43] text-white rounded-full w-4 h-4 flex items-center justify-center">
+                    {wishlistCount}
+                  </span>
+                  {/* )} */}
+                  {/* <span className="ml-1 text-xs sm:text-sm text-customBlue hidden lg:inline">Wishlist</span> */}
+                </Link>
+
+                {/* Cart */}
+                <Link href="/cart" className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#333333] hover:bg-[#A3CA43] transition">
+                  <FaShoppingCart size={18} className="text-white" />
+                  <span className="absolute -top-2 -right-2 text-[10px] bg-[#A3CA43] text-white rounded-full w-4 h-4 flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                  {/* <span className="ml-1 text-xs sm:text-sm text-customBlue hidden lg:inline">Cart</span> */}
+                </Link>
+
+                {/* User Account */}
+                <div className="relative" >
+                  {isLoggedIn ? (
+                    <>
+                      <div className="flex items-center justify-center">
+                        <button onClick={() => setDropdownOpen(!dropdownOpen)} className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#333333] hover:bg-[#A3CA43] transition">
+                          <FaUser size={18} className="text-white" />
                         </button>
-                        <div className="shimmer" aria-hidden="true"></div>
-                        {/* DROPDOWN MOVED OUTSIDE TO SUPPORT MOBILE */ }
-                        {/* (was here previously) */}                   
-                    </div>
+                        <span className="ml-1 font-bold text-xs sm:text-sm text-[#333333] hidden lg:inline pl-1 max-w-[80px] truncate">
+                          Hi, {(userData?.name || userData?.username || "User").slice(0, 6)}
+                        </span>
 
-                    {/* Text and Icons Group */}
-                    <div className="flex items-center text-gray-700">
-                      
-                       {/* TEXT MENU (DESKTOP ONLY) A3CA43*/}
-                      <div className="hidden lg:flex items-center space-x-6 pr-3">
-                        
-                        <Link href="/location" className="text-md hover:text-[#c7ff3e]">Store</Link>
-                        <Link href="/franchise" className="text-md hover:text-[#c7ff3e]">Franchise</Link>
                       </div>
-
-                      {/* Icons Group */}
-                      <div className="flex items-center space-x-6 pl-3">
-                          {/* Wishlist */}
-                          <Link href="/wishlist" className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#333333] hover:bg-[#A3CA43] transition ">
-                              <FaHeart size={18} className="text-white m-1" />
-                              {/* {wishlistCount > 0 && ( */}
-                                  <span className="absolute -top-2 -right-1 text-[10px] bg-[#A3CA43] text-white rounded-full w-4 h-4 flex items-center justify-center">
-                                      {wishlistCount}
+                      {dropdownOpen && (
+                        <div ref={dropdownRef} className="absolute right-0 mt-3 w-48 sm:w-56 bg-white rounded-xl shadow-xl z-50 transition-all">
+                          <div className="py-2 px-2">
+                            <div className="block px-4 py-2 mb-2 bg-gray-50 rounded-md">
+                              <p className="text-xs text-gray-500">Signed in as</p>
+                              <p className="text-sm font-semibold text-[#A3CA43] truncate">
+                                {userData?.name || userData?.username || "User"}
+                              </p>
+                            </div>
+                            {isAdmin && (
+                              <>
+                                <Link href="/admin/dashboard" className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm text-gray-700 hover:bg-[#a3ca4363] transition-colors">
+                                  <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-[#333333] text-white">
+                                    <FaUserShield className="w-3 h-3 sm:w-4 sm:h-4" />
                                   </span>
-                              {/* )} */}
-                              {/* <span className="ml-1 text-xs sm:text-sm text-customBlue hidden lg:inline">Wishlist</span> */}
-                          </Link>
-
-                          {/* Cart */}
-                          <Link href="/cart" className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#333333] hover:bg-[#A3CA43] transition">
-                              <FaShoppingCart size={18} className="text-white" />
-                              <span className="absolute -top-2 -right-2 text-[10px] bg-[#A3CA43] text-white rounded-full w-4 h-4 flex items-center justify-center">
-                                  {cartCount}
-                              </span>
-                              {/* <span className="ml-1 text-xs sm:text-sm text-customBlue hidden lg:inline">Cart</span> */}
-                          </Link>
-
-                          {/* User Account */}
-                          <div className="relative" >
-                              {isLoggedIn ? (
-                                  <>
-                                    <div className="flex items-center justify-center">
-                                      <button onClick={() => setDropdownOpen(!dropdownOpen)} className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#333333] hover:bg-[#A3CA43] transition">
-                                          <FaUser size={18} className="text-white" />
-                                      </button>
-                                     <span className="ml-1 font-bold text-xs sm:text-sm text-[#333333] hidden lg:inline pl-1 max-w-[80px] truncate">
-                                      Hi, {(userData?.name || userData?.username || "User").slice(0, 6)}
-                                    </span>
-
-                                    </div>
-                                      {dropdownOpen && (
-                                          <div ref={dropdownRef} className="absolute right-0 mt-3 w-48 sm:w-56 bg-white rounded-xl shadow-xl z-50 transition-all">
-                                              <div className="py-2 px-2">
-                                                <div className="block px-4 py-2 mb-2 bg-gray-50 rounded-md">
-                                                  <p className="text-xs text-gray-500">Signed in as</p>
-                                                  <p className="text-sm font-semibold text-[#A3CA43] truncate">
-                                                    {userData?.name || userData?.username || "User"}
-                                                  </p>
-                                                </div>
-                                                  {isAdmin && (
-                                                      <>
-                                                          <Link href="/admin/dashboard" className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm text-gray-700 hover:bg-[#a3ca4363] transition-colors">
-                                                              <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-[#333333] text-white">
-                                                                  <FaUserShield className="w-3 h-3 sm:w-4 sm:h-4" />
-                                                              </span>
-                                                              Admin Panel
-                                                          </Link>
-                                                      </>
-                                                  )}
-                                                  <Link href="/orders" className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm text-gray-700 hover:bg-[#a3ca4363] transition-colors">
-                                                      <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-[#333333] text-white">
-                                                          <FaShoppingBag className="w-3 h-3 sm:w-4 sm:h-4" />
-                                                      </span>My Orders</Link>
-                                                  <hr className="my-2 border-gray-200" />
-                                                  <button onClick={handleLogout} className="flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm text-gray-700 hover:bg-red-50 transition-colors">
-                                                      <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-[#333333] text-white">
-                                                          <IoLogOut className="w-3 h-3 sm:w-4 sm:h-4" />
-                                                      </span>Logout
-                                                  </button>
-                                              </div>
-                                          </div>
-                                      )}
-                                  </>
-                              ) : (
-                                  <button onClick={() => setShowAuthModal(true)} className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#333333] hover:bg-[#A3CA43] transition">
-                                      <FaUser size={18} className="text-white" />
-                                      {/* <span className="ml-1 font-bold text-xs sm:text-sm text-customBlue hidden lg:inline">Sign In</span> */}
-                                  </button>
-                              )}
+                                  Admin Panel
+                                </Link>
+                              </>
+                            )}
+                            <Link href="/orders" className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm text-gray-700 hover:bg-[#a3ca4363] transition-colors">
+                              <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-[#333333] text-white">
+                                <FaShoppingBag className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </span>My Orders</Link>
+                            <hr className="my-2 border-gray-200" />
+                            <button onClick={handleLogout} className="flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm text-gray-700 hover:bg-red-50 transition-colors">
+                              <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-[#333333] text-white">
+                                <IoLogOut className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </span>Logout
+                            </button>
                           </div>
-                      </div>
-                    </div>
-                </div> 
-                {/* ================= MOBILE MENU (WhatsApp-style) ================= */}
-                <div
-                  className={`fixed inset-0 z-50 bg-black/40
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <button onClick={() => setShowAuthModal(true)} className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#333333] hover:bg-[#A3CA43] transition">
+                      <FaUser size={18} className="text-white" />
+                      {/* <span className="ml-1 font-bold text-xs sm:text-sm text-customBlue hidden lg:inline">Sign In</span> */}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* ================= MOBILE MENU (WhatsApp-style) ================= */}
+          <div
+            className={`fixed inset-0 z-50 bg-black/40
                     transition-opacity duration-300
                     ${isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
                   `}
-                  onClick={closeMobileMenu}
-                >
-                  {/* Drawer */}
-                  <div
-                    className={`fixed top-0 left-0 h-full w-[300px] bg-white p-5
+            onClick={closeMobileMenu}
+          >
+            {/* Drawer */}
+            <div
+              className={`fixed top-0 left-0 h-full w-[300px] bg-white p-5
                       transform transition-[transform] duration-400
                       ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
                     `}
-                    style={{
-                      transitionTimingFunction: "cubic-bezier(0.4, 0.0, 0.2, 1)", // WhatsApp easing
-                      willChange: "transform",
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
+              style={{
+                transitionTimingFunction: "cubic-bezier(0.4, 0.0, 0.2, 1)", // WhatsApp easing
+                willChange: "transform",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
 
-                    {/* ===== HEADER ===== */}
-                    <div className="flex items-center justify-between mb-3 sticky top-0 bg-white pb-2 border-b">
-                      <Link href="/index" onClick={closeMobileMenu}>
-                        <img src="/user/cw-logo.jpg" alt="Logo" width={80} />
-                      </Link>
+              {/* ===== HEADER ===== */}
+              <div className="flex items-center justify-between mb-3 sticky top-0 bg-white pb-2 border-b">
+                <Link href="/index" onClick={closeMobileMenu}>
+                  <img src="/user/cw-logo.jpg" alt="Logo" width={80} />
+                </Link>
 
-                      <button
-                        onClick={closeMobileMenu}
-                        aria-label="Close menu"
-                        className="p-2 rounded-full hover:bg-[#a3ca4363]"
-                      >
-                        <FiX size={22} />
-                      </button>
-                    </div>
+                <button
+                  onClick={closeMobileMenu}
+                  aria-label="Close menu"
+                  className="p-2 rounded-full hover:bg-[#a3ca4363]"
+                >
+                  <FiX size={22} />
+                </button>
+              </div>
 
-                    {/* ===== LOGIN INFO ===== */}
-                    <div className="border-b pb-3">
-                      <p className="text-sm text-gray-500">
-                        Hi{isLoggedIn ? "," : ""}
-                      </p>
+              {/* ===== LOGIN INFO ===== */}
+              <div className="border-b pb-3">
+                <p className="text-sm text-gray-500">
+                  Hi{isLoggedIn ? "," : ""}
+                </p>
 
-                      {isLoggedIn ? (
-                        <p className="font-semibold truncate">
-                          {userData?.name || userData?.username || "User"}
-                        </p>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setShowAuthModal(true);
-                            closeMobileMenu();
-                          }}
-                          className="font-semibold hover:text-[#A3CA43]"
-                        >
-                          Login / Register
-                        </button>
-                      )}
-                    </div>
-
-                    {/* ===== CONTENT ===== */}
-                    <div className="overflow-y-auto max-h-[calc(100vh-120px)] scrollbar-hide">
-
-                      {/* Categories */}
-                      <ul className="space-y-4 border-b">
-                        <li>
-                          <button
-                            onClick={() => toggleMenu("bike")}
-                            className="flex justify-between w-full items-center py-2"
-                          >
-                            <span>Bicycle categories</span>
-                            <span>{openMenu === "bike" ? "−" : "+"}</span>
-                          </button>
-
-                          <div
-                            className={`transition-all duration-300 scrollbar-hide ${
-                              openMenu === "bike"
-                                ? "max-h-64 overflow-y-auto bg-[#f5f5f5] rounded-md"
-                                : "max-h-0 overflow-hidden"
-                            }`}
-                          >
-                            <ul className="p-2 space-y-1 my-2">
-                              {renderCategories(categories, 0, [])}
-                            </ul>
-                          </div>
-                        </li>
-                      </ul>
-
-                       {/*Medium Device Page Links */}
-                        <ul className="lg:hidden space-y-2">
-                            <li className="border-b">
-                            <Link
-                              href="https://supportcycleworld.zohodesk.in/portal/en/signin" onClick={closeMobileMenu}
-                              className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
-                            >
-                              Support
-                            </Link>
-                          </li>
-                          <li className="border-b">
-                            <Link
-                              href="/track-orders" onClick={closeMobileMenu}
-                              className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
-                            >
-                              Track Order
-                            </Link>
-                          </li>
-                          <li className="border-b">
-                            <Link
-                              href="/location" onClick={closeMobileMenu}
-                              className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
-                            >
-                              Stores
-                            </Link>
-                          </li>
-                          <li className="border-b">
-                            <Link
-                              href="/franchise" onClick={closeMobileMenu}
-                              className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
-                            >
-                              Franschise
-                            </Link>
-                          </li>
-                        </ul>
-
-                      {/* Links */}
-                      <ul className="space-y-2 mt-3">
-                        <li className="border-b">
-                          <Link href="/aboutus" onClick={closeMobileMenu} className="block py-1 hover:text-[#A3CA43]">
-                            About Us
-                          </Link>
-                        </li>
-                        <li className="border-b">
-                          <Link href="/contact" onClick={closeMobileMenu} className="block py-1 hover:text-[#A3CA43]">
-                            Contact
-                          </Link>
-                        </li>
-                        <li className="border-b">
-                          <Link href="/blog" onClick={closeMobileMenu} className="block py-1 hover:text-[#A3CA43]">
-                            Blogs
-                          </Link>
-                        </li>
-                        <li className="border-b">
-                          <Link href="/faq" onClick={closeMobileMenu} className="block py-1 hover:text-[#A3CA43]">
-                            FAQ
-                          </Link>
-                        </li>
-                      </ul>
-
-                      {/* Logout */}
-                      {isLoggedIn && (
-                        <div className="text-center border rounded-full p-2 bg-red-100 mt-3 cursor-pointer">
-                          <button
-                            onClick={() => {
-                              handleLogout();
-                              closeMobileMenu();
-                            }}
-                            className="text-sm font-semibold text-red-600"
-                          >
-                            Logout
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                {/* Auth Modal */}
-                {showAuthModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-lg p-8 w-96 max-w-full relative">
-                            <button onClick={() => { setShowAuthModal(false); setFormError(''); setError(''); setErrors({ login: {}, register: {} }); setLoginData({ email: "", password: "" }); setRegisterData({ name: "", email: "", mobile: "", password: "" }); }} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl">
-                                &times;
-                            </button>
-                            <div className="flex gap-4 mb-6 border-b">
-                                <button className={`pb-2 px-1 ${activeTab === 'login' ? ' border-b-2 border-[#A3CA43] text-[#333333]' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setActiveTab('login')}>
-                                    Login
-                                </button>
-                                <button className={`pb-2 px-1 ${activeTab === 'register' ? 'border-b-2 border-[#A3CA43] text-[#333333]' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setActiveTab('register')}>
-                                    Register
-                                </button>
-                            </div>
-                            <form onSubmit={handleAuthSubmit} className="space-y-4">
-                              {/* Register Name Field */}
-                              {activeTab === "register" && (
-                                <>
-                                  <input
-                                    type="text"
-                                    placeholder="Name"
-                                    value={registerData.name}
-                                    onChange={(e) =>
-                                      setRegisterData({ ...registerData, name: e.target.value })
-                                    }
-                                    className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                      errors?.register?.name ? "border-red-500" : ""
-                                    }`}
-                                  />
-                                  {errors?.register?.name && (
-                                    <p className="text-red-500 text-sm">{errors.register.name}</p>
-                                  )}
-                                </>
-                              )}
-
-                              {/* Email Field */}
-                              <input
-                                type="text"
-                                placeholder="Email"
-                                value={
-                                  activeTab === "login" ? loginData.email : registerData.email
-                                }
-                                onChange={(e) =>
-                                  activeTab === "login"
-                                    ? setLoginData({ ...loginData, email: e.target.value })
-                                    : setRegisterData({ ...registerData, email: e.target.value })
-                                }
-                                className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                  errors?.[activeTab]?.email ? "border-red-500" : ""
-                                }`}
-                              />
-                              {errors?.[activeTab]?.email && (
-                                <p className="text-red-500 text-sm">{errors[activeTab].email}</p>
-                              )}
-
-                              {/* Register Mobile Field */}
-                              {activeTab === "register" && (
-                                <>
-                                  <input
-                                    type="tel"
-                                    placeholder="Mobile"
-                                    value={registerData.mobile}
-                                    onChange={(e) =>
-                                      setRegisterData({ ...registerData, mobile: e.target.value })
-                                    }
-                                    className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                      errors?.register?.mobile ? "border-red-500" : ""
-                                    }`}
-                                  />
-                                  {errors?.register?.mobile && (
-                                    <p className="text-red-500 text-sm">{errors.register.mobile}</p>
-                                  )}
-                                </>
-                              )}
-
-                              {/* Password Field */}
-                              <input
-                                type="password"
-                                placeholder="Password"
-                                value={
-                                  activeTab === "login" ? loginData.password : registerData.password
-                                }
-                                onChange={(e) =>
-                                  activeTab === "login"
-                                    ? setLoginData({ ...loginData, password: e.target.value })
-                                    : setRegisterData({ ...registerData, password: e.target.value })
-                                }
-                                className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                  errors?.[activeTab]?.password ? "border-red-500" : ""
-                                }`}
-                                minLength={6}
-                              />
-                              {errors?.[activeTab]?.password && (
-                                <p className="text-red-500 text-sm">{errors[activeTab].password}</p>
-                              )}
-
-                              {/* Global Form Error */}
-                              {(formError || error) && (
-                                <div className="text-red-500 text-sm">{formError || error}</div>
-                              )}
-
-                              {/* Submit Button */}
-                              <button
-                                type="submit"
-                                disabled={loadingAuth}
-                                className="w-full bg-[#A3CA43] text-[#333333] hover:text-[#A3CA43] py-2 px-4 rounded hover:bg-[#333333] disabled:bg-gray-400 transition-colors duration-200"
-                              >
-                                {loadingAuth
-                                  ? "Processing..."
-                                  : activeTab === "login"
-                                  ? "Login"
-                                  : "Register"}
-                              </button>
-
-                              {/* Forgot Password (only in login) */}
-                              {activeTab === "login" && (
-                                <div className="text-center mt-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setShowAuthModal(false);
-                                      setShowForgotPasswordModal(true);
-                                      setForgotStep(1);
-                                      setForgotPasswordEmail(formData?.email || "");
-                                      setForgotOTP("");
-                                      setNewPassword("");
-                                      setConfirmPassword("");
-                                      setForgotPasswordMessage("");
-                                      setForgotPasswordError("");
-                                    }}
-                                    className="text-sm text-[#a3ca43] hover:underline"
-                                  >
-                                    Forgot Password?
-                                  </button>
-                                </div>
-                              )}
-                            </form>
-                        </div>
-                    </div>
-                )}
-                {showForgotPasswordModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-lg p-6 w-96 max-w-full relative">
-                            <button onClick={() => setShowForgotPasswordModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-                            {/* STEP 1: Enter Email */}
-                            {forgotStep === 1 && (
-                                <>
-                                    <h2 className="text-lg font-semibold mb-4">Reset Password</h2>
-                                    <form onSubmit={async (e) => {
-                                        e.preventDefault(); setForgotPasswordError(''); setForgotPasswordMessage(''); setForgotPasswordLoading(true);
-                                        try {
-                                            const res = await fetch('/api/auth/request-reset', {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({ email: forgotPasswordEmail }),
-                                            });
-                                            const data = await res.json();
-                                            if (!res.ok) throw new Error(data.message || 'Error sending OTP');
-                                            setForgotPasswordMessage('OTP sent to your email.');
-                                            setForgotStep(2);
-                                        } catch (err) {
-                                            setForgotPasswordError(err.message);
-                                        } finally {
-                                            setForgotPasswordLoading(false);
-                                        }
-                                    }} className="space-y-4">
-                                        <input
-                                            type="email"
-                                            placeholder="Enter your email"
-                                            value={forgotPasswordEmail}
-                                            onChange={(e) => setForgotPasswordEmail(e.target.value)}
-                                            required
-                                            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
-                                        {forgotPasswordError && (
-                                            <p className="text-red-500 text-sm">{forgotPasswordError}</p>
-                                        )}
-                                        {forgotPasswordMessage && (
-                                            <p className="text-green-500 text-sm">{forgotPasswordMessage}</p>
-                                        )}
-                                        <button
-                                            type="submit"
-                                            disabled={forgotPasswordLoading}
-                                            className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
-                                        >
-                                            {forgotPasswordLoading ? 'Sending...' : 'Send OTP'}
-                                        </button>
-                                    </form>
-                                </>
-                            )}
-
-                            {/* STEP 2: Enter OTP */}
-                            {forgotStep === 2 && (
-                                <>
-                                    <h2 className="text-lg font-semibold mb-4">Enter OTP</h2>
-                                    <p className="text-sm mb-2">Email: <strong>{forgotPasswordEmail}</strong></p>
-                                    <form onSubmit={async (e) => {
-                                        e.preventDefault(); setForgotPasswordError(''); setForgotPasswordMessage('');
-                                        if (!forgotOTP.trim()) {
-                                            setForgotPasswordError('Please enter OTP.');
-                                            return;
-                                        }
-                                        setForgotPasswordLoading(true);
-                                        try {
-                                            const res = await fetch('/api/auth/verify-otp', {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({
-                                                    email: forgotPasswordEmail,
-                                                    otp: forgotOTP,
-                                                }),
-                                            });
-                                            const data = await res.json();
-                                            if (!res.ok) throw new Error(data.message || 'Invalid OTP');
-                                            setForgotPasswordMessage('OTP verified. Please set your new password.');
-                                            setForgotStep(3);
-                                        } catch (err) {
-                                            setForgotPasswordError(err.message);
-                                        } finally {
-                                            setForgotPasswordLoading(false);
-                                        }
-                                    }} className="space-y-4">
-                                        <input type="text" placeholder="Enter OTP" value={forgotOTP} onChange={(e) => setForgotOTP(e.target.value)} required className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                                        {forgotPasswordError && (
-                                            <p className="text-red-500 text-sm">{forgotPasswordError}</p>
-                                        )}
-                                        {forgotPasswordMessage && (
-                                            <p className="text-green-500 text-sm">{forgotPasswordMessage}</p>
-                                        )}
-                                        <button type="submit" disabled={forgotPasswordLoading} className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 disabled:bg-gray-400">
-                                            {forgotPasswordLoading ? 'Validating...' : 'Validate OTP'}
-                                        </button>
-                                    </form>
-                                </>
-                            )}
-                            {/* STEP 3: New Password */}
-                            {forgotStep === 3 && (
-                                <>
-                                    <h2 className="text-lg font-semibold mb-4">Set New Password</h2>
-                                    <p className="text-sm mb-2">Email: <strong>{forgotPasswordEmail}</strong></p>
-                                    <form onSubmit={async (e) => {
-                                        e.preventDefault();
-                                        setForgotPasswordError('');
-                                        setForgotPasswordMessage('');
-                                        if (newPassword !== confirmPassword) {
-                                            setForgotPasswordError('Passwords do not match.');
-                                            return;
-                                        }
-                                        setForgotPasswordLoading(true);
-                                        try {
-                                              const res = await fetch('/api/auth/reset-password', {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({
-                                                    email: forgotPasswordEmail,
-                                                    otp: forgotOTP,
-                                                    newPassword,
-                                                }),
-                                            });
-
-                                            const data = await res.json();
-                                            if (!res.ok) throw new Error(data.message || 'Error resetting password');
-
-                                            setForgotPasswordMessage('Password reset successful.');
-                                            setTimeout(() => {
-                                                setShowForgotPasswordModal(false);
-                                                setShowAuthModal(true); // reopen login
-                                            }, 1500);
-                                        } catch (err) {
-                                            setForgotPasswordError(err.message);
-                                        } finally {
-                                            setForgotPasswordLoading(false);
-                                        }
-                                    }} className="space-y-4">
-                                        <input type="password" placeholder="New Password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6} className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                                        <input type="password" placeholder="Confirm New Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                                        {forgotPasswordError && (
-                                            <p className="text-red-500 text-sm">{forgotPasswordError}</p>
-                                        )}
-                                        {forgotPasswordMessage && (
-                                            <p className="text-green-500 text-sm">{forgotPasswordMessage}</p>
-                                        )}
-                                        <button
-                                            type="submit"
-                                            disabled={forgotPasswordLoading}
-                                            className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
-                                        >
-                                            {forgotPasswordLoading ? 'Resetting...' : 'Reset Password'}
-                                        </button>
-                                    </form>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                )}
-          </div>
-          
-        </header>
-         <div className={`border-t-2 border-t-[#333333] py-2 shadow-md ${categories && categories.length > 0 ? "block" : "block md:hidden"}`}>
-          <div className="block md:hidden px-4">
-             {/* NEW MOBILE SEARCH BAR */}
-                <div className="flex items-center bg-[#f5f5f5] h-12 rounded-full border border-gray-300 shadow-sm overflow-hidden w-full transition-all duration-150 focus-within:border-[#a3ca43] focus-within:shadow-[0_0_0_2px_rgba(36,83,211,0.15)] flex-nowrap inset-shadow-sm">
-                  
-
-                  <div className="flex-1 relative h-full flex items-center">
-                    <input
-                      type="search"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyDown={handleKeyPress}
-                      placeholder=" "
-                      className="w-full h-full text-sm outline-none bg-transparent px-1 focus:text-[#111] placeholder-transparent"
-                      ref={searchContext === 'mobileTop' ? searchInputRef : null}
-                      onFocus={() => {
-                        setSearchContext('mobileTop');
-                        setSearchDropdownVisible(true);
-
-                        setTimeout(() => {
-                          if (searchInputRef.current) {
-                            const rect = searchInputRef.current.getBoundingClientRect();
-                            setSearchDropdownLeft(rect.left);
-                            setSearchDropdownTop(rect.bottom + window.scrollY);
-                            setSearchDropdownWidth(rect.width);
-                          }
-                        }, 0);
-
-                        if (searchQuery.trim().length >= 1) fetchSuggestions(searchQuery);
-                      }}
-                    />
-                    {searchQuery.trim() === "" && (
-                      <div className="absolute left-1 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[11px] pointer-events-none z-10">
-                        <span className="text-gray-400">Search for</span>
-                        <span className="text-gray-900">"{typedPreview }"</span>
-                      </div>
-                    )}
-                  </div>
-              
+                {isLoggedIn ? (
+                  <p className="font-semibold truncate">
+                    {userData?.name || userData?.username || "User"}
+                  </p>
+                ) : (
                   <button
-                    onClick={handleSearch}
-                    aria-label="Search"
-                    className="h-full text-white flex items-center justify-center active:scale-[0.97] transition p-2 border-l-2"
+                    onClick={() => {
+                      setShowAuthModal(true);
+                      closeMobileMenu();
+                    }}
+                    className="font-semibold hover:text-[#A3CA43]"
                   >
-                    <FaSearch size={16} className="text-[#333333]"/>
+                    Login / Register
+                  </button>
+                )}
+              </div>
+
+              {/* ===== CONTENT ===== */}
+              <div className="overflow-y-auto max-h-[calc(100vh-120px)] scrollbar-hide">
+
+                {/* Categories */}
+                <ul className="space-y-4 border-b">
+                  <li>
+                    <button
+                      onClick={() => toggleMenu("bike")}
+                      className="flex justify-between w-full items-center py-2"
+                    >
+                      <span>Bicycle categories</span>
+                      <span>{openMenu === "bike" ? "−" : "+"}</span>
+                    </button>
+
+                    <div
+                      className={`transition-all duration-300 scrollbar-hide ${openMenu === "bike"
+                        ? "max-h-64 overflow-y-auto bg-[#f5f5f5] rounded-md"
+                        : "max-h-0 overflow-hidden"
+                        }`}
+                    >
+                      <ul className="p-2 space-y-1 my-2">
+                        {renderCategories(categories, 0, [])}
+                      </ul>
+                    </div>
+                  </li>
+                </ul>
+
+                {/*Medium Device Page Links */}
+                <ul className="lg:hidden space-y-2">
+                  <li className="border-b">
+                    <Link
+                      href="https://supportcycleworld.zohodesk.in/portal/en/signin" onClick={closeMobileMenu}
+                      className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
+                    >
+                      Support
+                    </Link>
+                  </li>
+                  <li className="border-b">
+                    <Link
+                      href="/track-orders" onClick={closeMobileMenu}
+                      className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
+                    >
+                      Track Order
+                    </Link>
+                  </li>
+                  <li className="border-b">
+                    <Link
+                      href="/location" onClick={closeMobileMenu}
+                      className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
+                    >
+                      Stores
+                    </Link>
+                  </li>
+                  <li className="border-b">
+                    <Link
+                      href="/franchise" onClick={closeMobileMenu}
+                      className="block py-1 border-b border-transparent hover:text-[#A3CA43] transition"
+                    >
+                      Franschise
+                    </Link>
+                  </li>
+                </ul>
+
+                {/* Links */}
+                <ul className="space-y-2 mt-3">
+                  <li className="border-b">
+                    <Link href="/aboutus" onClick={closeMobileMenu} className="block py-1 hover:text-[#A3CA43]">
+                      About Us
+                    </Link>
+                  </li>
+                  <li className="border-b">
+                    <Link href="/contact" onClick={closeMobileMenu} className="block py-1 hover:text-[#A3CA43]">
+                      Contact
+                    </Link>
+                  </li>
+                  <li className="border-b">
+                    <Link href="/blog" onClick={closeMobileMenu} className="block py-1 hover:text-[#A3CA43]">
+                      Blogs
+                    </Link>
+                  </li>
+                  <li className="border-b">
+                    <Link href="/faq" onClick={closeMobileMenu} className="block py-1 hover:text-[#A3CA43]">
+                      FAQ
+                    </Link>
+                  </li>
+                </ul>
+
+                {/* Logout */}
+                {isLoggedIn && (
+                  <div className="text-center border rounded-full p-2 bg-red-100 mt-3 cursor-pointer">
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        closeMobileMenu();
+                      }}
+                      className="text-sm font-semibold text-red-600"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          {/* Auth Modal */}
+          {showAuthModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-8 w-96 max-w-full relative">
+                <button onClick={() => { setShowAuthModal(false); setFormError(''); setError(''); setErrors({ login: {}, register: {} }); setLoginData({ email: "", password: "" }); setRegisterData({ name: "", email: "", mobile: "", password: "" }); }} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl">
+                  &times;
+                </button>
+                <div className="flex gap-4 mb-6 border-b">
+                  <button className={`pb-2 px-1 ${activeTab === 'login' ? ' border-b-2 border-[#A3CA43] text-[#333333]' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setActiveTab('login')}>
+                    Login
+                  </button>
+                  <button className={`pb-2 px-1 ${activeTab === 'register' ? 'border-b-2 border-[#A3CA43] text-[#333333]' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setActiveTab('register')}>
+                    Register
                   </button>
                 </div>
-                {/* MOBILE TOP SUGGESTIONS (outside menu) */}
-                {searchDropdownVisible && searchContext === 'mobileTop' && !isMobileMenuOpen && (
-                  <div ref={searchDropdownRef} className="sm:hidden absolute z-[70] left-0 right-0 px-3 mt-1">
-                    <div className="bg-white rounded-lg shadow-lg border max-h-72 overflow-y-auto">
-                      <div className="px-3 pt-2 pb-1 text-[11px] font-semibold tracking-wide text-gray-500">
-                        PRODUCTS
-                      </div>
-                      <div className="px-3 pb-2">
-                        {suggestions.length > 0
-                          ? suggestions.map(renderSuggestionItem)
-                          : (searchQuery.trim() && (
-                              <div className="py-10 flex flex-col items-center justify-center text-gray-500">
-                                {/* Icon */}
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="w-12 h-12 mb-3 text-gray-400"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                  strokeWidth={1.5}
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M9 13h6m-3-3v6m9-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                  />
-                                </svg>
-
-                                {/* Message */}
-                                <p className="text-sm font-medium">No products found</p>
-                                <p className="text-xs text-gray-400 mt-1">Try a different keyword</p>
-                              </div>
-
-                            ))
+                <form onSubmit={handleAuthSubmit} className="space-y-4">
+                  {/* Register Name Field */}
+                  {activeTab === "register" && (
+                    <>
+                      <input
+                        type="text"
+                        placeholder="Name"
+                        value={registerData.name}
+                        onChange={(e) =>
+                          setRegisterData({ ...registerData, name: e.target.value })
                         }
-                      </div>
+                        className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors?.register?.name ? "border-red-500" : ""
+                          }`}
+                      />
+                      {errors?.register?.name && (
+                        <p className="text-red-500 text-sm">{errors.register.name}</p>
+                      )}
+                    </>
+                  )}
+
+                  {/* Email Field */}
+                  <input
+                    type="text"
+                    placeholder="Email"
+                    value={
+                      activeTab === "login" ? loginData.email : registerData.email
+                    }
+                    onChange={(e) =>
+                      activeTab === "login"
+                        ? setLoginData({ ...loginData, email: e.target.value })
+                        : setRegisterData({ ...registerData, email: e.target.value })
+                    }
+                    className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors?.[activeTab]?.email ? "border-red-500" : ""
+                      }`}
+                  />
+                  {errors?.[activeTab]?.email && (
+                    <p className="text-red-500 text-sm">{errors[activeTab].email}</p>
+                  )}
+
+                  {/* Register Mobile Field */}
+                  {activeTab === "register" && (
+                    <>
+                      <input
+                        type="tel"
+                        placeholder="Mobile"
+                        value={registerData.mobile}
+                        onChange={(e) =>
+                          setRegisterData({ ...registerData, mobile: e.target.value })
+                        }
+                        className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors?.register?.mobile ? "border-red-500" : ""
+                          }`}
+                      />
+                      {errors?.register?.mobile && (
+                        <p className="text-red-500 text-sm">{errors.register.mobile}</p>
+                      )}
+                    </>
+                  )}
+
+                  {/* Password Field */}
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    value={
+                      activeTab === "login" ? loginData.password : registerData.password
+                    }
+                    onChange={(e) =>
+                      activeTab === "login"
+                        ? setLoginData({ ...loginData, password: e.target.value })
+                        : setRegisterData({ ...registerData, password: e.target.value })
+                    }
+                    className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors?.[activeTab]?.password ? "border-red-500" : ""
+                      }`}
+                    minLength={6}
+                  />
+                  {errors?.[activeTab]?.password && (
+                    <p className="text-red-500 text-sm">{errors[activeTab].password}</p>
+                  )}
+
+                  {/* Global Form Error */}
+                  {(formError || error) && (
+                    <div className="text-red-500 text-sm">{formError || error}</div>
+                  )}
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={loadingAuth}
+                    className="w-full bg-[#A3CA43] text-[#333333] hover:text-[#A3CA43] py-2 px-4 rounded hover:bg-[#333333] disabled:bg-gray-400 transition-colors duration-200"
+                  >
+                    {loadingAuth
+                      ? "Processing..."
+                      : activeTab === "login"
+                        ? "Login"
+                        : "Register"}
+                  </button>
+
+                  {/* Forgot Password (only in login) */}
+                  {activeTab === "login" && (
+                    <div className="text-center mt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAuthModal(false);
+                          setShowForgotPasswordModal(true);
+                          setForgotStep(1);
+                          setForgotPasswordEmail(formData?.email || "");
+                          setForgotOTP("");
+                          setNewPassword("");
+                          setConfirmPassword("");
+                          setForgotPasswordMessage("");
+                          setForgotPasswordError("");
+                        }}
+                        className="text-sm text-[#a3ca43] hover:underline"
+                      >
+                        Forgot Password?
+                      </button>
                     </div>
-                  </div>
+                  )}
+                </form>
+              </div>
+            </div>
+          )}
+          {showForgotPasswordModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 w-96 max-w-full relative">
+                <button onClick={() => setShowForgotPasswordModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                {/* STEP 1: Enter Email */}
+                {forgotStep === 1 && (
+                  <>
+                    <h2 className="text-lg font-semibold mb-4">Reset Password</h2>
+                    <form onSubmit={async (e) => {
+                      e.preventDefault(); setForgotPasswordError(''); setForgotPasswordMessage(''); setForgotPasswordLoading(true);
+                      try {
+                        const res = await fetch('/api/auth/request-reset', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email: forgotPasswordEmail }),
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.message || 'Error sending OTP');
+                        setForgotPasswordMessage('OTP sent to your email.');
+                        setForgotStep(2);
+                      } catch (err) {
+                        setForgotPasswordError(err.message);
+                      } finally {
+                        setForgotPasswordLoading(false);
+                      }
+                    }} className="space-y-4">
+                      <input
+                        type="email"
+                        placeholder="Enter your email"
+                        value={forgotPasswordEmail}
+                        onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                        required
+                        className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      {forgotPasswordError && (
+                        <p className="text-red-500 text-sm">{forgotPasswordError}</p>
+                      )}
+                      {forgotPasswordMessage && (
+                        <p className="text-green-500 text-sm">{forgotPasswordMessage}</p>
+                      )}
+                      <button
+                        type="submit"
+                        disabled={forgotPasswordLoading}
+                        className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
+                      >
+                        {forgotPasswordLoading ? 'Sending...' : 'Send OTP'}
+                      </button>
+                    </form>
+                  </>
                 )}
-          </div>
-          <div className="hidden md:block">
-            <Swiper
-              modules={[Navigation]}
-              slidesPerView="auto"
-              spaceBetween={25}
-              className={`max-w-7xl mx-auto px-5 ${
-                categories?.length >= 1 && categories?.length <= 10 ? "cat-nav" : ""
-              }`}
+
+                {/* STEP 2: Enter OTP */}
+                {forgotStep === 2 && (
+                  <>
+                    <h2 className="text-lg font-semibold mb-4">Enter OTP</h2>
+                    <p className="text-sm mb-2">Email: <strong>{forgotPasswordEmail}</strong></p>
+                    <form onSubmit={async (e) => {
+                      e.preventDefault(); setForgotPasswordError(''); setForgotPasswordMessage('');
+                      if (!forgotOTP.trim()) {
+                        setForgotPasswordError('Please enter OTP.');
+                        return;
+                      }
+                      setForgotPasswordLoading(true);
+                      try {
+                        const res = await fetch('/api/auth/verify-otp', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            email: forgotPasswordEmail,
+                            otp: forgotOTP,
+                          }),
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.message || 'Invalid OTP');
+                        setForgotPasswordMessage('OTP verified. Please set your new password.');
+                        setForgotStep(3);
+                      } catch (err) {
+                        setForgotPasswordError(err.message);
+                      } finally {
+                        setForgotPasswordLoading(false);
+                      }
+                    }} className="space-y-4">
+                      <input type="text" placeholder="Enter OTP" value={forgotOTP} onChange={(e) => setForgotOTP(e.target.value)} required className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      {forgotPasswordError && (
+                        <p className="text-red-500 text-sm">{forgotPasswordError}</p>
+                      )}
+                      {forgotPasswordMessage && (
+                        <p className="text-green-500 text-sm">{forgotPasswordMessage}</p>
+                      )}
+                      <button type="submit" disabled={forgotPasswordLoading} className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 disabled:bg-gray-400">
+                        {forgotPasswordLoading ? 'Validating...' : 'Validate OTP'}
+                      </button>
+                    </form>
+                  </>
+                )}
+                {/* STEP 3: New Password */}
+                {forgotStep === 3 && (
+                  <>
+                    <h2 className="text-lg font-semibold mb-4">Set New Password</h2>
+                    <p className="text-sm mb-2">Email: <strong>{forgotPasswordEmail}</strong></p>
+                    <form onSubmit={async (e) => {
+                      e.preventDefault();
+                      setForgotPasswordError('');
+                      setForgotPasswordMessage('');
+                      if (newPassword !== confirmPassword) {
+                        setForgotPasswordError('Passwords do not match.');
+                        return;
+                      }
+                      setForgotPasswordLoading(true);
+                      try {
+                        const res = await fetch('/api/auth/reset-password', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            email: forgotPasswordEmail,
+                            otp: forgotOTP,
+                            newPassword,
+                          }),
+                        });
+
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.message || 'Error resetting password');
+
+                        setForgotPasswordMessage('Password reset successful.');
+                        setTimeout(() => {
+                          setShowForgotPasswordModal(false);
+                          setShowAuthModal(true); // reopen login
+                        }, 1500);
+                      } catch (err) {
+                        setForgotPasswordError(err.message);
+                      } finally {
+                        setForgotPasswordLoading(false);
+                      }
+                    }} className="space-y-4">
+                      <input type="password" placeholder="New Password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6} className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      <input type="password" placeholder="Confirm New Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      {forgotPasswordError && (
+                        <p className="text-red-500 text-sm">{forgotPasswordError}</p>
+                      )}
+                      {forgotPasswordMessage && (
+                        <p className="text-green-500 text-sm">{forgotPasswordMessage}</p>
+                      )}
+                      <button
+                        type="submit"
+                        disabled={forgotPasswordLoading}
+                        className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
+                      >
+                        {forgotPasswordLoading ? 'Resetting...' : 'Reset Password'}
+                      </button>
+                    </form>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+      </header>
+      <div className={`border-t-2 border-t-[#333333] py-2 shadow-md ${categories && categories.length > 0 ? "block" : "block md:hidden"}`}>
+        <div className="block md:hidden px-4">
+          {/* NEW MOBILE SEARCH BAR */}
+          <div className="flex items-center bg-[#f5f5f5] h-12 rounded-full border border-gray-300 shadow-sm overflow-hidden w-full transition-all duration-150 focus-within:border-[#a3ca43] focus-within:shadow-[0_0_0_2px_rgba(36,83,211,0.15)] flex-nowrap inset-shadow-sm">
+
+
+            <div className="flex-1 relative h-full flex items-center">
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder=" "
+                className="w-full h-full text-sm outline-none bg-transparent px-1 focus:text-[#111] placeholder-transparent"
+                ref={searchContext === 'mobileTop' ? searchInputRef : null}
+                onFocus={() => {
+                  setSearchContext('mobileTop');
+                  setSearchDropdownVisible(true);
+
+                  setTimeout(() => {
+                    if (searchInputRef.current) {
+                      const rect = searchInputRef.current.getBoundingClientRect();
+                      setSearchDropdownLeft(rect.left);
+                      setSearchDropdownTop(rect.bottom + window.scrollY);
+                      setSearchDropdownWidth(rect.width);
+                    }
+                  }, 0);
+
+                  if (searchQuery.trim().length >= 1) fetchSuggestions(searchQuery);
+                }}
+              />
+              {searchQuery.trim() === "" && (
+                <div className="absolute left-1 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[11px] pointer-events-none z-10">
+                  <span className="text-gray-400">Search for</span>
+                  <span className="text-gray-900">"{typedPreview}"</span>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={handleSearch}
+              aria-label="Search"
+              className="h-full text-white flex items-center justify-center active:scale-[0.97] transition p-2 border-l-2"
             >
-              {categories
-                ?.filter(
-                  (category) =>
-                    category?.category_name && category?.category_slug
-                )
-                .map((category) => (
+              <FaSearch size={16} className="text-[#333333]" />
+            </button>
+          </div>
+          {/* MOBILE TOP SUGGESTIONS (outside menu) */}
+          {searchDropdownVisible && searchContext === 'mobileTop' && !isMobileMenuOpen && (
+            <div ref={searchDropdownRef} className="sm:hidden absolute z-[70] left-0 right-0 px-3 mt-1">
+              <div className="bg-white rounded-lg shadow-lg border max-h-72 overflow-y-auto">
+                <div className="px-3 pt-2 pb-1 text-[11px] font-semibold tracking-wide text-gray-500">
+                  PRODUCTS
+                </div>
+                <div className="px-3 pb-2">
+                  {suggestions.length > 0
+                    ? suggestions.map(renderSuggestionItem)
+                    : (searchQuery.trim() && (
+                      <div className="py-10 flex flex-col items-center justify-center text-gray-500">
+                        {/* Icon */}
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-12 h-12 mb-3 text-gray-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={1.5}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9 13h6m-3-3v6m9-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+
+                        {/* Message */}
+                        <p className="text-sm font-medium">No products found</p>
+                        <p className="text-xs text-gray-400 mt-1">Try a different keyword</p>
+                      </div>
+
+                    ))
+                  }
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="hidden md:block">
+          <Swiper
+            modules={[Navigation]}
+            slidesPerView="auto"
+            spaceBetween={25}
+            lazy={true}
+            watchSlidesProgress={true}
+            className={`max-w-7xl mx-auto px-5 ${categories?.length >= 1 && categories?.length <= 10 ? "cat-nav" : ""
+              }`}
+          >
+            {categories
+              ?.filter(
+                (category) =>
+                  category?.category_name && category?.category_slug
+              )
+              .map((category) => {
+                let link = category.category_slug
+                return (
                   <SwiperSlide key={category._id} className="!w-auto">
                     <Link
-                      href={`/category/${category.category_slug}`}
+                      href={`/category/${link}`}
                       className="flex flex-col items-center justify-center gap-2 text-[#333333] hover:text-[#A3CA43] transition cursor-pointer"
                     >
                       {/* Category Image */}
-                      <img
+                      <Image
                         src={getCategoryImage(category)}
                         alt={category.category_name}
+                        width={64}
+                        height={64}
                         className="lg:w-16 lg:h-16 md:w-12 md:h-12 rounded bg-white object-contain"
+                        loading="lazy"
                       />
 
                       {/* Category Name */}
@@ -2313,61 +2315,62 @@ const Header = () => {
                       </span>
                     </Link>
                   </SwiperSlide>
-                ))}
-            </Swiper>
-          </div>
+                )
+              })}
+          </Swiper>
+        </div>
 
-         </div>
-    
-         {/* DESKTOP SUGGESTIONS DROPDOWN */}
-        {searchDropdownVisible && searchContext === 'desktop' && (
-          <div
-            ref={searchDropdownRef}
-            className="hidden sm:flex flex-col fixed z-[80] bg-white shadow-xl rounded-xl border border-gray-200 overflow-hidden"
-            style={{
-              top: `${searchDropdownTop}px`,
-              left: `${searchDropdownLeft}px`,
-              width: `${searchDropdownWidth}px`,
-              maxHeight: '500px'
-            }}
-            role="listbox"
-            aria-label="Search product suggestions"
-          >
-            <div className="px-5 pt-3 pb-2 text-[11px] font-semibold tracking-[0.12em] text-gray-500 uppercase select-none">
-              Products
-            </div>
-            <div className="px-3 pb-3 overflow-y-auto custom-scrollbar space-y-2">
-              {suggestions.length > 0
-                ? suggestions.map(renderDesktopSuggestionItem)
-                : (searchQuery.trim() && (
-                    <div className="py-10 flex flex-col items-center justify-center text-gray-500">
-                    {/* Icon */}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-12 h-12 mb-3 text-gray-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 13h6m-3-3v6m9-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
+      </div>
 
-                    {/* Message */}
-                    <p className="text-sm font-medium">No products found</p>
-                    <p className="text-xs text-gray-400 mt-1">Try a different keyword</p>
-                  </div>
-                  ))
-              }
-            </div>
+      {/* DESKTOP SUGGESTIONS DROPDOWN */}
+      {searchDropdownVisible && searchContext === 'desktop' && (
+        <div
+          ref={searchDropdownRef}
+          className="hidden sm:flex flex-col fixed z-[80] bg-white shadow-xl rounded-xl border border-gray-200 overflow-hidden"
+          style={{
+            top: `${searchDropdownTop}px`,
+            left: `${searchDropdownLeft}px`,
+            width: `${searchDropdownWidth}px`,
+            maxHeight: '500px'
+          }}
+          role="listbox"
+          aria-label="Search product suggestions"
+        >
+          <div className="px-5 pt-3 pb-2 text-[11px] font-semibold tracking-[0.12em] text-gray-500 uppercase select-none">
+            Products
           </div>
-        )}
-      
-      </>
-    );
+          <div className="px-3 pb-3 overflow-y-auto custom-scrollbar space-y-2">
+            {suggestions.length > 0
+              ? suggestions.map(renderDesktopSuggestionItem)
+              : (searchQuery.trim() && (
+                <div className="py-10 flex flex-col items-center justify-center text-gray-500">
+                  {/* Icon */}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-12 h-12 mb-3 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 13h6m-3-3v6m9-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+
+                  {/* Message */}
+                  <p className="text-sm font-medium">No products found</p>
+                  <p className="text-xs text-gray-400 mt-1">Try a different keyword</p>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      )}
+
+    </>
+  );
 };
 export default Header;

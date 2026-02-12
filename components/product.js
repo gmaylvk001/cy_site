@@ -33,7 +33,7 @@ export default function ProductPage() {
         const data = await res.json();
 
         if (!res.ok) throw new Error(data.message || "Product fetch failed");
-console.log(data)
+// console.log(data)
         setProduct(data);
         setSelectedImage(data.images?.[0] || "/placeholder.jpg");
         setError(null);

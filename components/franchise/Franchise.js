@@ -150,7 +150,7 @@ export default function Franchise() {
           lead_campaign: utm_campaign,
         };
 
-        console.log("Data to send:", payload);
+        // console.log("Data to send:", payload);
 
       try {
         const res = await fetch("https://adtarbo.eywamedia.com/api/lead", {

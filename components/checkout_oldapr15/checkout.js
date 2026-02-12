@@ -89,7 +89,7 @@ export default function CheckoutComponent() {
         paymentMethod,
       };
     
-      console.log("Order Submitted: ", orderDetails);
+      // console.log("Order Submitted: ", orderDetails);
     
       // Mock API call or database submission
       alert("Order placed successfully!");

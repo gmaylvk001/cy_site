@@ -6,22 +6,22 @@ import { NextResponse } from "next/server";
 
 export async function POST(req) {
   try {
-    console.log("req", req);
+    // console.log("req", req);
 
     const { email, password } = await req.json();
 
     await connectDB();
-    console.log("dfd");
+    // console.log("dfd");
 
     const existingUser = await User.findOne({ email });
-    console.log("existingUser", existingUser);
+    // console.log("existingUser", existingUser);
 
     if (!existingUser) {
       return NextResponse.json({ error: "Admin not found" }, { status: 400 });
     }
 
     const isPassword = await bcrypt.compare(password, existingUser.password);
-    console.log(isPassword);
+    // console.log(isPassword);
 
     if (!isPassword) return NextResponse.json({ error: "Incorrect Password" }, { status: 400 });
 

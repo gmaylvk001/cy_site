@@ -68,7 +68,7 @@ const addHistory = async () => {
       console.error("❌ Failed to update history:", data);
       toast.error("Failed to update history");
     } else {
-      console.log("✅ History updated", data);
+      // console.log("✅ History updated", data);
       setOrder(data);
       setStatus("");
       setComment("");

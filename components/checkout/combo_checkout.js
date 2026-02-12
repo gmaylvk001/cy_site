@@ -382,7 +382,7 @@ export default function Custom_Combo_Checkout() {
           )
           : [];
 
-        console.log(normalizedAccessories, 'accessories')
+        // console.log(normalizedAccessories, 'accessories')
         setCombo([
           ...normalizedCycles,
           ...normalizedAccessories,

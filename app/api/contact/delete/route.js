@@ -6,14 +6,14 @@ export  async function DELETE(req) {
   
   const { id } = await req.json();
 
-console.log(id)
+// console.log(id)
     if (!id) {
       return NextResponse.json({ success: false, message: "ID is required" });
     }
 
     try {
       await dbConnect();
-      console.log("Database connected successfully");
+      // console.log("Database connected successfully");
 
       const updatedUser = await User.findByIdAndUpdate(
         id,

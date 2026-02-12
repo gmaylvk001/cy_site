@@ -9,7 +9,7 @@ export async function GET(request, context) {
     const { params } = context;
     const categoryId = params.categoryId;
     
-    console.log("Fetching products for category:", categoryId);
+    // console.log("Fetching products for category:", categoryId);
     
     if (!categoryId) {
       return NextResponse.json(
@@ -24,7 +24,7 @@ export async function GET(request, context) {
       status: "Active" 
     }).select("name price").sort({ name: 1 });
     
-    console.log(`Found ${products.length} products for category ${categoryId}`);
+    // console.log(`Found ${products.length} products for category ${categoryId}`);
     
     return NextResponse.json({
       success: true,

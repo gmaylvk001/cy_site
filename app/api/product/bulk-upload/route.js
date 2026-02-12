@@ -141,7 +141,7 @@ export async function POST(req) {
       variantWorkbook.Sheets[variantWorkbook.SheetNames[0]],
       { header: 1 }
     );
-    console.log("variants.length ", variants);
+    // console.log("variants.length ", variants);
 
 
     // Process Images ZIP if provided
@@ -190,7 +190,7 @@ export async function POST(req) {
     const valid_variant = variants
       .slice(0)
       .filter((row) => row && row.length > 0 && row[0]); // Skip header and empty rows
-    console.log("Actual valid variant:", valid_variant);
+    // console.log("Actual valid variant:", valid_variant);
 
     if (!valid_variant || valid_variant.length === 0) {
       return NextResponse.json(
@@ -492,7 +492,7 @@ export async function POST(req) {
         productData.overview_image = existingProduct.overview_image;
       }
 
-      console.log(productData);
+      // console.log(productData);
 
       if (!existingProduct) {
         // Create new product
@@ -580,7 +580,7 @@ export async function POST(req) {
           variant_arr = JSON.parse(row[2].toString().trim());
           if (!Array.isArray(variant_arr)) variant_arr = [];
         } catch (err) {
-          console.log(`Variant JSON error at row ${i + 1}:`, err.message);
+          // console.log(`Variant JSON error at row ${i + 1}:`, err.message);
           continue;
         }
       }
@@ -654,7 +654,7 @@ export async function POST(req) {
           variants: [newVariantObj],
         }); 
 
-        console.log(`✅ Created Variant doc for ${item_code}`);
+        // console.log(`✅ Created Variant doc for ${item_code}`);
         continue;
       }
 
@@ -697,14 +697,14 @@ export async function POST(req) {
           ...newVariantObj,
         };
 
-        console.log(
-          `🔁 Updated existing variant for ${item_code} at index ${existingIndex}`
-        );
+        // console.log(
+        //   `🔁 Updated existing variant for ${item_code} at index ${existingIndex}`
+        // );
       } else {
         // ✅ push new variant
         variantDoc.variants.push(newVariantObj);
 
-        console.log(`➕ Added new variant for ${item_code}`);
+        // console.log(`➕ Added new variant for ${item_code}`);
       }
 
       // update name also

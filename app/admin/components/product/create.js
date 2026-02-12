@@ -176,7 +176,7 @@ export default function AddProductPage({
         toast.error(result.error);
       } else {
         const data = result.data;
-        console.log(data);
+        // console.log(data);
         const brandOptions = data.map((cat) => ({
           value: cat._id,
           label: cat.brand_name,
@@ -368,8 +368,8 @@ export default function AddProductPage({
 
   useEffect(() => {
     if (mode === "edit" || productData) {
-      console.log("Edit mode - Product data:", productData);
-      console.log("Overview images from DB:", productData.overview_image);
+      // console.log("Edit mode - Product data:", productData);
+      // console.log("Overview images from DB:", productData.overview_image);
 
       // Initialize warranties from productData
       if (
@@ -754,12 +754,12 @@ export default function AddProductPage({
       newImages.splice(index, 1);
       newFiles.splice(index, 1);
 
-      console.log("Removing overview image:", {
-        index,
-        removedImage,
-        currentImages: prev.overviewImage,
-        newImages: newImages,
-      });
+      // console.log("Removing overview image:", {
+      //   index,
+      //   removedImage,
+      //   currentImages: prev.overviewImage,
+      //   newImages: newImages,
+      // });
 
       return {
         ...prev,
@@ -1251,7 +1251,7 @@ export default function AddProductPage({
     }));
   };
   const handleBrandChange = (selectedOptions) => {
-    console.log(selectedOptions);
+    // console.log(selectedOptions);
     setProduct((prev) => ({
       ...prev,
       brand: selectedOptions.value,
@@ -1272,7 +1272,7 @@ export default function AddProductPage({
         toast.error(result.error);
       } else {
         const data = result;
-        console.log(data);
+        // console.log(data);
         const prodOptions = data.map((prod) => ({
           value: prod._id,
           label: prod.name,
@@ -1307,7 +1307,7 @@ export default function AddProductPage({
   };
 
   const handleFilterChange = (selectedOptions) => {
-    console.log(selectedOptions);
+    // console.log(selectedOptions);
     setProduct((prev) => ({
       ...prev,
       filters: selectedOptions,
@@ -1384,8 +1384,8 @@ export default function AddProductPage({
         removedOverviewImages: removedOverviewImages || [],
       };
 
-      console.log("Overview images to save:", existingOverviewImages);
-      console.log("Overview images to remove:", removedOverviewImages);
+      // console.log("Overview images to save:", existingOverviewImages);
+      // console.log("Overview images to remove:", removedOverviewImages);
 
       // Upload product images
       (product.files || []).forEach((file) => {
@@ -1431,7 +1431,7 @@ export default function AddProductPage({
       const responseData = await response.json();
 
       if (response.ok) {
-        console.log("Product saved:", responseData);
+        // console.log("Product saved:", responseData);
 
         const formData1 = new FormData();
 

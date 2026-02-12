@@ -182,7 +182,7 @@ export default function CheckoutPage() {
     subtotal: 0,
     total: 0
   });
-  console.log(cartItems);
+  // console.log(cartItems);
 const [isSubmitting, setIsSubmitting] = useState(false);
   useEffect(() => {
     const fetchStores = async () => {
@@ -789,56 +789,56 @@ const grandTotal = subtotal - totalDiscount;
           JSON.stringify([name,orderData.order.order_number,order_amount,orderData.order.payment_method, itemHtml])
         );
        
-        const response = await fetch("https://bea.eygr.in/api/email/send-msg", {
-          method: "POST",
-          headers: {
-            Authorization: "Bearer 2|DC7TldSOIhrILsnzAf0gzgBizJcpYz23GHHs0Y2L",
-          },
-          body: emailFormData, // Use the renamed variable
-        });
+      //   const response = await fetch("https://bea.eygr.in/api/email/send-msg", {
+      //     method: "POST",
+      //     headers: {
+      //       Authorization: "Bearer 2|DC7TldSOIhrILsnzAf0gzgBizJcpYz23GHHs0Y2L",
+      //     },
+      //     body: emailFormData, // Use the renamed variable
+      //   });
  
-        const data = await response.json();
+      //   const data = await response.json();
  
         
-      const adminItemsHtml = orderData.order.order_item.map(item => {
-       return `<li>${item.name} - ₹${item.price.toFixed(2)} x ${item.quantity}</li>`;
-        }).join('');
+      // const adminItemsHtml = orderData.order.order_item.map(item => {
+      //  return `<li>${item.name} - ₹${item.price.toFixed(2)} x ${item.quantity}</li>`;
+      //   }).join('');
 
-      const adminItemsTableHtml = `<ul style="padding-left: 20px; color: #555555;">${adminItemsHtml}</ul>`;
+      // const adminItemsTableHtml = `<ul style="padding-left: 20px; color: #555555;">${adminItemsHtml}</ul>`;
 
-        const adminemailFormData = new FormData();
-        adminemailFormData.append("campaign_id", "dd7b5f8d-5bf1-45a5-9116-fcb40f69ede6");
-        adminemailFormData.append(
-          "params",
-          JSON.stringify([name,addressData.email,addressData.phonenumber,deliveryAddress, adminItemsTableHtml])
-        );
+      //   const adminemailFormData = new FormData();
+      //   adminemailFormData.append("campaign_id", "dd7b5f8d-5bf1-45a5-9116-fcb40f69ede6");
+      //   adminemailFormData.append(
+      //     "params",
+      //     JSON.stringify([name,addressData.email,addressData.phonenumber,deliveryAddress, adminItemsTableHtml])
+      //   );
 
-        const emailadmin = ["arunkarthik@bharathelectronics.in","ecom@bharathelectronics.in","itadmin@bharathelectronics.in","telemarketing@bharathelectronics.in","sekarcorp@bharathelectronics.in"];
+        // const emailadmin = ["arunkarthik@bharathelectronics.in","ecom@bharathelectronics.in","itadmin@bharathelectronics.in","telemarketing@bharathelectronics.in","sekarcorp@bharathelectronics.in"];
 
         //const emailadmin = ["sorambeevi@gmail.com"];
         //const emailadmin = ["gmaylvk001@gmail.com"]; "siva96852@gmail.com"
-        emailadmin.forEach(async (adminEmail) => {
-          adminemailFormData.set("email", adminEmail);
-        let adminresponse = await fetch("https://bea.eygr.in/api/email/send-msg", {
-          method: "POST",
-          headers: {
-            Authorization: "Bearer 2|DC7TldSOIhrILsnzAf0gzgBizJcpYz23GHHs0Y2L",
-          },
-          body: adminemailFormData, // Use the renamed variable
-        });
+      //   emailadmin.forEach(async (adminEmail) => {
+      //     adminemailFormData.set("email", adminEmail);
+      //   let adminresponse = await fetch("https://bea.eygr.in/api/email/send-msg", {
+      //     method: "POST",
+      //     headers: {
+      //       Authorization: "Bearer 2|DC7TldSOIhrILsnzAf0gzgBizJcpYz23GHHs0Y2L",
+      //     },
+      //     body: adminemailFormData, // Use the renamed variable
+      //   });
 
-        let adminData = await adminresponse.json();
-        });
+      //   let adminData = await adminresponse.json();
+      //   });
         
         
-        // send_order_detail_to_sap
-        const Send_SAP_Res = await fetch('/api/send-order-detail-to-sap', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          order_number: orderData.order.order_number,
-        }),
-      });
+      //   // send_order_detail_to_sap
+      //   const Send_SAP_Res = await fetch('/api/send-order-detail-to-sap', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     order_number: orderData.order.order_number,
+      //   }),
+      // });
   
         //console.log("SAP_STATUS", Send_SAP_Res.status); 
 

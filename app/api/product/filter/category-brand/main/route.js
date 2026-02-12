@@ -49,7 +49,7 @@ export async function GET(req) {
       query.brand = { $in: brandIds };
     }
 
-    console.log(query);
+    // console.log(query);
     if( categorySlug === "televisions" ){
       categorySlug = "television";
     }else if( categorySlug === "computers-laptops" ){

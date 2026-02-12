@@ -9,7 +9,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const categorySlug = searchParams.get('categorySlug');
     
-    console.log('🔍 Fetching banners for category slug:', categorySlug);
+    // console.log('🔍 Fetching banners for category slug:', categorySlug);
     
     let query = { banner_status: "Active" };
     
@@ -18,14 +18,14 @@ export async function GET(request) {
       query.category_slug = categorySlug;
     }
 
-    console.log('📋 Query:', query);
+    // console.log('📋 Query:', query);
 
     // Fetch category banners with category info, sorted by display order
     const banners = await CategoryBanner.find(query)
       .populate('category_id', 'category_name category_slug')
       .sort({ display_order: 1, createdAt: -1 });
     
-    console.log('🎯 Found banners:', banners.length);
+    // console.log('🎯 Found banners:', banners.length);
     
     return NextResponse.json({ 
       success: true, 

@@ -9,7 +9,7 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const categoryId = searchParams.get("categoryId");
 
-    console.log("Fetching filters for category ID:", categoryId);
+    // console.log("Fetching filters for category ID:", categoryId);
 
     if (!categoryId) {
       return NextResponse.json({ 
@@ -21,12 +21,12 @@ export async function GET(req) {
     // Fetch category filters from the database
     const categoryFilters = await CategoryFilter.find({ category_id: categoryId });
     
-    console.log("Raw category filters from DB:", categoryFilters);
+    // console.log("Raw category filters from DB:", categoryFilters);
 
     // Extract just the filter_id values
     const filterIds = categoryFilters.map(cf => cf.filter_id);
 
-    console.log(`Found ${filterIds.length} filters for category ${categoryId}:`, filterIds);
+    // console.log(`Found ${filterIds.length} filters for category ${categoryId}:`, filterIds);
 
     return NextResponse.json({ 
       success: true,

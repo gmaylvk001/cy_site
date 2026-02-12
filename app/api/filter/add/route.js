@@ -7,7 +7,7 @@ export async function POST(req) {
     await dbConnect();
     // console.log(req.json());
     const formData = await req.json();
-    console.log(formData);
+    // console.log(formData);
     const {filter_name,status,filter_group } = formData;
     // const formData = await req.formData();
     // const filter_name = formData.get("filter_name");

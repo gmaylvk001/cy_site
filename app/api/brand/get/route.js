@@ -9,7 +9,7 @@ export async function GET() {
     const brands = await Brand.find({ status: "Active" })
       .select("brand_name image")
       .lean();
-console.log(brands)
+// console.log(brands)
     return new NextResponse(JSON.stringify({
       success: true,
       brands: brands.map(brand => ({

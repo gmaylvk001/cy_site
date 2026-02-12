@@ -48,7 +48,7 @@ export async function POST(req) {
           gst_number      :  gst_number,
           additionalInfo  :  additionalInfo,
         };
-console.log(addressData);
+// console.log(addressData);
     //existing user 
     const existingUser = await Useraddress.findOne({ userId });
     let result;

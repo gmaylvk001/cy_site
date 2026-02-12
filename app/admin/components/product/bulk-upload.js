@@ -619,6 +619,14 @@ export default function BulkUploadPage() {
     link.click();
     document.body.removeChild(link);
   };
+    const handlevariantDownload = () => {
+    const link = document.createElement('a');
+    link.href = `/uploads/files/sampleVariants.xlsx?t=${Date.now()}`;
+    link.download = 'sampleVariants.xlsx';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handleZipDownload = () => {
     const link = document.createElement('a');
@@ -733,7 +741,7 @@ export default function BulkUploadPage() {
               />
               <button
                 type="button"   // <-- Add this
-                onClick={handleDownload}
+                onClick={handlevariantDownload}
                 className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -100,10 +100,10 @@ export async function PUT(req, { params }) {
     let variants = JSON.parse(formData.get("variant") || "[]");
     const Filters = productData.filters;
 
-    console.log(productData);
-    console.log(
-      ".............................................................."
-    );
+    // console.log(productData);
+    // console.log(
+    //   ".............................................................."
+    // );
 
     const slug = productData.slug;
     const md5_cat_name = md5(slug);
@@ -188,8 +188,8 @@ export async function PUT(req, { params }) {
       amount: Number(item.amount) || 0,
     }));
 
-    console.log("Processed extend_warranty:", extend_warranty);
-    console.log(imageFiles); // ...
+    // console.log("Processed extend_warranty:", extend_warranty);
+    // console.log(imageFiles); // ...
     // Updated pathing for more reliability
     // Inside your PUT handler
     // ...
@@ -308,7 +308,7 @@ export async function PUT(req, { params }) {
     const chain = await buildMultiCategoryChains(productData.sub_category || []);
     // const chain = await buildCategoryChain(productData.sub_category);
 
-    console.log("Normalized brand_code:", productData);
+    // console.log("Normalized brand_code:", productData);
 
     if (productData._id) delete productData._id;
     const updatedProduct = await Product.findByIdAndUpdate(
@@ -336,12 +336,12 @@ export async function PUT(req, { params }) {
       { new: true }
     );
 
-    console.log(
-      "Updated product extend_warranty:",
-      updatedProduct?.extend_warranty
-    );
+    // console.log(
+    //   "Updated product extend_warranty:",
+    //   updatedProduct?.extend_warranty
+    // );
     // Filters = array of strings
-    console.log(Filters);
+    // console.log(Filters);
     const product_id = updatedProduct?._id;
     if (product_id) {
       if (filterIds.length != 0) {
@@ -380,7 +380,7 @@ export async function PUT(req, { params }) {
               );
               if (fs.existsSync(fullPath)) {
                 fs.unlinkSync(fullPath);
-                console.log("Deleted overview image:", imagePath);
+                // console.log("Deleted overview image:", imagePath);
               }
             }
           });

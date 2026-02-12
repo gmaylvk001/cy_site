@@ -122,7 +122,7 @@ export default function VariantModal({ open, onClose, initialVariant, onSubmit }
 
 
     const addImageField = () => {
-        console.log("Adding image field");
+        // console.log("Adding image field");
         setVariant((prev) => ({
             ...prev,
             images: [...(prev.images || []), ""],

@@ -24,7 +24,7 @@ export async function GET() {
     let productCount = 0;
     products.map((product) =>{
       if(product.category == category._id){
-        console.log(product.category);
+        // console.log(product.category);
         productCount=productCount+1;
       }
     })

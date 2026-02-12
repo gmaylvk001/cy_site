@@ -126,7 +126,7 @@ export default function Order() {
   };
 
   const handleEmailConfirm = async (order) => {
-    console.log("order",order);
+    // console.log("order",order);
     setShowEmailConfirm(false);
     
     const token = localStorage.getItem("token");

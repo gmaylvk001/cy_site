@@ -151,10 +151,10 @@ export async function POST(req) {
       }
     }
 
-    console.log(productData);
-    console.log(
-      ".............................................................."
-    );
+    // console.log(productData);
+    // console.log(
+    //   ".............................................................."
+    // );
     const category = productData.sub_category;
     let existingProductname = await Product.findOne({ slug });
     if (existingProductname) {
@@ -183,7 +183,7 @@ export async function POST(req) {
         while (true) {
           const imageKey = `variant_${i}_image_${imgIndex}`;
           const imageFile = formData.get(imageKey);
-          console.log(imageFile);
+          // console.log(imageFile);
           if (!imageFile) break;
 
           // Process and save the image
@@ -294,7 +294,7 @@ export async function POST(req) {
     }
     const highlights = JSON.parse(formData.get("highlights") || "[]");
     productData.product_highlights = highlights;
-    console.log(productData);
+    // console.log(productData);
     const newProduct = new Product({
       ...productData,
       images: savedImages,

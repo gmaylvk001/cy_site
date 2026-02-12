@@ -19,12 +19,12 @@ export async function POST(request) {
 
     // 🚀 Send Email or SMS here
     if (email) {
-      console.log(`Resend OTP ${otp} to email ${email}`);
+      // console.log(`Resend OTP ${otp} to email ${email}`);
       // await sendEmail(email, otp);
     }
 
     if (mobile) {
-      console.log(`Resend OTP ${otp} to mobile ${mobile}`);
+      // console.log(`Resend OTP ${otp} to mobile ${mobile}`);
       // await sendSMS(mobile, otp);
     }
 

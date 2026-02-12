@@ -30,6 +30,7 @@ export default function customize_combo() {
   const [all_categries, setAll_categries] = useState([]);
   const [time, setTime] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [product_load, setProduct_load] = useState(true);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -84,6 +85,12 @@ export default function customize_combo() {
     return 0; // no discount below 10000
   }, [totalPrice]);
 
+
+  useEffect(() => {
+    setTime(Date.now());
+    fetchInitialData();
+  }, []);
+
   useEffect(() => {
 
 
@@ -98,6 +105,7 @@ export default function customize_combo() {
       }
     };
     fetchVariants();
+    // allcategries();
   }, []);
 
 
@@ -223,6 +231,7 @@ export default function customize_combo() {
     //   toast.error("Error fetching initial data");
     //   router.push("/noproduct");
     // } finally {
+
     setLoading(false);
     //   setInitialLoadComplete(true);
     // }
@@ -239,58 +248,61 @@ export default function customize_combo() {
     );
   };
 
-  const allProducts = async () => {
-    const raw = await fetch("/api/product/get");
-    const res = await raw.json();
-    const cycleMd5s = allcycle_cat.map((cat) =>
-      cat.md5_cat_name.trim().toLowerCase(),
-    );
+  // old method
+  // const allProducts = async () => {
+  //   const raw = await fetch("/api/product/get");
+  //   const res = await raw.json();
+  //   const cycleMd5s = allcycle_cat.map((cat) =>
+  //     cat.md5_cat_name.trim().toLowerCase(),
+  //   );
 
-    setCycleProducts(
-      res.filter((product) => {
-        if (!product.sub_category_new) return false;
+  //   setCycleProducts(
+  //     res.filter((product) => {
+  //       if (!product.sub_category_new) return false;
 
-        const productMd5s = product.sub_category_new
-          .split(/##|\|\|/)
-          .map((v) => v.trim().toLowerCase())
-          .filter(Boolean);
-        return cycleMd5s.some((md5) => productMd5s.includes(md5));
-      }),
-      // res
-    );
+  //       const productMd5s = product.sub_category_new
+  //         .split(/##|\|\|/)
+  //         .map((v) => v.trim().toLowerCase())
+  //         .filter(Boolean);
+  //       return cycleMd5s.some((md5) => productMd5s.includes(md5));
+  //     }),
+  //     // res
+  //   );
 
-    const bag = all_categries.filter((cat) =>
-      cat.category_name.toLowerCase().includes("bag"),
-    );
+  //   const bag = all_categries.filter((cat) =>
+  //     cat.category_name.toLowerCase().includes("bag"),
+  //   );
 
-    if (bag.length > 0) {
-      const bagmd5 = bag.map((bag) => bag.md5_cat_name);
-      setBagProducts(
-        res.filter((product) => {
-          if (!product.sub_category_new) return false;
-          const temp = product.sub_category_new.split(/##|\|\|/);
-          return bagmd5.some((md5) => temp.includes(md5));
-        }),
-      );
-    }
+  //   if (bag.length > 0) {
+  //     const bagmd5 = bag.map((bag) => bag.md5_cat_name);
+  //     setBagProducts(
+  //       res.filter((product) => {
+  //         if (!product.sub_category_new) return false;
+  //         const temp = product.sub_category_new.split(/##|\|\|/);
+  //         return bagmd5.some((md5) => temp.includes(md5));
+  //       }),
+  //     );
+  //   }
 
-    const accessories = all_categries.filter((cat) =>
-      cat.category_name.toLowerCase().includes("accessories"),
-    );
+  //   const accessories = all_categries.filter((cat) =>
+  //     cat.category_name.toLowerCase().includes("accessories"),
+  //   );
 
-    if (accessories.length > 0) {
-      const accessoriesmd5 = accessories.map(
-        (accessories) => accessories.md5_cat_name,
-      );
-      setAccessoriesProducts(
-        res.filter((product) => {
-          if (!product.sub_category_new) return false;
-          const temp = product.sub_category_new.split(/##|\|\|/);
-          return accessoriesmd5.some((md5) => temp.includes(md5));
-        }),
-      );
-    }
-  };
+  //   if (accessories.length > 0) {
+  //     const accessoriesmd5 = accessories.map(
+  //       (accessories) => accessories.md5_cat_name,
+  //     );
+  //     setAccessoriesProducts(
+  //       res.filter((product) => {
+  //         if (!product.sub_category_new) return false;
+  //         const temp = product.sub_category_new.split(/##|\|\|/);
+  //         return accessoriesmd5.some((md5) => temp.includes(md5));
+  //       }),
+  //     );
+  //   }
+  // };
+
+
   const filter = (products = [], selected = null) => {
     if (!selected || !all_categries.length) {
       setFilteredProducts([]);
@@ -410,16 +422,100 @@ export default function customize_combo() {
   }, []);
 
   useEffect(() => {
-    if (allcycle_cat.length > 0 && all_categries.length > 0) {
-      allProducts();
-    }
-  }, [allcycle_cat, all_categries]);
+    const loadData = async () => {
+      try {
+        setProduct_load(true);
 
-  useEffect(() => {
-    setTime(Date.now());
-    fetchInitialData();
-    allcategries();
+        const [catRes, prodRes] = await Promise.all([
+          fetch("/api/categories/get"),
+          fetch("/api/product/get"),
+        ]);
+
+        if (!catRes.ok || !prodRes.ok) {
+          throw new Error("Failed to fetch data");
+        }
+
+        const categories = await catRes.json();
+        const products = await prodRes.json();
+
+        setAll_categries(categories);
+
+        const cycleCategories = categories.filter(cat =>
+          cat.category_name?.toLowerCase().includes("cycle")
+        );
+
+        setAllcycle_cat(cycleCategories);
+
+        // ---- Build Sets ----
+        const cycleSet = new Set(
+          cycleCategories.map(cat =>
+            cat.md5_cat_name?.trim().toLowerCase()
+          )
+        );
+
+        const bagSet = new Set(
+          categories
+            .filter(cat =>
+              cat.category_name?.toLowerCase().includes("bag")
+            )
+            .map(cat =>
+              cat.md5_cat_name?.trim().toLowerCase()
+            )
+        );
+
+        const accessoriesSet = new Set(
+          categories
+            .filter(cat =>
+              cat.category_name?.toLowerCase().includes("accessories")
+            )
+            .map(cat =>
+              cat.md5_cat_name?.trim().toLowerCase()
+            )
+        );
+
+        const cycleProducts = [];
+        const bagProducts = [];
+        const accessoriesProducts = [];
+
+        products.forEach(product => {
+          if (!product.sub_category_new) return;
+
+          const productSet = new Set(
+            product.sub_category_new
+              .split(/##|\|\|/)
+              .map(v => v.trim().toLowerCase())
+              .filter(Boolean)
+          );
+
+          if ([...productSet].some(v => cycleSet.has(v))) {
+            cycleProducts.push(product);
+          }
+
+          if ([...productSet].some(v => bagSet.has(v))) {
+            bagProducts.push(product);
+          }
+
+          if ([...productSet].some(v => accessoriesSet.has(v))) {
+            accessoriesProducts.push(product);
+          }
+        });
+
+        setCycleProducts(cycleProducts);
+        setBagProducts(bagProducts);
+        setAccessoriesProducts(accessoriesProducts);
+        // setProduct_load(false);
+      } catch (err) {
+        console.error(err);
+        // setError(err.message);
+      } finally {
+        setProduct_load(false);
+      }
+    };
+
+    loadData();
   }, []);
+
+
   const handleBuyCombo = () => {
     alert("Buying Combo!");
   };
@@ -1240,86 +1336,91 @@ export default function customize_combo() {
             {/* ================= PRODUCT GRID ================= */}
             <div className="flex-1 overflow-y-auto px-4 py-4">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {filteredProducts.map((product) => {
-                  const isSelected = selectedProducts.some(
-                    (p) => p._id === product._id,
-                  );
-                  let selected_pro = selectedProducts.find((p) => p?._id === product?._id)
-                  // console.log(selected_pro, 'testing')
-                  // console.log(all_variants, 'test all variants')
-                  const filterVariant = all_variants?.find(
-                    vari => vari.parent_id === product._id
-                  );
-                  let filterVariant_info;
-                  let colors = [];
-                  let sizes = [];
-                  if (filterVariant) {
-                    filterVariant.variants.forEach((vari) => {
-                      vari.variant_arr.forEach((v) => {
-                        if (v.variant_attribute_name == 'color') {
-                          if (v.options == selected_pro?.selectedColor) {
-                            filterVariant_info = vari
+                {product_load ? (
+                  <div className="flex justify-center items-center py-20">
+                    <div className="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+                  </div>
+                ) : filteredProducts.length > 0 ? (
+                  filteredProducts.map((product) => {
+                    const isSelected = selectedProducts.some(
+                      (p) => p._id === product._id,
+                    );
+                    let selected_pro = selectedProducts.find((p) => p?._id === product?._id)
+                    // console.log(selected_pro, 'testing')
+                    // console.log(all_variants, 'test all variants')
+                    const filterVariant = all_variants?.find(
+                      vari => vari.parent_id === product._id
+                    );
+                    let filterVariant_info;
+                    let colors = [];
+                    let sizes = [];
+                    if (filterVariant) {
+                      filterVariant.variants.forEach((vari) => {
+                        vari.variant_arr.forEach((v) => {
+                          if (v.variant_attribute_name == 'color') {
+                            if (v.options == selected_pro?.selectedColor) {
+                              filterVariant_info = vari
+                            }
+                            colors.push(v.options)
                           }
-                          colors.push(v.options)
-                        }
-                        else if (v.variant_attribute_name == 'size') {
-                          sizes.push(v.options);
-                        }
-                      })
-                    });
-                  }
-                  return (
-                    <div
-                      key={product._id}
-                      className={`relative rounded-lg overflow-hidden shadow-sm hover:shadow-md
-                                  ${isSelected
-                          ? "border-2 border-blue-500"
-                          : "border border-gray-200"
-                        }
-                                `}
-                    >
-                      {/* Product image */}
+                          else if (v.variant_attribute_name == 'size') {
+                            sizes.push(v.options);
+                          }
+                        })
+                      });
+                    }
+                    return (
                       <div
-                        onClick={() => {
-                          // console.log('testing', colors.length)
-                          handleproductSelect(product)
-
-                          // if (colors.length === 0) {
-                          //   handleproductSelect(product)
-                          // }
-                          // else {
-                          //   if(selectedProducts.find((p)=>p?._id === product?._id)?.selectedColor){
-                          //      handleproductSelect(product)
-                          //   }
-                          //   else{
-                          //     setOpenColorProductId(product._id);
-                          //   }
-                          // }
-                        }
-                        }
-                      // className={`relative cursor-pointer ${
-                      //   isSelected ? "blur-sm opacity-40" : ""
-                      // }`}
+                        key={product._id}
+                        className={`relative rounded-lg overflow-hidden shadow-sm hover:shadow-md
+                                  ${isSelected
+                            ? "border-2 border-blue-500"
+                            : "border border-gray-200"
+                          }
+                                `}
                       >
-                        <div className="relative w-full aspect-square bg-white">
-                          {product.images?.[0] && (
-                            <Image
-                              src={
-                                filterVariant_info?.images?.[0] ? `/uploads/products/${filterVariant_info.images[0]}` :
-                                  product.images[0].startsWith("http") ? product.images[0] : `/uploads/products/${product.images[0]}`
-                              }
-                              alt={product.name}
-                              fill
-                              className="object-contain p-2 md:p-4"
-                              sizes="(max-width: 640px) 50vw, 33vw, 25vw"
-                              unoptimized
-                            />
-                          )}
-                        </div>
-                      </div>
+                        {/* Product image */}
+                        <div
+                          onClick={() => {
+                            // console.log('testing', colors.length)
+                            handleproductSelect(product)
 
-                      {/* Color picker */}
-                      {/* {openColorProductId === product._id && (colors.length > 0) && (
+                            // if (colors.length === 0) {
+                            //   handleproductSelect(product)
+                            // }
+                            // else {
+                            //   if(selectedProducts.find((p)=>p?._id === product?._id)?.selectedColor){
+                            //      handleproductSelect(product)
+                            //   }
+                            //   else{
+                            //     setOpenColorProductId(product._id);
+                            //   }
+                            // }
+                          }
+                          }
+                        // className={`relative cursor-pointer ${
+                        //   isSelected ? "blur-sm opacity-40" : ""
+                        // }`}
+                        >
+                          <div className="relative w-full aspect-square bg-white">
+                            {product.images?.[0] && (
+                              <Image
+                                src={
+                                  filterVariant_info?.images?.[0] ? `/uploads/products/${filterVariant_info.images[0]}` :
+                                    product.images[0].startsWith("http") ? product.images[0] : `/uploads/products/${product.images[0]}`
+                                }
+                                alt={product.name}
+                                fill
+                                className="object-contain p-2 md:p-4"
+                                sizes="(max-width: 640px) 50vw, 33vw, 25vw"
+                                unoptimized
+                              />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Color picker */}
+                        {/* {openColorProductId === product._id && (colors.length > 0) && (
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
                           <div
                             // onChange={(e) =>
@@ -1350,64 +1451,69 @@ export default function customize_combo() {
                         </div>
                       )} */}
 
-                      {/* Info */}
-                      <div className="p-3 border-t relative">
-                        <h4 className="text-sm font-semibold line-clamp-2">
-                          {product.name}
-                        </h4>
-                        <p className="text-sm font-bold mt-1">
-                          ₹{filterVariant_info?.special_price || product.special_price.toLocaleString()}
-                        </p>
-                        <div className="absolute top-1/2 right-2 -translate-y-1/2 flex gap-2">
+                        {/* Info */}
+                        <div className="p-3 border-t relative">
+                          <h4 className="text-sm font-semibold line-clamp-2">
+                            {product.name}
+                          </h4>
+                          <p className="text-sm font-bold mt-1">
+                            ₹{filterVariant_info?.special_price || product.special_price.toLocaleString()}
+                          </p>
+                          <div className="absolute top-1/2 right-2 -translate-y-1/2 flex gap-2">
 
-                          {colors.map((color, key) => {
-                            const [c1, c2 = c1] = color.split('/');
-                            let info;
-                            if (filterVariant) {
-                              filterVariant.variants.forEach((vari) => {
-                                vari.variant_arr.forEach((v) => {
-                                  if (v.variant_attribute_name == 'color') {
-                                    if (v.options == color) {
-                                      info = vari
+                            {colors.map((color, key) => {
+                              const [c1, c2 = c1] = color.split('/');
+                              let info;
+                              if (filterVariant) {
+                                filterVariant.variants.forEach((vari) => {
+                                  vari.variant_arr.forEach((v) => {
+                                    if (v.variant_attribute_name == 'color') {
+                                      if (v.options == color) {
+                                        info = vari
+                                      }
                                     }
-                                  }
-                                })
-                              });
-                            }
-                            const variantInfo = {
-                              color: color,             // selected color
-                              frame: null, // optional
-                              size: null,   // optional
-                              price: info.special_price || product.special_price,        // optional
-                              images: info.images || [],        // optional
-                            };
-                            return (
-                              <span
-                                key={key}
-                                className={`
+                                  })
+                                });
+                              }
+                              const variantInfo = {
+                                color: color,             // selected color
+                                frame: null, // optional
+                                size: null,   // optional
+                                price: info.special_price || product.special_price,        // optional
+                                images: info.images || [],        // optional
+                              };
+                              return (
+                                <span
+                                  key={key}
+                                  className={`
                                     w-4 h-4 rounded-full cursor-pointer mb-1
                                     border border-gray-300
                                     ${selected_pro?.selectedColor === color
-                                    ? "ring-2 ring-blue-500 ring-offset-2"
-                                    : ""}
+                                      ? "ring-2 ring-blue-500 ring-offset-2"
+                                      : ""}
                                   `}
-                                style={{
-                                  background: `linear-gradient(135deg, ${c1} 50%, ${c2} 50%)`,
-                                }}
-                                onClick={() => {
-                                  // if()
-                                  // console.log(selected_pro?.selectedColor, 'tstinpadf')
-                                  handleproductSelect(product, { color }, variantInfo);
-                                }}
-                              />
+                                  style={{
+                                    background: `linear-gradient(135deg, ${c1} 50%, ${c2} 50%)`,
+                                  }}
+                                  onClick={() => {
+                                    // if()
+                                    // console.log(selected_pro?.selectedColor, 'tstinpadf')
+                                    handleproductSelect(product, { color }, variantInfo);
+                                  }}
+                                />
 
-                            )
-                          })}
+                              )
+                            })}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-20 text-gray-500">
+                    No Products Found
+                  </div>)
+                }
               </div>
             </div>
 

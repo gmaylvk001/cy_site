@@ -69,7 +69,7 @@ export async function POST(req) {
             filtergroup_slug: filterGroupName.toLowerCase().replace(/\s+/g, "-"),
             status: "Active",
           });
-          console.log(`Created new filter group: ${filterGroupName}`);
+          // console.log(`Created new filter group: ${filterGroupName}`);
         }
 
         // Check for existing filter with same name AND same group
@@ -84,7 +84,7 @@ export async function POST(req) {
             existingFilter.status = statusValue;
             await existingFilter.save();
             updatedCount++;
-            console.log(`Updated filter: ${filterName} in group: ${filterGroupName}`);
+            // console.log(`Updated filter: ${filterName} in group: ${filterGroupName}`);
           }
         } else {
           // Create unique slug by including filter group reference
@@ -98,7 +98,7 @@ export async function POST(req) {
             status: statusValue,
           });
           addedCount++;
-          console.log(`Created new filter: ${filterName} in group: ${filterGroupName}`);
+          // console.log(`Created new filter: ${filterName} in group: ${filterGroupName}`);
         }
       } catch (error) {
         errors.push({

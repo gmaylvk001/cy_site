@@ -62,7 +62,7 @@ export default function CheckoutPage() {
 
   const fetchAddress = async () => {
     const token = localStorage.getItem("token");
-    console.log(token);
+    // console.log(token);
     if (!token) {
       setShowAuthModal(true);
       return;
@@ -72,10 +72,10 @@ export default function CheckoutPage() {
       const decoded = jwtDecode(token);
       const userId = decoded.userId;
       const email  = decoded.email;
-      console.log("UserID:", userId);
+      // console.log("UserID:", userId);
       if (!userId) return;
   
-      console.log("UserID:", userId);
+      // console.log("UserID:", userId);
   
       const res = await fetch(`/api/useraddress?user_id=${userId}`);
       const data = await res.json();
@@ -388,10 +388,10 @@ export default function CheckoutPage() {
         paymentStatus = "pending";
         paymentMode = "cash";
       } else if (paymentMethod === 'online') {
-        console.log("Online Payment");
+        // console.log("Online Payment");
         return;
       } else {
-        console.log("Invalid Payment Method");
+        // console.log("Invalid Payment Method");
         return;
       }
   
@@ -454,8 +454,8 @@ export default function CheckoutPage() {
         : `${addressData.address}, ${addressData.city}, ${addressData.state}, ${addressData.country}, ${addressData.postCode}`;
   
       // Save Order
-      console.log(addressData,paymentData);
-      console.log(useSavedAddress,selectedAddress,useraddress);
+      // console.log(addressData,paymentData);
+      // console.log(useSavedAddress,selectedAddress,useraddress);
       alert("addressData");
       const orderRes = await fetch('/api/orders/add', {
         method: 'POST',
@@ -536,7 +536,7 @@ export default function CheckoutPage() {
         });
   
         const data = await response.json();
-        console.log(data);
+        // console.log(data);
         
         if (!response.ok) throw new Error(data.message || 'Authentication failed');
         if (data.token) {

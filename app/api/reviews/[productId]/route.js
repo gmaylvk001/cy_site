@@ -13,7 +13,7 @@ export async function GET(request, { params }) {
     const reviews = await Review.find({ product_id : productId, review_status: "active"})
       .populate("user_id", "name email")
       .sort({ created_date: -1 }); 
-      console.log(reviews);
+      // console.log(reviews);
       // Calculate avg rating
       const avgRating =
       reviews.length > 0
@@ -55,12 +55,12 @@ export async function POST(request, { params }) {
     const item_code   = products.item_code;
 
     const order_check = await ecom_order_info.countDocuments({ "order_item.item_code": item_code, order_status : "shipped", user_id : userId });
-    console.log(order_check);
+    // console.log(order_check);
 
     if (order_check >= 1) {
 
       const review_check = await Review.countDocuments({user_id : userId, product_id : productId});
-      console.log(review_check);
+      // console.log(review_check);
 
       if(review_check < 1) {
         const newReview = await Review.create({

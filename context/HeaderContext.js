@@ -9,7 +9,7 @@ const [userData, setUserData] = useState(null);
  const [isLoggedIn, setIsLoggedIn] = useState(false);
  const [isAdmin, setIsAdmin] = useState(false);
   const updateHeaderdetails = (user) => {
-    console.log(user.user);
+    // console.log(user.user);
   setUserData(user.user);
   setIsLoggedIn(!!user.user);
 };

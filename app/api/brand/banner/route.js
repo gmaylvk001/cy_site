@@ -83,7 +83,7 @@ export async function POST(req) {
           brand.banners.push({ banner_name, banner_image: bannerImagePath, redirect_url, banner_status });
         }
         await brand.save();
-        console.log("Updated brand with banners:", brand);
+        // console.log("Updated brand with banners:", brand);
       }
     } else {
       // 🔹 Create new brand with optional banner

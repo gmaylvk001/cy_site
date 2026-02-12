@@ -24,9 +24,9 @@ export async function POST(req) {
     const endDate = formData.get("endDate");
     const status = formData.get("status");
     const bgImage = formData.get("bgImage");
-    console.log("bgImage (from form):", bgImage ? "exists" : "does not exist");
-    console.log("bgImage instanceof File:", bgImage instanceof File);
-    console.log("bgImage.name:", bgImage?.name);
+    // console.log("bgImage (from form):", bgImage ? "exists" : "does not exist");
+    // console.log("bgImage instanceof File:", bgImage instanceof File);
+    // console.log("bgImage.name:", bgImage?.name);
 
     const bannerImage = formData.get("bannerImage") ?? null;
     console.log("bannerImage (from form):", bannerImage ? "exists" : "does not exist");
