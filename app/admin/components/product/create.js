@@ -349,10 +349,10 @@ export default function AddProductPage({
     if (mode === "edit" && productData?._id) {
       const fetchVariants = async () => {
         try {
-          const response = await fetch(`/api/Variants/get?_id=${productData._id}`);
+          const response = await fetch(`/api/Variants/get?_id=${productData?._id}`);
           // if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
           const data = await response.json();
-          setFetchedVariantData(data || []); // optional
+          setFetchedVariantData(data || []); // optiona
         } catch (error) {
           console.error("Failed to fetch variant:", error);
         }
@@ -1344,30 +1344,29 @@ export default function AddProductPage({
     e.preventDefault();
     try {
       const formData = new FormData();
-
       // Get existing product images (filter out blob URLs and nulls)
       const existingProductImages = product.images.filter(
         (img) => typeof img === "string" && !img.startsWith("blob:")
       );
-
+      
       // Get existing overview images (filter out blob URLs and nulls)
       const existingOverviewImages = product.overviewImage.filter(
         (img) => img && typeof img === "string" && !img.startsWith("blob:")
       );
-
+      
       // Filter out empty warranty entries
       const validWarranties = warranties.filter(
         (warranty) =>
           warranty.year !== "" &&
-          warranty.amount !== "" &&
-          warranty.year != null &&
-          warranty.amount != null
+        warranty.amount !== "" &&
+        warranty.year != null &&
+        warranty.amount != null
       );
-
+      
       // Clean product data
       const { brand_code, removedOverviewImages, ...restProduct } = product;
       const trimmedBrandCode = (brand_code ?? "").toString().trim();
-
+      
       const cleanedProduct = {
         ...restProduct,
         ...(trimmedBrandCode ? { brand_code: trimmedBrandCode } : {}),
@@ -1383,53 +1382,56 @@ export default function AddProductPage({
         // Send removed overview images to backend
         removedOverviewImages: removedOverviewImages || [],
       };
-
+      
       // console.log("Overview images to save:", existingOverviewImages);
       // console.log("Overview images to remove:", removedOverviewImages);
-
+      
       // Upload product images
       (product.files || []).forEach((file) => {
         if (file) formData.append("images", file);
       });
-
+      
       // Upload NEW overview images
       (product.overviewImageFile || []).forEach((file) => {
         if (file) formData.append("overviewImages", file);
       });
-
+      
       // Variants with images
-      const variantsWithImages = (product.variants || []).map((variant, i) => {
-        const files = variant.files || [];
-        files.forEach((file, j) => {
-          if (file) {
-            formData.append(`variant_${i}_image_${j}`, file);
-          }
+      if(product.variants){
+        const variantsWithImages = (product?.variants || [])?.map((variant, i) => {
+          const files = variant?.files || [];
+          files?.forEach((file, j) => {
+            if (file) {
+              formData.append(`variant_${i}_image_${j}`, file);
+            }
+          });
+          return { ...variant, images: [] };
         });
-        return { ...variant, images: [] };
-      });
-      cleanedProduct.hasVariants = fetchedVariantData.variants.length > 0;
-
+        formData.append("variant", JSON.stringify(variantsWithImages));
+      }
+      cleanedProduct.hasVariants = fetchedVariantData?.variants?.length > 0 || false;
+      
       const finalProductData = {
         ...cleanedProduct,
         extend_warranty: validWarranties,
       };
-
+      
       formData.append("product", JSON.stringify(finalProductData));
-      formData.append("variant", JSON.stringify(variantsWithImages));
       formData.append(
         "highlights",
         JSON.stringify(cleanedProduct.product_highlights)
       );
-
+      
       const apiUrl =
-        mode === "edit"
-          ? `/api/product/update/${productId}`
-          : "/api/product/add";
+      mode === "edit"
+      ? `/api/product/update/${productId}`
+      : "/api/product/add";
       const method = mode === "edit" ? "PUT" : "POST";
-
+      
       const response = await fetch(apiUrl, { method, body: formData });
       const responseData = await response.json();
-
+      
+      // console.log("Submitting product data:", product);
       if (response.ok) {
         // console.log("Product saved:", responseData);
 
@@ -1440,14 +1442,14 @@ export default function AddProductPage({
         formData1.append("product_name", responseData.product.name);
 
         // ✅ Clean variants JSON (remove File objects)
-        const cleanedVariants = fetchedVariantData.variants.map((variant) => {
+        const cleanedVariants = fetchedVariantData?.variants?.map((variant) => {
           const copy = { ...variant };
           delete copy.files;
           return copy;
         });
 
         // ✅ Attach variants JSON
-        formData1.append("variants", JSON.stringify(cleanedVariants));
+        formData1.append("variants", JSON.stringify(cleanedVariants || []));
 
         // ✅ Attach variant files
         fetchedVariantData?.variants?.forEach((variant, index) => {
@@ -1471,9 +1473,10 @@ export default function AddProductPage({
         // }
 
         toast.success(mode === "edit" ? "Product updated" : "Product added");
-
         if (mode === "edit" && typeof onSuccess === "function") onSuccess();
+        else if(mode == "duplicate") onSuccess();
         else router.push("/admin/product");
+        // console.log(mode,'testing mode')
       }
       else {
         toast.error(responseData.error || "Something went wrong");
@@ -1743,6 +1746,7 @@ export default function AddProductPage({
 
           return issues;
         };
+        // console.log("Fetched variant data for validation:", fetchedVariantData);
         const invalidFields = findInvalidVariantFields(fetchedVariantData);
         if (invalidFields.length > 0) {
           return `Please fill in all required variant fields. Missing: ${invalidFields.join(", ")}`;

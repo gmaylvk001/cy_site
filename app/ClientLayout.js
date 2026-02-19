@@ -9,6 +9,7 @@ import { ModalProvider } from "@/context/ModalContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { CartProvider } from "@/context/CartContext";
 import { HeaderProvider } from "@/context/HeaderContext";
+import { ToastContainer } from "react-toastify";
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
@@ -18,6 +19,8 @@ export default function ClientLayout({ children }) {
   const hideHeaderFooter = hideLayoutPages.some((p) => pathname?.startsWith(p));
 
   return (
+    <>
+    <ToastContainer position="top-right" autoClose={5000} />
     <HeaderProvider>
       <ModalProvider>
         <WishlistProvider>
@@ -32,5 +35,6 @@ export default function ClientLayout({ children }) {
         </WishlistProvider>
       </ModalProvider>
     </HeaderProvider>
+    </>
   );
 }

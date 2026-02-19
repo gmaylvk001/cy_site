@@ -174,7 +174,7 @@ export async function POST(req) {
     }
     const savedVariantImages = [];
     if (productData.hasVariants) {
-      for (let i = 0; i < variants.length; i++) {
+      for (let i = 0; i < variants?.length; i++) {
         const variant = variants[i];
         const variantImages = [];
 

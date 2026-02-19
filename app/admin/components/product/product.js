@@ -2,13 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 import ReactPaginate from "react-paginate";
-import { FaPlus, FaMinus, FaEdit } from "react-icons/fa";
+import { FaPlus, FaMinus, FaEdit, FaCopy } from "react-icons/fa";
 import DateRangePicker from '@/components/DateRangePicker';
 import EditProductModal from "./EditProductModal";
 import { Icon } from '@iconify/react';
 import Link from 'next/link';
 import * as XLSX from 'xlsx';
 import { ToastContainer, toast } from "react-toastify";
+import DuplicateProductModel from "./DuplicateProductModel";
 
 export default function CategoryComponent() {
   const [products, setProducts] = useState([]);
@@ -24,8 +25,8 @@ export default function CategoryComponent() {
   const [SelectedProduct, setSelectedProduct] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [filters, setFilters]   = useState([]);
-  
+  const [filters, setFilters] = useState([]);
+
   // Filters
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -38,6 +39,8 @@ export default function CategoryComponent() {
   const [showAlert, setShowAlert] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [SelectedDuplicateProduct, setSelectedDuplicateProduct] = useState(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
@@ -84,7 +87,7 @@ export default function CategoryComponent() {
       if (data.success) {
         setBrands(data.brands);
       }
-      
+
     } catch (error) {
       console.error("Error fetching brands:", error);
     }
@@ -159,11 +162,11 @@ export default function CategoryComponent() {
   //       'Status'
   //     ]
   //   });
-    
+
   //   // Create workbook
   //   const workbook = XLSX.utils.book_new();
   //   XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
-    
+
   //   // Generate file and trigger download
   //   XLSX.writeFile(workbook, `products_export_${new Date().toISOString().slice(0,10)}.xlsx`);
   // };
@@ -187,7 +190,7 @@ export default function CategoryComponent() {
   //   XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
   //   XLSX.writeFile(workbook, `products_export_${new Date().toISOString().slice(0,10)}.xlsx`);
   // };
-  
+
   const exportToExcel = () => {
     // Create mapping objects for faster lookup
     const categoryMap = {};
@@ -237,14 +240,14 @@ export default function CategoryComponent() {
         }
       }
 
-      let sizeFilter        = "";
-      const filter          = product.sizeFilterDetails;
-      const filter_length   = filter.length;    
+      let sizeFilter = "";
+      const filter = product.sizeFilterDetails;
+      const filter_length = filter.length;
       filter.forEach(filter_det => {
-        if(filter_length > 1) {
-          sizeFilter        += filter_det.filter_name +",";
-        }else {
-          sizeFilter        = filter_det.filter_name;
+        if (filter_length > 1) {
+          sizeFilter += filter_det.filter_name + ",";
+        } else {
+          sizeFilter = filter_det.filter_name;
         }
       });
 
@@ -302,29 +305,29 @@ export default function CategoryComponent() {
         'Status'
       ]
     });
-    
+
     // Create workbook
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
-    
+
     // Generate file and trigger download
-    XLSX.writeFile(workbook, `products_export_${new Date().toISOString().slice(0,10)}.xlsx`);
+    XLSX.writeFile(workbook, `products_export_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   const [isBulkUploadModel, setIsBulkUploadModel] = useState({
-    isOpen: false, 
+    isOpen: false,
     type: null,
   });
 
   const OpenModelBulk = (type_val) => {
     if (type_val == "movement") {
       setIsBulkUploadModel({
-        isOpen: true, 
+        isOpen: true,
         type: type_val,
       });
-    }else {
+    } else {
       setIsBulkUploadModel({
-        isOpen: true, 
+        isOpen: true,
         type: type_val,
       });
     }
@@ -333,10 +336,10 @@ export default function CategoryComponent() {
   const CloseModal = (type_val) => {
     if (type_val == "movement") {
       setIsBulkUploadModel({
-        isOpen: false, 
+        isOpen: false,
         type: type_val,
       });
-    }else {
+    } else {
       setIsBulkUploadModel({
         isOpen: false,
         type: type_val,
@@ -349,6 +352,11 @@ export default function CategoryComponent() {
     setShowEditModal(true);
     setEditingProduct(product._id);
   };
+  const handleduplicatProduct = (product)=>{
+    setSelectedDuplicateProduct(product);
+    setShowDuplicateModal(true);
+    
+  }
 
   const handlePageClick = ({ selected }) => {
     setCurrentPage(selected);
@@ -357,10 +365,10 @@ export default function CategoryComponent() {
   const handleDateChange = ({ startDate, endDate }) => {
     const normalizedStartDate = startDate ? new Date(startDate) : null;
     const normalizedEndDate = endDate ? new Date(endDate) : null;
-    
-    setDateFilter({ 
+
+    setDateFilter({
       startDate: normalizedStartDate,
-      endDate: normalizedEndDate 
+      endDate: normalizedEndDate
     });
     setCurrentPage(0);
   };
@@ -410,9 +418,9 @@ export default function CategoryComponent() {
 
   const renderCategoryOptions = () => {
     const mainCategories = categories.filter(cat => cat.parentid === "none").slice() // prevent mutating original
-    .sort((a, b) => a.category_name.localeCompare(b.category_name)); // ✅ sort ascending A–Z;
+      .sort((a, b) => a.category_name.localeCompare(b.category_name)); // ✅ sort ascending A–Z;
     const options = [];
-    
+
     options.push(
       <option key="all" value="">
         All Categories
@@ -421,8 +429,8 @@ export default function CategoryComponent() {
 
     mainCategories.forEach(mainCat => {
       options.push(
-        <option 
-          key={mainCat._id} 
+        <option
+          key={mainCat._id}
           value={mainCat._id.toString()}
         >
           {mainCat.category_name}
@@ -439,75 +447,75 @@ export default function CategoryComponent() {
         All Brands
       </option>,
       ...brands.slice() // create a shallow copy so you don't mutate the original array
-      .sort((a, b) => a.brand_name.localeCompare(b.brand_name)).map(brand => (
-        <option 
-          key={brand.id} 
-          value={brand.id}
-        >
-          {brand.brand_name}
-        </option>
+        .sort((a, b) => a.brand_name.localeCompare(b.brand_name)).map(brand => (
+          <option
+            key={brand.id}
+            value={brand.id}
+          >
+            {brand.brand_name}
+          </option>
 
 
 
-      ))
+        ))
     ];
   };
 
   const getFilteredProducts = () => {
     const flattenedProducts = flattenProducts(products);
-   
+
     return flattenedProducts.filter((product) => {
       // Search filter
       const matchesSearch = debouncedSearchQuery === "" ||
         product.name?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
         product.slug?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
         product.item_code?.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
- 
+
       // Status filter
       const matchesStatus = statusFilter === "" ||
         product.status?.toLowerCase() === statusFilter.toLowerCase();
- 
+
       // Date filter
       let matchesDate = true;
       if (dateFilter.startDate && dateFilter.endDate && product.createdAt) {
         const productDate = new Date(product.createdAt);
         const startDate = new Date(dateFilter.startDate);
         const endDate = new Date(dateFilter.endDate);
- 
+
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(23, 59, 59, 999);
- 
+
         matchesDate = productDate >= startDate && productDate <= endDate;
       }
- 
+
       // Category filter
       let matchesCategory = true;
       if (categoryFilter) {
         if (product.category && typeof product.category === 'object') {
           const productCategoryId = product.category._id.toString();
           const selectedCategory = categories.find(cat => cat._id.toString() === categoryFilter);
-         
+
           if (selectedCategory.parentid === "none") {
             const subCategoryIds = categories
               .filter(cat => cat.parentid === categoryFilter)
               .map(cat => cat._id.toString());
-           
+
             matchesCategory = productCategoryId === categoryFilter ||
-                            subCategoryIds.includes(productCategoryId);
+              subCategoryIds.includes(productCategoryId);
           } else {
             matchesCategory = productCategoryId === categoryFilter;
           }
         } else if (product.category) {
           const productCategoryId = product.category.toString();
           const selectedCategory = categories.find(cat => cat._id.toString() === categoryFilter);
-         
+
           if (selectedCategory.parentid === "none") {
             const subCategoryIds = categories
               .filter(cat => cat.parentid === categoryFilter)
               .map(cat => cat._id.toString());
-           
+
             matchesCategory = productCategoryId === categoryFilter ||
-                            subCategoryIds.includes(productCategoryId);
+              subCategoryIds.includes(productCategoryId);
           } else {
             matchesCategory = productCategoryId === categoryFilter;
           }
@@ -515,7 +523,7 @@ export default function CategoryComponent() {
           matchesCategory = false;
         }
       }
- 
+
       // Brand filter
       let matchesBrand = true;
       if (brandFilter) {
@@ -527,21 +535,21 @@ export default function CategoryComponent() {
           matchesBrand = false;
         }
       }
- 
- 
-     let matchesStock = true;
-if (stockFilter) {
-  matchesStock = product.stock_status?.toLowerCase() === stockFilter.toLowerCase();
-}
- 
- 
+
+
+      let matchesStock = true;
+      if (stockFilter) {
+        matchesStock = product.stock_status?.toLowerCase() === stockFilter.toLowerCase();
+      }
+
+
       return matchesSearch && matchesStatus && matchesDate && matchesCategory && matchesBrand && matchesStock;
     });
   };
 
   // const getFilteredProducts = () => {
   //   const flattenedProducts = flattenProducts(products);
-    
+
   //   return flattenedProducts.filter((product) => {
   //     // Search filter
   //     const matchesSearch = debouncedSearchQuery === "" || 
@@ -572,12 +580,12 @@ if (stockFilter) {
   //       if (product.category && typeof product.category === 'object') {
   //         const productCategoryId = product.category._id.toString();
   //         const selectedCategory = categories.find(cat => cat._id.toString() === categoryFilter);
-          
+
   //         if (selectedCategory.parentid === "none") {
   //           const subCategoryIds = categories
   //             .filter(cat => cat.parentid === categoryFilter)
   //             .map(cat => cat._id.toString());
-            
+
   //           matchesCategory = productCategoryId === categoryFilter || 
   //                           subCategoryIds.includes(productCategoryId);
   //         } else {
@@ -586,12 +594,12 @@ if (stockFilter) {
   //       } else if (product.category) {
   //         const productCategoryId = product.category.toString();
   //         const selectedCategory = categories.find(cat => cat._id.toString() === categoryFilter);
-          
+
   //         if (selectedCategory.parentid === "none") {
   //           const subCategoryIds = categories
   //             .filter(cat => cat.parentid === categoryFilter)
   //             .map(cat => cat._id.toString());
-            
+
   //           matchesCategory = productCategoryId === categoryFilter || 
   //                           subCategoryIds.includes(productCategoryId);
   //         } else {
@@ -640,12 +648,12 @@ if (stockFilter) {
     return allowedExtensions.some((ext) => fileName.endsWith(ext));
   };
 
-  const [excelFile ,setExcelFile] = useState();
+  const [excelFile, setExcelFile] = useState();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if(!excelFile || !validateFile(excelFile, ['.xlsx', '.csv'])) {
+    if (!excelFile || !validateFile(excelFile, ['.xlsx', '.csv'])) {
       toast.error("Please upload a valid Excel (.xlsx) or CSV (.csv) file.");
       return;
     }
@@ -670,18 +678,18 @@ if (stockFilter) {
         toast.error(data.error);
       }
 
-    }catch (error){
+    } catch (error) {
       toast.error(error);
-    }finally {
+    } finally {
       setIsLoading(false);
     }
 
     if (type_val == "movement") {
       setIsBulkUploadModel({
-        isOpen: false, 
+        isOpen: false,
         type: type_val,
       });
-    }else {
+    } else {
       setIsBulkUploadModel({
         isOpen: false,
         type: type_val,
@@ -701,7 +709,7 @@ if (stockFilter) {
 
       <div className="flex justify-between items-center mb-5">
         <h2 className="text-2xl font-bold">Product List</h2>
-        
+
         <div className="flex items-center gap-4">
           {/* <button onClick={() => OpenModelBulk("movement")} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center gap-2" >
             <Icon icon="mdi:upload" className="text-lg" /> Bulk uploads one
@@ -790,7 +798,7 @@ if (stockFilter) {
                 {renderBrandOptions()}
               </select>
             </div>
-<div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
               <select
                 value={stockFilter}
@@ -839,11 +847,11 @@ if (stockFilter) {
                     <td className="p-2 text-center align-middle">
                       {product.item_code}
                     </td>
-                  
+
                     {/* Image Column */}
                     <td className="p-2">
                       {product.images && product.images.length > 0 ? (
-                        <img 
+                        <img
                           src={`/uploads/products/${product.images[0]}`}
                           alt={product.name}
                           className="w-12 h-12 object-contain mx-auto"
@@ -858,7 +866,7 @@ if (stockFilter) {
                         </div>
                       )}
                     </td>
-                    
+
                     {/* Name Column */}
                     <td className="p-2 text-center align-middle">
                       <a
@@ -869,16 +877,16 @@ if (stockFilter) {
                         {product.name}
                       </a>
                     </td>
-                    
+
                     {/* Price Column */}
                     <td className="p-2">{product.price}</td>
-                    
+
                     {/* Special Price Column */}
                     <td className="p-2">{product.special_price}</td>
-                    
+
                     {/* Quantity Column */}
                     <td className="p-2">{product.quantity}</td>
-                    
+
                     {/* Status Column */}
                     <td className="p-2 font-semibold">
                       {product.status === "Active" ? (
@@ -887,10 +895,20 @@ if (stockFilter) {
                         <span className="bg-red-100 text-red-600 px-6 py-1.5 rounded-full font-medium text-sm">Inactive</span>
                       )}
                     </td>
-                    
+
                     {/* Action Column */}
                     <td>
                       <div className="flex items-center gap-2 justify-center">
+                        <button
+                          className="w-7 h-7 bg-gray-100 text-gray-800 rounded-full inline-flex items-center justify-center"
+                          title="Duplicate product"
+                          onClick={()=>{
+                            handleduplicatProduct(product)
+                            toast.success("Item duplicated")
+                          }}
+                        >
+                          <FaCopy className="w-3 h-3" />
+                        </button>
                         <button
                           onClick={() => handleEditProduct(product)}
                           className="w-7 h-7 bg-red-100 text-red-600 rounded-full inline-flex items-center justify-center"
@@ -934,11 +952,10 @@ if (stockFilter) {
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 0))}
                 disabled={currentPage === 0}
-                className={`px-3 py-1.5 border border-gray-300 rounded-md ${
-                  currentPage === 0
+                className={`px-3 py-1.5 border border-gray-300 rounded-md ${currentPage === 0
                     ? "text-gray-400 cursor-not-allowed"
                     : "text-black bg-white hover:bg-gray-100"
-                }`}
+                  }`}
                 aria-label="Previous page"
               >
                 «
@@ -954,11 +971,10 @@ if (stockFilter) {
                     <button
                       key={i}
                       onClick={() => setCurrentPage(i)}
-                      className={`px-3 py-1.5 border border-gray-300 rounded-md ${
-                        currentPage === i
+                      className={`px-3 py-1.5 border border-gray-300 rounded-md ${currentPage === i
                           ? "bg-red-500 text-white"
                           : "text-black bg-white hover:bg-gray-100"
-                      }`}
+                        }`}
                       aria-label={`Page ${i + 1}`}
                       aria-current={currentPage === i ? "page" : undefined}
                     >
@@ -984,11 +1000,10 @@ if (stockFilter) {
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, pageCount - 1))}
                 disabled={currentPage === pageCount - 1}
-                className={`px-3 py-1.5 border border-gray-300 rounded-md ${
-                  currentPage === pageCount - 1
+                className={`px-3 py-1.5 border border-gray-300 rounded-md ${currentPage === pageCount - 1
                     ? "text-gray-400 cursor-not-allowed"
                     : "text-black bg-white hover:bg-gray-100"
-                }`}
+                  }`}
                 aria-label="Next page"
               >
                 »
@@ -1048,6 +1063,18 @@ if (stockFilter) {
             setShowEditModal(false);
             setEditingProduct(null);
             setSelectedProduct(null);
+            fetchProducts();
+          }}
+        />
+      )}
+      
+      {showDuplicateModal && SelectedDuplicateProduct && (
+        <DuplicateProductModel
+          product={SelectedDuplicateProduct}
+          onClose={() => {
+            setShowDuplicateModal(false);
+            // setEditingProduct(null);
+            setSelectedDuplicateProduct(null);
             fetchProducts();
           }}
         />
@@ -1226,7 +1253,7 @@ if (stockFilter) {
       )}
 
 
-      <ToastContainer position="top-right" autoClose={5000} />
+      {/* <ToastContainer position="top-right" autoClose={5000} /> */}
     </div>
   );
 }

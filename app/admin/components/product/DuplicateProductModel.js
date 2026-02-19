@@ -1,0 +1,62 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import AddProductPage from "./create";
+import { ToastContainer, toast } from 'react-toastify';
+
+export default function DuplicateProductModel({ product, onClose }) {
+  const [productData, setProductData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (product) {
+         const { _id, ...productWithoutId } = product; // remove _id
+      const prefilledProduct = {
+        ...productWithoutId,
+        files: [],
+        overviewImageFile: [],
+        images: [null, null, null, null],
+        overviewImage: [null],
+        variantAttributes: product.variantAttributes || [],
+        product_highlights: product.product_highlights || [""],
+      };
+      setProductData(prefilledProduct);
+      setLoading(false);
+    }
+  }, [product]);
+
+  if (loading) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-start overflow-auto p-8">
+      <div className="bg-white 100 rounded-lg shadow-lg w-full max-w-6xl relative">
+        <div className="flex justify-between items-center border-b px-6 py-4">
+          <h2 className="text-xl font-semibold">Duplicate Product</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-600 hover:text-red-600 text-lg font-bold"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="p-8 max-h-[80vh] overflow-y-auto">
+          {/* <ToastContainer /> */}
+           <AddProductPage
+            mode="duplicate"
+            productData={productData}
+            // productId={product._id}
+            onSuccess={() => {
+              // toast.success("Product Added successfullyy");
+              // console.log("Product added successfully");
+              setTimeout(() => {
+                onClose(); // Close the modal
+              }, 1500); // Wait 1.5s for toast to show
+            }}
+          />
+          {/* <AddProductPage mode="edit" productData={productData} productId={product._id} /> */}
+        </div>
+      </div>
+    </div>
+  );
+}
