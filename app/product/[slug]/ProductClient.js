@@ -1678,7 +1678,7 @@ export default function ProductClient() {
 
                   // 🔥 Clean & filter
                   const cleanedFeatures = features
-                    .map(f => String(f).replace(/[{}\[\]"]/g, "").trim())
+                    .map(f => String(f).replace(/[{}\[\]"]/g, "").replace(/\|\|/g, ",").trim())
                     .filter(f => f.length > 0);
 
                   return cleanedFeatures.length > 0 ? (
