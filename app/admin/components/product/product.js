@@ -352,10 +352,10 @@ export default function CategoryComponent() {
     setShowEditModal(true);
     setEditingProduct(product._id);
   };
-  const handleduplicatProduct = (product)=>{
+  const handleduplicatProduct = (product) => {
     setSelectedDuplicateProduct(product);
     setShowDuplicateModal(true);
-    
+
   }
 
   const handlePageClick = ({ selected }) => {
@@ -879,10 +879,13 @@ export default function CategoryComponent() {
                     </td>
 
                     {/* Price Column */}
-                    <td className="p-2">{product.price}</td>
+                    <td className="p-2 whitespace-nowrap">
+                      ₹ {Number(product.price).toLocaleString("en-IN")}
+                    </td>
 
-                    {/* Special Price Column */}
-                    <td className="p-2">{product.special_price}</td>
+                    <td className="p-2 whitespace-nowrap">
+                      ₹ {Number(product.special_price).toLocaleString("en-IN")}
+                    </td>
 
                     {/* Quantity Column */}
                     <td className="p-2">{product.quantity}</td>
@@ -902,7 +905,7 @@ export default function CategoryComponent() {
                         <button
                           className="w-7 h-7 bg-gray-100 text-gray-800 rounded-full inline-flex items-center justify-center"
                           title="Duplicate product"
-                          onClick={()=>{
+                          onClick={() => {
                             handleduplicatProduct(product)
                             toast.success("Item duplicated")
                           }}
@@ -953,8 +956,8 @@ export default function CategoryComponent() {
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 0))}
                 disabled={currentPage === 0}
                 className={`px-3 py-1.5 border border-gray-300 rounded-md ${currentPage === 0
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-black bg-white hover:bg-gray-100"
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-black bg-white hover:bg-gray-100"
                   }`}
                 aria-label="Previous page"
               >
@@ -972,8 +975,8 @@ export default function CategoryComponent() {
                       key={i}
                       onClick={() => setCurrentPage(i)}
                       className={`px-3 py-1.5 border border-gray-300 rounded-md ${currentPage === i
-                          ? "bg-red-500 text-white"
-                          : "text-black bg-white hover:bg-gray-100"
+                        ? "bg-red-500 text-white"
+                        : "text-black bg-white hover:bg-gray-100"
                         }`}
                       aria-label={`Page ${i + 1}`}
                       aria-current={currentPage === i ? "page" : undefined}
@@ -1001,8 +1004,8 @@ export default function CategoryComponent() {
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, pageCount - 1))}
                 disabled={currentPage === pageCount - 1}
                 className={`px-3 py-1.5 border border-gray-300 rounded-md ${currentPage === pageCount - 1
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-black bg-white hover:bg-gray-100"
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-black bg-white hover:bg-gray-100"
                   }`}
                 aria-label="Next page"
               >
@@ -1067,7 +1070,7 @@ export default function CategoryComponent() {
           }}
         />
       )}
-      
+
       {showDuplicateModal && SelectedDuplicateProduct && (
         <DuplicateProductModel
           product={SelectedDuplicateProduct}
