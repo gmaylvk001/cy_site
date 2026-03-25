@@ -32,7 +32,7 @@ export async function POST(req) {
     }
 
     let image_url = "";
-    if (file) {
+    if (file  && file.size > 0) {
       const uploadDir = path.join(process.cwd(), "public/uploads/Brands");
       
       // Ensure the directory exists
@@ -70,7 +70,7 @@ export async function POST(req) {
       brand_name,
       brand_slug,
       status,
-      image: image_url,
+      image: image_url || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     });

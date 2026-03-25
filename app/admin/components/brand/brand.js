@@ -648,7 +648,7 @@ const handleDeleteBrand = async (brandId) => {
                       file:bg-red-50 file:text-red-700
                       hover:file:bg-red-100
                     "
-                    required
+                    // required
                   />
                   {imageError && (
                     <p className="text-red-500 text-sm mt-1">{imageError}</p>
