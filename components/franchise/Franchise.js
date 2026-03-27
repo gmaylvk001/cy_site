@@ -439,7 +439,7 @@ export default function Franchise() {
                   </div>
                   <div>
                       <h3 className="font-semibold text-black">
-                      4,000+ Bikes Sold Every Month
+                      10,000+ Bikes Sold Every Month
                       </h3>
                       <p className="text-gray-500 text-sm mt-1">
                       Consistent sales volume ensures strong demand, higher revenue,

@@ -462,6 +462,41 @@ export default function HomeComponent() {
       category_slug.trim()
   );
 
+  const testimonials = [
+    {
+      name: "Rohit Sharma",
+      city: "Bengaluru",
+      title: "Smooth buying experience from start to finish",
+      quote:
+        "I found the right hybrid cycle in minutes. Delivery updates were clear, assembly was easy, and the bike quality felt premium right away.",
+      highlight: "Verified purchase",
+    },
+    {
+      name: "Meghana Reddy",
+      city: "Hyderabad",
+      title: "Great support team and genuine guidance",
+      quote:
+        "The Cycle World team helped me compare models based on height and riding style. I ended up choosing the perfect bicycle for daily commuting.",
+      highlight: "Recommended by support",
+    },
+    {
+      name: "Arjun Patel",
+      city: "Ahmedabad",
+      title: "Best place to shop for family bicycles",
+      quote:
+        "We ordered cycles for both our kids and one for weekend rides. Product quality, pricing, and after-sales response were all excellent.",
+      highlight: "Family purchase",
+    },
+    {
+      name: "Nisha Verma",
+      city: "Chennai",
+      title: "Fast delivery and trusted brand selection",
+      quote:
+        "I liked that the store had multiple trusted brands in one place. The checkout process was simple and the cycle arrived in great condition.",
+      highlight: "Multi-brand shopper",
+    },
+  ];
+
 
   return (
     <>
@@ -1160,6 +1195,75 @@ export default function HomeComponent() {
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+        <section className="bg-[#f5f5f5] py-10">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#2a7b9b]">
+                  Testimonials
+                </p>
+                <h2 className="mt-2 text-3xl font-bold text-gray-900">
+                  What Cycle World Customers Say
+                </h2>
+                <p className="mt-2 max-w-2xl text-gray-600">
+                  Real feedback from riders and families who chose Cycle World for
+                  quality products, expert help, and dependable service.
+                </p>
+              </div>
+            </div>
+
+            <Swiper
+              modules={[Autoplay, Pagination]}
+              autoplay={{
+                delay: 3500,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+              }}
+              pagination={{ clickable: true }}
+              spaceBetween={24}
+              breakpoints={{
+                0: { slidesPerView: 1 },
+                768: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
+              }}
+              className="mt-10 pb-12"
+            >
+              {testimonials.map((item) => (
+                <SwiperSlide key={`${item.name}-${item.city}`}>
+                  <div className="h-full rounded-2xl border border-white/80 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+                    <div className="mb-5 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#a3ca43] text-lg font-bold text-white">
+                          {item.name.charAt(0)}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                          <p className="text-sm text-gray-500">{item.city}</p>
+                        </div>
+                      </div>
+                      <span className="rounded-full bg-[#eef7d5] px-3 py-1 text-xs font-medium text-[#5f7f12]">
+                        {item.highlight}
+                      </span>
+                    </div>
+
+                    <p className="text-lg font-semibold leading-snug text-gray-900">
+                      {item.title}
+                    </p>
+                    <p className="mt-4 text-sm leading-7 text-gray-600">
+                      "{item.quote}"
+                    </p>
+
+                    <div className="mt-6 flex items-center gap-1 text-[#f59e0b]">
+                      {Array.from({ length: 5 }).map((_, index) => (
+                        <span key={index}>★</span>
+                      ))}
+                    </div>
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
           </div>
         </section>
         {/* Why Shop + Features */}

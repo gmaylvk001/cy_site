@@ -1650,7 +1650,7 @@ const Header = () => {
               <div className="hidden lg:flex items-center space-x-6 pr-3">
 
                 <Link href="/location" className="text-md hover:text-[#c7ff3e]">Store</Link>
-                <Link href="/franchise" className="text-md hover:text-[#c7ff3e]">Franchise</Link>
+                <Link href="/franchise" className="text-md hover:text-[#c7ff3e]">Franchise Enquiry</Link>
               </div>
 
               {/* Icons Group */}
