@@ -1,6 +1,8 @@
 import dbConnect from "@/lib/db";
 import Product from "@/models/product";
 import ProductFilter from "@/models/ecom_productfilter_info";
+import Filter from "@/models/ecom_filter_infos";
+import FilterGroup from "@/models/ecom_filter_group_infos";
 
 export async function GET(req) {
   try {
@@ -52,73 +54,82 @@ export async function GET(req) {
       }
     ];
     
-    // First fetch products matching brand and price filters
-    // let products = await Product.find(query)
-    //   .populate('brand', 'brand_name brand_slug')
-    //   .lean();
-    
-    // // Apply additional filters if any
-    // if (filterIds.length > 0) {
-    //   const productIds = products.map(p => p._id);
-      
-    //   // Get all product-filter relationships that match our criteria
-    //   const productFilters = await ProductFilter.find({
-    //     product_id: { $in: productIds },
-    //     filter_id: { $in: filterIds }
-    //   });
-    //   console.log(productFilters);
-    //   // Group filters by product
-    //   const filtersByProduct = productFilters.reduce((acc, pf) => {
-    //     const productId = pf.product_id.toString();
+    const baseProductIds = await Product.find(query).distinct("_id");
+    const baseProductIdStrings = baseProductIds.map((id) => id.toString());
+    let matchingProductIdStrings = baseProductIdStrings;
 
-    //     if (!acc[productId]) acc[productId] = new Set();
-    //     acc[productId].add(pf.filter_id.toString());
-    //     return acc;
-    //   }, {});
-    //   console.log("filtersByProduct",filtersByProduct);
-    //   console.log("products",products);
-    //   // Filter products to only those that have ALL selected filters
-    //   products = products.filter(product => {
-    //     const productId = product._id.toString();
-    //     const productFilterIds = filtersByProduct[productId] || new Set();
-    //    // return filterIds.every(fid => productFilterIds.has(fid));
-    //    return filterIds.some(fid => productFilterIds.has(fid));
-    //   });
-    // }
-    
-    // return Response.json(products);
-    let productsQuery = Product.find(query)
-    .populate('brand', 'brand_name brand_slug');
-  
-  // Apply additional filters if any
-  if (filterIds.length > 0) {
-    const productIds = await productsQuery.distinct('_id');
-    
-    const productFilters = await ProductFilter.find({
-      product_id: { $in: productIds },
-      filter_id: { $in: filterIds }
-    });
-    
-    const filtersByProduct = productFilters.reduce((acc, pf) => {
-      const productId = pf.product_id.toString();
-      if (!acc[productId]) acc[productId] = new Set();
-      acc[productId].add(pf.filter_id.toString());
+    if (filterIds.length > 0 && baseProductIdStrings.length > 0) {
+      const selectedProductFilters = await ProductFilter.find({
+        product_id: { $in: baseProductIdStrings },
+        filter_id: { $in: filterIds },
+      }).lean();
+
+      const filtersByProduct = selectedProductFilters.reduce((acc, pf) => {
+        const productId = pf.product_id.toString();
+        if (!acc[productId]) acc[productId] = new Set();
+        acc[productId].add(pf.filter_id.toString());
+        return acc;
+      }, {});
+
+      matchingProductIdStrings = baseProductIdStrings.filter((productId) => {
+        const productFilterIds = filtersByProduct[productId] || new Set();
+        return filterIds.some((fid) => productFilterIds.has(fid));
+      });
+    }
+
+    const allProductFilters =
+      matchingProductIdStrings.length > 0
+        ? await ProductFilter.find({
+            product_id: { $in: matchingProductIdStrings },
+          }).lean()
+        : [];
+
+    const filterCountMap = allProductFilters.reduce((acc, pf) => {
+      const filterId = pf.filter_id?.toString();
+      const productId = pf.product_id?.toString();
+
+      if (!filterId || !productId) {
+        return acc;
+      }
+
+      if (!acc[filterId]) {
+        acc[filterId] = new Set();
+      }
+
+      acc[filterId].add(productId);
       return acc;
     }, {});
-    
-    // Get only product IDs that match all filters
-    const filteredProductIds = productIds.filter(id => {
-      const productId = id.toString();
-      const productFilterIds = filtersByProduct[productId] || new Set();
-      return filterIds.some(fid => productFilterIds.has(fid));
-    });
-    
-    // Update the query to only include filtered products
-    query._id = { $in: filteredProductIds };
-    productsQuery = Product.find(query).populate('brand', 'brand_name brand_slug');
-  }
 
- 
+    const availableFilterIds = Object.keys(filterCountMap);
+    const availableFilters =
+      availableFilterIds.length > 0
+        ? await Filter.find({ _id: { $in: availableFilterIds } })
+            .populate({
+              path: "filter_group",
+              select: "_id filtergroup_name",
+              model: FilterGroup,
+            })
+            .lean()
+        : [];
+
+    const formattedAvailableFilters = availableFilters
+      .map((filter) => ({
+        ...filter,
+        filter_group_id: filter.filter_group?._id?.toString() || "",
+        filter_group_name: filter.filter_group?.filtergroup_name || "No Group",
+        count: filterCountMap[filter._id.toString()]?.size || 0,
+      }))
+      .filter((filter) => filter.count > 0);
+
+    if (matchingProductIdStrings.length > 0) {
+      query._id = { $in: matchingProductIdStrings };
+    } else {
+      query._id = { $in: [] };
+    }
+
+    let productsQuery = Product.find(query).populate("brand", "brand_name brand_slug");
+
+
     // Apply sorting: Products with quantity > 0 first, then quantity <= 0
     productsQuery = productsQuery.sort({ 
       quantity: -1, // -1 for descending: quantity > 0 comes first, then quantity <= 0
@@ -138,10 +149,13 @@ export async function GET(req) {
   
   return Response.json({
     products,
+    availableFilters: formattedAvailableFilters,
     pagination: {
       currentPage: page,
       totalPages,
       totalProducts,
+      hasNext: page < totalPages,
+      hasPrev: page > 1,
       hasMore: page < totalPages
     }
   });

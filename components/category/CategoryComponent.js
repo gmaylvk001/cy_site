@@ -85,6 +85,54 @@ export default function CategoryPage(params) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter(); // Added router
 
+  const buildFilterGroups = useCallback((filters = []) => {
+    if (!Array.isArray(filters) || filters.length === 0) {
+      return {};
+    }
+
+    return filters.reduce((groups, filter) => {
+      const groupId = filter.filter_group_id || filter.filter_group_name;
+
+      if (!groupId || (filter.count || 0) <= 0) {
+        return groups;
+      }
+
+      if (!groups[groupId]) {
+        groups[groupId] = {
+          _id: groupId,
+          name: filter.filter_group_name || "Unnamed Group",
+          slug: (filter.filter_group_name || "unnamed")
+            .toLowerCase()
+            .replace(/\s+/g, "-"),
+          filters: [],
+        };
+      }
+
+      groups[groupId].filters.push({
+        _id: filter._id,
+        filter_name: filter.filter_name,
+        count: filter.count || 0,
+      });
+
+      return groups;
+    }, {});
+  }, []);
+
+  const syncFilterGroups = useCallback(
+    (filters = []) => {
+      const groups = buildFilterGroups(filters);
+      setFilterGroups(groups);
+      setExpandedFilters((prev) => {
+        const next = {};
+        Object.keys(groups).forEach((groupId) => {
+          next[groupId] = prev[groupId] ?? true;
+        });
+        return next;
+      });
+    },
+    [buildFilterGroups],
+  );
+
   // Fetch initial data
   useEffect(() => {
     if (slug) {
@@ -379,9 +427,10 @@ export default function CategoryPage(params) {
           throw new Error("Failed to fetch products");
         }
 
-        const { products, pagination } = await res.json();
+        const { products, pagination, availableFilters } = await res.json();
 
         setProducts(products);
+        syncFilterGroups(availableFilters || []);
 
         setPagination({
           currentPage: pagination.currentPage,
@@ -404,7 +453,7 @@ export default function CategoryPage(params) {
         if (!initialLoad) setLoading(false);
       }
     },
-    [selectedFilters, itemsPerPage, router]
+    [itemsPerPage, router, selectedFilters, syncFilterGroups]
   );
 
 
