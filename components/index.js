@@ -1139,7 +1139,7 @@ export default function HomeComponent() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold">
-                    4,000+ Bikes Sold Monthly
+                    10,000+ Bikes Sold Monthly
                   </h3>
                   <p className="text-gray-500 text-sm">
                     Proven customer confidence
