@@ -119,7 +119,7 @@ const sendCancellationEmail = async (order) => {
         "params",
         JSON.stringify([name, order.order_number])
       );
-
+      /*
       const response = await fetch("https://bea.eygr.in/api/email/send-msg", {
         method: "POST",
         headers: {
@@ -130,6 +130,7 @@ const sendCancellationEmail = async (order) => {
 
       const data = await response.json();
       results.push({ email, data });
+      */
     }
 
     return results; // Return results for all emails
@@ -166,7 +167,7 @@ const sendCancellationEmail = async (order) => {
         "params",
         JSON.stringify([order.order_username, order.order_number, formattedDate])
       );
-
+      /*
       const response = await fetch("https://bea.eygr.in/api/email/send-msg", {
         method: "POST",
         headers: {
@@ -180,6 +181,7 @@ const sendCancellationEmail = async (order) => {
       } else {
         console.log(`Email sent successfully to ${email}`);
       }
+      */
     }
 
     return { success: true, message: "Emails sent successfully" };

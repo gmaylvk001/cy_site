@@ -59,7 +59,7 @@ export async function POST(request) {
       { status: 201 }
     );  */
        
-
+      /*
       const adminresponse = await fetch("https://bea.eygr.in/api/email/send-msg", {
         method: "POST",
         headers: {
@@ -70,6 +70,7 @@ export async function POST(request) {
 
       const adminData = await adminresponse.json();
       //console.log("Mail Sent:", adminEmail, adminData);
+      */
     }
 
 

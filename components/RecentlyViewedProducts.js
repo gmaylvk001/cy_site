@@ -233,7 +233,7 @@ const RecentlyViewedProducts = () => {
           <div className="relative rounded-xl overflow-hidden h-full group cursor-pointer">
             {/* Background Image */}
             <img
-              src="/uploads/designs/recently-visit-banner.webp"
+              src="/images/cycle-port.png"
               alt="Promo"
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             />

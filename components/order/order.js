@@ -156,7 +156,7 @@ export default function Order() {
         "params",
         JSON.stringify([name, order.order_number])
       );
-
+      /*
       const response = await fetch("https://bea.eygr.in/api/email/send-msg", {
         method: "POST",
         headers: {
@@ -167,6 +167,7 @@ export default function Order() {
 
       const data = await response.json();
       results.push({ email, data });
+      */
     }
 
     toast.success("Cancellation email sent successfully");
@@ -271,7 +272,7 @@ export default function Order() {
                       ? "You haven't placed any orders yet" 
                       : `No ${activeFilter} orders found`}
                   </p>
-                  <Link href="/products" className="mt-4 sm:mt-6 inline-block px-4 sm:px-6 py-2 bg-customBlue text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base">
+                  <Link href="/" className="mt-4 sm:mt-6 inline-block px-4 sm:px-6 py-2 bg-customBlue text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base">
                     Start Shopping
                   </Link>
                 </div>
