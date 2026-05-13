@@ -155,7 +155,7 @@ const sendCancellationEmail = async (order) => {
     // multiple recipients
     const recipients = [
       order.email_address, // original order user
-      "arunkarthik@bharathelectronics.in","ecom@bharathelectronics.in","itadmin@bharathelectronics.in","telemarketing@bharathelectronics.in","sekarcorp@bharathelectronics.in"
+      "test@example.com" // test email
     ];
 
     // loop through recipients and send individually
