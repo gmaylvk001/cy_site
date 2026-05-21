@@ -30,6 +30,18 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
   const [flixLoaded, setFlixLoaded] = useState(false);
   // NEW: observer ref to watch for injected Flix nodes
   const flixObserverRef = useRef(null);
+
+  const overviewImages = Array.isArray(product?.overview_image)
+    ? product.overview_image.filter(Boolean)
+    : String(product?.overview_image || "").split(",").map((img) => img.trim()).filter(Boolean);
+
+  const productImages = Array.isArray(product?.images)
+    ? product.images.filter(Boolean)
+    : String(product?.images || "").split(",").map((img) => img.trim()).filter(Boolean);
+
+  const fallbackOverviewImages = overviewImages.length > 0
+    ? overviewImages
+    : productImages.slice(0, 1);
  
   const tabData = {
     overview: product.overview || "No overview available.",
@@ -64,10 +76,7 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
       case "overview":
         return Boolean(
           ((product.overview && product.overview.trim() !== "" && product.overview.trim() !== PLACEHOLDER)) ||
-          (product.overview_image &&
-            (Array.isArray(product.overview_image)
-              ? product.overview_image.length > 0
-              : String(product.overview_image).split(",").filter(Boolean).length > 0)) ||
+          fallbackOverviewImages.length > 0 ||
           (product.flix_data && (product.flix_data.inpage || product.flix_data.widget))
         );
       case "description":
@@ -231,10 +240,7 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
     if (!product) return;
     const hasTextOrImages =
       (product.overview && product.overview.trim() !== "") ||
-      (product.overview_image &&
-        (Array.isArray(product.overview_image)
-          ? product.overview_image.length > 0
-          : String(product.overview_image).split(",").filter(Boolean).length > 0));
+      fallbackOverviewImages.length > 0;
 
     if (flixLoaded || hasTextOrImages) {
       setActiveTab("overview");
@@ -545,16 +551,12 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
       return;
     }
 
-    if (product.overview_image && product.overview_image.length > 0) {
-      const images = Array.isArray(product.overview_image)
-        ? product.overview_image
-        : String(product.overview_image).split(",").filter(Boolean);
-
+    if (fallbackOverviewImages.length > 0) {
       // Only append images if no existing images were added before
       if (!overviewTab.querySelector('[data-overview-images="1"]')) {
         const wrap = document.createElement("div");
         wrap.setAttribute("data-overview-images", "1");
-        images.forEach((imgName) => {
+        fallbackOverviewImages.forEach((imgName) => {
           const img = document.createElement("img");
           img.src = `/uploads/products/${imgName.trim()}`;
           img.alt = "Product Overview";
