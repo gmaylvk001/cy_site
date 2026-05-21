@@ -1133,7 +1133,9 @@ export default function ProductClient() {
                         Rs.{Math.round(Number(product.special_price) || Number(product.price))}
                       </span>
 
-                      {Number(product.special_price) > 0 && Number(product.price) > 0 && (
+                      {Number(product.special_price) > 0 &&
+                        Number(product.price) > 0 &&
+                        Number(product.special_price) < Number(product.price) && (
                         <span className="text-gray-800 line-through text-sm">
                           Rs.{Math.round(Number(product.price))}
                         </span>
