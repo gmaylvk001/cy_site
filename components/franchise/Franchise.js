@@ -142,7 +142,7 @@ export default function Franchise() {
           mobile: formData.phone,
           email: formData.email,
           city: formData.city,
-          company: formData.company,
+          //company: formData.company,
           investment_budget: formData.invest,
           opening_timeline: formData.start,
           occupation_type: formData.job,
@@ -300,7 +300,7 @@ export default function Franchise() {
                   {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
                 </div>
 
-                {/* Company Name */}
+                {/* Company Name 
                 <div>
                   <label className="block mb-1 font-medium">Company Name</label>
                   <input
@@ -311,7 +311,7 @@ export default function Franchise() {
                     className="w-full border rounded px-3 py-2"
                   />
                 </div>
-
+                  */}
                 {/* Investment Range */}
                 <div>
                   <label className="block mb-1 font-medium">Investment Range *</label>
@@ -324,9 +324,9 @@ export default function Franchise() {
                     }`}
                   >
                     <option value="">Select investment range</option>
-                    <option value="20–30 Lakhs">20–30 Lakhs</option>
-                    <option value="30–50 Lakhs">30–50 Lakhs</option>
-                    <option value="50+ Lakhs">50+ Lakhs</option>
+                    <option value="20–30 Lakhs">15–20 Lakhs</option>
+                    <option value="30–50 Lakhs">20–30 Lakhs</option>
+                    <option value="50+ Lakhs">30–50 Lakhs</option>
                   </select>
                   {errors.invest && <p className="text-red-500 text-xs mt-1">{errors.invest}</p>}
                 </div>

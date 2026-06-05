@@ -6,7 +6,7 @@ export async function GET() {
 
   try {
     // Fetch all stores from the database
-    const stores = await store.find({});
+    const stores = await store.find({'status' : 'Active'}).sort({ created_at: -1 });
 
     // Return the stores as a JSON response
     return new Response(JSON.stringify({ success: true, data: stores }), {

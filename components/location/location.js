@@ -44,7 +44,7 @@ export default function LocationPage() {
               className="border border-[#a3ca43] rounded-lg shadow-sm p-4 hover:shadow-md transition"
             >
               <h2 className="text-md font-semibold text-gray-800 mb-2">
-                {branch.title}
+                {branch.organisation_name}
               </h2>
               <p className="text-sm text-gray-700 mb-1">{branch.address}</p>
               <p className="text-sm text-gray-700 mb-1">{branch.city}</p>

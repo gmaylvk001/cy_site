@@ -1015,7 +1015,7 @@ const grandTotal = subtotal - totalDiscount;
     name="businessName"
     value={formData.businessName}
     className="border p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-200 pt-5 pb-1"
-    required
+    
   />
   <span className={`absolute left-2 transition-all duration-200 ${
     formData.businessName
@@ -1053,7 +1053,7 @@ const grandTotal = subtotal - totalDiscount;
     name="landmark"
     value={formData.landmark}
     className="border p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-200 pt-5 pb-1"
-    required
+    
   />
   <span className={`absolute left-2 transition-all duration-200 ${
     formData.landmark
@@ -1399,6 +1399,7 @@ const grandTotal = subtotal - totalDiscount;
                     />
                     <span>Online Payment</span>
                   </label>
+                  {/* 
                   <label className="flex items-center space-x-2">
                     <input 
                       type="radio" 
@@ -1410,6 +1411,7 @@ const grandTotal = subtotal - totalDiscount;
                     />
                     <span>Cash on Delivery</span>
                   </label>
+                    */}
                 </div>
               </div>
              <button 
