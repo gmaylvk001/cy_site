@@ -465,7 +465,7 @@ export default function Custom_Combo_Checkout() {
 
       return new Promise((resolve, reject) => {
         const options = {
-          key: process.env.NEXT_PUBLIC_RAZORPAY_TEST_KEY,
+          key: process.env.NEXT_PUBLIC_RAZORPAY_LIVE_KEY,
           amount: order.amount,
           currency: "INR",
           name: "Cycle world",
@@ -541,7 +541,7 @@ export default function Custom_Combo_Checkout() {
 
   //     return new Promise((resolve, reject) => {
   //       const options = {
-  //         key: process.env.NEXT_PUBLIC_RAZORPAY_TEST_KEY,
+  //         key: process.env.NEXT_PUBLIC_RAZORPAY_LIVE_KEY,
   //         amount: order.amount,
   //         currency: "INR",
   //         name: "BEA",

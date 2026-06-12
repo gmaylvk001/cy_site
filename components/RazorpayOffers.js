@@ -11,7 +11,7 @@ const RazorpayOffers = ({ amount }) => {
           clearInterval(interval); // Stop checking
 
           const widgetConfig = {
-            key: process.env.NEXT_PUBLIC_RAZORPAY_TEST_KEY,// "rzp_live_KrAP9KEDGHrelP",
+            key: process.env.NEXT_PUBLIC_RAZORPAY_LIVE_KEY,// "rzp_live_KrAP9KEDGHrelP",
             amount: amount * 100, // in paise
             features: { offers: { list: [  ] } },
           };

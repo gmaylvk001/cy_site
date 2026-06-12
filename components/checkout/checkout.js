@@ -326,10 +326,10 @@ const handleOnlinePayment = async (totalAmount) => {
 
     return new Promise((resolve, reject) => {
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_TEST_KEY,
+        key: process.env.NEXT_PUBLIC_RAZORPAY_LIVE_KEY,
         amount: order.amount,
         currency: "INR",
-        name: "BEA",
+        name: "Cycle world",
         description: "Product Purchase",
         order_id: order.id,
         handler: async function (response) {
@@ -402,7 +402,7 @@ const handleOnlinePayment = async (totalAmount) => {
   
   //     return new Promise((resolve, reject) => {
   //       const options = {
-  //         key: process.env.NEXT_PUBLIC_RAZORPAY_TEST_KEY,
+  //         key: process.env.NEXT_PUBLIC_RAZORPAY_LIVE_KEY,
   //         amount: order.amount,
   //         currency: "INR",
   //         name: "BEA",

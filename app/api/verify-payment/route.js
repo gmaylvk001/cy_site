@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto'; // Add crypto import
 
 const razorpay = new Razorpay({
-  key_id: process.env.NEXT_PUBLIC_RAZORPAY_TEST_KEY,
+  key_id: process.env.NEXT_PUBLIC_RAZORPAY_LIVE_KEY,
   key_secret: process.env.RAZORPAY_SECRET
 });
 

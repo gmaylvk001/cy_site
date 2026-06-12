@@ -13,6 +13,17 @@ import { FaHeart } from "react-icons/fa6";
 import { AuthModal } from '@/components/AuthModal';
 
 export default function Order() {
+  const [payOrderId, setPayOrderId] = useState(null);
+  const [isPaying, setIsPaying] = useState(false);
+
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      const pid = url.searchParams.get('payOrderId');
+      if (pid) setPayOrderId(pid);
+    } catch (e) {}
+  }, []);
+
   const [activeFilter, setActiveFilter] = useState('all');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authError, setAuthError] = useState('');
@@ -373,6 +384,24 @@ export default function Order() {
                               <FiShoppingBag className="mr-1 sm:mr-2 text-xs sm:text-sm" />
                               Buy Again
                             </button>
+
+                            {/* Complete Payment for cancelled online orders */}
+                            {payOrderId && order._id === payOrderId && order.payment_type === 'online' && order.order_status === 'pending' && (
+                              <button
+                                onClick={() => {
+                                  setIsPaying(true);
+                                  // Redirect back to checkout page flow or open Razorpay is not implemented yet here.
+                                  // For now, just clear paying state and keep UX.
+                                  // (Backend Razorpay + verify needs to be implemented in this component.)
+                                  setIsPaying(false);
+                                  toast.info('Complete Payment flow will start after checkout is updated.');
+                                }}
+                                className="px-3 sm:px-4 py-1 sm:py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-xs sm:text-sm"
+                              >
+                                {isPaying ? 'Opening...' : 'Complete Payment'}
+                              </button>
+                            )}
+
                             {order.order_status === 'pending' && (
                               <button 
                                 onClick={() => handleCancelClick(order)}
@@ -382,13 +411,6 @@ export default function Order() {
                               </button>
                             )}
 
-                            {order.order_status === "shipped" && (
-                              <a href={`/product/${order.order_item[0].slug}#reviews`} target='_blank'>
-                                <button className="px-3 sm:px-4 py-1 sm:py-2 bg-green-100 text-green-600 rounded-md hover:bg-green-200 transition-colors text-xs sm:text-sm">
-                                  Write Review
-                                </button>
-                              </a>
-                            )}
                           </div>
                         </div>
                       </div>

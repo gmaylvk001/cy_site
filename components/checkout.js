@@ -324,7 +324,7 @@ const handleOnlinePayment = async (totalAmount) => {
 
     return new Promise((resolve, reject) => {
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_TEST_KEY,
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: "INR",
         name: "BEA",
@@ -400,7 +400,7 @@ const handleOnlinePayment = async (totalAmount) => {
   
   //     return new Promise((resolve, reject) => {
   //       const options = {
-  //         key: process.env.NEXT_PUBLIC_RAZORPAY_TEST_KEY,
+  //         key: process.env.NEXT_PUBLIC_RAZORPAY_LIVE_KEY,
   //         amount: order.amount,
   //         currency: "INR",
   //         name: "BEA",
@@ -510,31 +510,10 @@ const grandTotal = subtotal - totalDiscount;
     setIsSubmitting(true);
       setError("");
   
-           const totalAmount = orderSummary.total;
+      const totalAmount = orderSummary.total;
 
-      let paymentId = "";
-      let paymentStatus = "";
-      let paymentMode = "";
-  
-      if (paymentMethod === 'Cash on Delivery') {
-        paymentId = "COD_" + Date.now();
-        paymentStatus = "pending";
-        paymentMode = "Cash on Delivery";
-      } else if (paymentMethod === 'online') {
-        try {
-          const result = await handleOnlinePayment(totalAmount);
-          paymentId = result.paymentId;
-          paymentStatus = result.status;
-          paymentMode = result.mode;
-        } catch (error) {
-          toast.error(`Payment failed: ${error.message}`);
-          setIsSubmitting(false);
-          return;
-        }
-      } else {
-        console.log("Invalid Payment Method");
-        return;
-      }
+      const tempPaymentId = (paymentMethod === 'Cash on Delivery' ? "COD_" : "ONLINE_") + Date.now();
+      const paymentMode = paymentMethod === 'online' ? 'online' : 'Cash on Delivery';
  
       // Only save new address if not using saved address
       if (!useSavedAddress || selectedAddress === null) {
@@ -575,9 +554,9 @@ const grandTotal = subtotal - totalDiscount;
         body: JSON.stringify({
           user_id: userId,
           payment_mode: paymentMode,
-          status: paymentStatus,
+          status: 'pending',
           modevalue: totalAmount,
-          payment_id: paymentId,
+          payment_id: tempPaymentId,
           payment_Date: new Date(),
         }),
       });
@@ -639,38 +618,9 @@ const grandTotal = subtotal - totalDiscount;
       if (!orderRes.ok) {
         throw new Error('Order creation failed');
       }
+      const orderData = await orderRes.json();
 
-
-      // if(orderRes.ok){
-        // const responsedata = await orderRes.json();
-        // const order_id = responsedata.order._id.toString();
-        // const orderhistory1 = await fetch('/api/orderhistory',{
-        //   method:'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({orderId : order_id})
-        // });
-
-        // if(formData.deliveryType == 'store'){
-        //  const storeorderid = await fetch('/api/sender_orderid',{
-        //   method:'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({orderId : order_id})
-        //  });
-
-        //  if(storeorderid.ok){
-        //     const storeresponsedata = await storeorderid.json();
-        //   const storeorderid_status = storeresponsedata.status;
-        //     const orderhistory = await fetch('/api/orderhistory',{
-        //       method:'PUT',
-        //       headers: { 'Content-Type': 'application/json' },
-        //       body: JSON.stringify({orderId : order_id,status:storeorderid_status})
-        //     });
-        //  }
-
-        // }
-      // }
-
-      // Clear cart after successful order
+      // Clear cart immediately after order creation
       const cartdelte = await fetch('/api/cart', {
         method: 'DELETE',
         headers: {
@@ -687,10 +637,21 @@ const grandTotal = subtotal - totalDiscount;
         return;
       }
 
+      // If online payment, go to gateway
+      if (paymentMethod === "online") {
+        try {
+          await handleOnlinePayment(totalAmount);
+          toast.success("Payment successful!");
+        } catch (error) {
+          toast.info("Payment was cancelled or failed. You can complete it later in the orders page.");
+          router.push("/orders");
+          return;
+        }
+      }
+
       if (cartdelte.status === 200) {
         localStorage.removeItem('checkoutData');
         localStorage.removeItem('appliedCoupon')
-        const orderData = await orderRes.json()
         // Prepare email data
         // console.log(orderData,orderData.order.order_number);
         // const emailData = {
