@@ -12,9 +12,25 @@ import { HiShoppingBag } from "react-icons/hi2";
 import { FaHeart } from "react-icons/fa6";
 import { AuthModal } from '@/components/AuthModal';
 
+const loadRazorpay = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 export default function Order() {
   const [payOrderId, setPayOrderId] = useState(null);
   const [isPaying, setIsPaying] = useState(false);
+  const [payingOrderId, setPayingOrderId] = useState(null);
 
   useEffect(() => {
     try {
@@ -77,6 +93,124 @@ export default function Order() {
 
   const handleBuyAgain = () => {
     router.push('/');
+  };
+
+  const createRazorpayOrder = async (amount) => {
+    const res = await fetch('/api/create-razorpay-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: Number(amount) * 100 })
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to create payment order');
+    }
+
+    return await res.json();
+  };
+
+  const openPaymentGateway = async (order) => {
+    const razorpayLoaded = await loadRazorpay();
+    if (!razorpayLoaded) {
+      throw new Error('Razorpay SDK failed to load');
+    }
+
+    const orderResponse = await createRazorpayOrder(order.order_amount);
+    const { order: razorpayOrder } = orderResponse;
+
+    return new Promise((resolve, reject) => {
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_LIVE_KEY,
+        amount: razorpayOrder.amount,
+        currency: "INR",
+        name: "Cycle world",
+        description: `Payment for order ${order.order_number}`,
+        order_id: razorpayOrder.id,
+        handler: async function (response) {
+          try {
+            const verificationRes = await fetch('/api/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+              })
+            });
+
+            if (!verificationRes.ok) {
+              reject(new Error('Payment verification failed'));
+              return;
+            }
+
+            resolve({
+              paymentId: response.razorpay_payment_id,
+              status: "paid",
+              mode: "online"
+            });
+          } catch (error) {
+            reject(error);
+          }
+        },
+        prefill: {
+          name: order.order_username,
+          email: order.email_address,
+          contact: order.order_phonenumber
+        },
+        theme: {
+          color: "#F37254"
+        },
+        modal: {
+          ondismiss: () => reject(new Error('Payment window closed'))
+        }
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+      razorpay.on('payment.failed', function (response) {
+        reject(new Error(response.error.description));
+      });
+    });
+  };
+
+  const handleCompletePayment = async (order) => {
+    if (isPaying) return;
+    setIsPaying(true);
+    setPayingOrderId(order._id);
+
+    try {
+      const result = await openPaymentGateway(order);
+      const paymentUpdateRes = await fetch('/api/orders/payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order._id,
+          paymentRecordId: order.payment_id,
+          paymentGatewayId: result.paymentId,
+          paymentStatus: result.status,
+          paymentType: result.mode,
+        }),
+      });
+
+      if (!paymentUpdateRes.ok) {
+        throw new Error('Payment saved, but order update failed');
+      }
+
+      setFilteredOrders(prev =>
+        prev.map(item =>
+          item._id === order._id
+            ? { ...item, payment_status: 'paid', payment_type: 'online', payment_method: 'online' }
+            : item
+        )
+      );
+      setPayOrderId(null);
+      toast.success('Payment completed successfully');
+    } catch (error) {
+      toast.error(error.message || 'Payment not completed');
+    } finally {
+      setIsPaying(false);
+      setPayingOrderId(null);
+    }
   };
 
   const handleCancelClick = (order) => {
@@ -365,9 +499,13 @@ export default function Order() {
                             </div>
                             <div className="text-gray-600 flex items-center gap-1 sm:gap-2">
                               <span>Payment:</span>
-                              {order.payment_type === 'online' ? (
+                              {order.payment_type === 'online' && order.payment_status === 'paid' ? (
                                 <span className="inline-flex items-center px-2 py-0.5 sm:py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
                                   <FiCheckCircle className="mr-1 text-xs" /> Paid
+                                </span>
+                              ) : order.payment_type === 'online' ? (
+                                <span className="inline-flex items-center px-2 py-0.5 sm:py-1 bg-amber-100 text-amber-800 text-xs font-semibold rounded-full">
+                                  <FiClock className="mr-1 text-xs" /> Pending
                                 </span>
                               ) : (
                                 <span className="text-gray-700 capitalize">{order.payment_type || 'Not specified'}</span>
@@ -385,20 +523,12 @@ export default function Order() {
                               Buy Again
                             </button>
 
-                            {/* Complete Payment for cancelled online orders */}
-                            {payOrderId && order._id === payOrderId && order.payment_type === 'online' && order.order_status === 'pending' && (
+                            {order.payment_type === 'online' && order.payment_status !== 'paid' && order.order_status === 'pending' && (
                               <button
-                                onClick={() => {
-                                  setIsPaying(true);
-                                  // Redirect back to checkout page flow or open Razorpay is not implemented yet here.
-                                  // For now, just clear paying state and keep UX.
-                                  // (Backend Razorpay + verify needs to be implemented in this component.)
-                                  setIsPaying(false);
-                                  toast.info('Complete Payment flow will start after checkout is updated.');
-                                }}
+                                onClick={() => handleCompletePayment(order)}
                                 className="px-3 sm:px-4 py-1 sm:py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-xs sm:text-sm"
                               >
-                                {isPaying ? 'Opening...' : 'Complete Payment'}
+                                {isPaying && payingOrderId === order._id ? 'Opening...' : 'Complete Payment'}
                               </button>
                             )}
 
@@ -476,10 +606,10 @@ export default function Order() {
                 onClick={handleEmailReject}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                No, Don't Send
+                No, Don&apos;t Send
               </button>
               <button
-                onClick={handleEmailConfirm(selectedOrder)}
+                onClick={() => handleEmailConfirm(selectedOrder)}
                 className="px-4 py-2 bg-customBlue text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Yes, Send Email

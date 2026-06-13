@@ -527,27 +527,21 @@ const grandTotal = subtotal - totalDiscount;
     setIsSubmitting(true);
       setError("");
   
-           const totalAmount = orderSummary.total;
+      const totalAmount = orderSummary.total;
+      const orderNumber = "ORD" + Date.now();
 
       let paymentId = "";
       let paymentStatus = "";
       let paymentMode = "";
   
       if (paymentMethod === 'Cash on Delivery') {
-        paymentId = "COD_" + Date.now();
+        paymentId = "COD_" + orderNumber;
         paymentStatus = "pending";
         paymentMode = "Cash on Delivery";
       } else if (paymentMethod === 'online') {
-        try {
-          const result = await handleOnlinePayment(totalAmount);
-          paymentId = result.paymentId;
-          paymentStatus = result.status;
-          paymentMode = result.mode;
-        } catch (error) {
-          toast.error(`Payment failed: ${error.message}`);
-          setIsSubmitting(false);
-          return;
-        }
+        paymentId = "PENDING_" + orderNumber;
+        paymentStatus = "pending";
+        paymentMode = "online";
       } else {
         console.log("Invalid Payment Method");
         return;
@@ -635,7 +629,7 @@ const grandTotal = subtotal - totalDiscount;
       : undefined,
           payment_id: paymentData._id,
           payment_status: paymentData.status,
-          order_number: "ORD" + Date.now(),
+          order_number: orderNumber,
           order_details: cartItems.map((item) => ({
             item_code: `ITEM${item.item_code}`,
             product_id: item.id,
@@ -648,7 +642,7 @@ const grandTotal = subtotal - totalDiscount;
             updated_at: new Date(),
             quantity: 1,
             //store_id: formData.deliveryType === "store" ? formData.selectedStore : "STORE01",
-            orderNumber: "ORD" + Date.now(),
+            orderNumber: orderNumber,
           })),
         }),
       });
@@ -656,6 +650,8 @@ const grandTotal = subtotal - totalDiscount;
       if (!orderRes.ok) {
         throw new Error('Order creation failed');
       }
+
+      const orderData = await orderRes.json();
 
 
       // if(orderRes.ok){
@@ -707,7 +703,34 @@ const grandTotal = subtotal - totalDiscount;
       if (cartdelte.status === 200) {
         localStorage.removeItem('checkoutData');
         localStorage.removeItem('appliedCoupon')
-        const orderData = await orderRes.json()
+
+        if (paymentMethod === 'online') {
+          try {
+            const result = await handleOnlinePayment(totalAmount);
+
+            const paymentUpdateRes = await fetch('/api/orders/payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                orderId: orderData.order._id,
+                paymentRecordId: paymentData._id,
+                paymentGatewayId: result.paymentId,
+                paymentStatus: result.status,
+                paymentType: result.mode,
+              }),
+            });
+
+            if (!paymentUpdateRes.ok) {
+              throw new Error('Payment saved, but order update failed');
+            }
+          } catch (error) {
+            toast.error(`Payment not completed: ${error.message}`);
+            router.push(`/orders?payOrderId=${orderData.order._id}`);
+            updateCartCount(0);
+            return;
+          }
+        }
+
         // Prepare email data
         // console.log(orderData,orderData.order.order_number);
         // const emailData = {

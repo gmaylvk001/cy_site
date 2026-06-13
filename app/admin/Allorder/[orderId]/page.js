@@ -10,6 +10,29 @@ import { IoMdMail } from "react-icons/io";
 import { TbTruckDelivery } from "react-icons/tb";
 import { MdOutlineLocalShipping, MdDeliveryDining, MdContacts } from "react-icons/md";
 
+const getPaymentStatusDetails = (value) => {
+  const status = (value || "pending").toString().toLowerCase();
+
+  if (status === "paid") {
+    return {
+      label: "Paid",
+      className: "bg-green-100 text-green-700 border border-green-200",
+    };
+  }
+
+  if (status === "failed" || status === "failure") {
+    return {
+      label: "Failed",
+      className: "bg-red-100 text-red-700 border border-red-200",
+    };
+  }
+
+  return {
+    label: "Pending",
+    className: "bg-yellow-100 text-yellow-700 border border-yellow-200",
+  };
+};
+
 const OrderDetails = () => {
   const params = useParams();
   const orderId = params?.orderId;
@@ -92,6 +115,7 @@ const addHistory = async () => {
 
   if (!order) return <p className="text-center mt-10">Loading...</p>;
   // console.log('Order:', order);
+  const paymentStatus = getPaymentStatusDetails(order.payment_status);
 
 
   return (
@@ -117,6 +141,17 @@ const addHistory = async () => {
             Payment:
           </td>
           <td className="p-2">{order.payment_method}</td>
+        </tr>
+        <tr className="border-b">
+          <td className="p-2 flex items-center gap-2 font-semibold text-gray-700">
+            <IoWalletSharp className="bg-red-500 text-white p-1 rounded-md w-6 h-6" />
+            Payment Status:
+          </td>
+          <td className="p-2">
+            <span className={`inline-flex rounded px-2 py-0.5 text-xs font-semibold ${paymentStatus.className}`}>
+              {paymentStatus.label}
+            </span>
+          </td>
         </tr>
         <tr className="border-b">
           <td className="p-2 flex items-center gap-2 font-semibold text-gray-700">
