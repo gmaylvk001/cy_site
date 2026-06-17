@@ -19,6 +19,187 @@ const loadRazorpay = () => {
   });
 };
 
+const indiaStatesAndCities = {
+  "Andhra Pradesh": [
+    "Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool",
+    "Rajahmundry", "Tirupati", "Kadapa", "Anantapur", "Kakinada"
+  ],
+
+  "Arunachal Pradesh": [
+    "Itanagar", "Naharlagun", "Pasighat", "Tawang", "Ziro",
+    "Bomdila", "Tezu", "Roing"
+  ],
+
+  "Assam": [
+    "Guwahati", "Silchar", "Dibrugarh", "Jorhat", "Nagaon",
+    "Tezpur", "Tinsukia", "Bongaigaon"
+  ],
+
+  "Bihar": [
+    "Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Darbhanga",
+    "Purnia", "Ara", "Begusarai"
+  ],
+
+  "Chhattisgarh": [
+    "Raipur", "Bhilai", "Durg", "Bilaspur", "Korba",
+    "Raigarh", "Jagdalpur"
+  ],
+
+  "Goa": [
+    "Panaji", "Margao", "Vasco da Gama", "Mapusa", "Ponda"
+  ],
+
+  "Gujarat": [
+    "Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar",
+    "Jamnagar", "Junagadh", "Gandhinagar"
+  ],
+
+  "Haryana": [
+    "Gurugram", "Faridabad", "Panipat", "Ambala", "Hisar",
+    "Karnal", "Rohtak", "Sonipat"
+  ],
+
+  "Himachal Pradesh": [
+    "Shimla", "Dharamshala", "Solan", "Mandi", "Kullu",
+    "Hamirpur", "Bilaspur"
+  ],
+
+  "Jharkhand": [
+    "Ranchi", "Jamshedpur", "Dhanbad", "Bokaro",
+    "Deoghar", "Hazaribagh"
+  ],
+
+  "Karnataka": [
+    "Bengaluru", "Mysuru", "Mangaluru", "Hubballi",
+    "Dharwad", "Belagavi", "Kalaburagi", "Shivamogga",
+    "Ballari", "Vijayapura"
+  ],
+
+  "Kerala": [
+    "Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur",
+    "Kollam", "Alappuzha", "Palakkad", "Kottayam",
+    "Kannur", "Malappuram"
+  ],
+
+  "Madhya Pradesh": [
+    "Bhopal", "Indore", "Jabalpur", "Gwalior",
+    "Ujjain", "Sagar", "Satna", "Rewa"
+  ],
+
+  "Maharashtra": [
+    "Mumbai", "Pune", "Nagpur", "Nashik",
+    "Thane", "Aurangabad", "Solapur",
+    "Kolhapur", "Amravati"
+  ],
+
+  "Manipur": [
+    "Imphal", "Thoubal", "Bishnupur", "Churachandpur"
+  ],
+
+  "Meghalaya": [
+    "Shillong", "Tura", "Jowai", "Nongpoh"
+  ],
+
+  "Mizoram": [
+    "Aizawl", "Lunglei", "Champhai", "Kolasib"
+  ],
+
+  "Nagaland": [
+    "Kohima", "Dimapur", "Mokokchung", "Wokha"
+  ],
+
+  "Odisha": [
+    "Bhubaneswar", "Cuttack", "Rourkela",
+    "Sambalpur", "Puri", "Balasore"
+  ],
+
+  "Punjab": [
+    "Ludhiana", "Amritsar", "Jalandhar",
+    "Patiala", "Bathinda", "Mohali"
+  ],
+
+  "Rajasthan": [
+    "Jaipur", "Jodhpur", "Udaipur",
+    "Kota", "Ajmer", "Bikaner",
+    "Alwar", "Bharatpur"
+  ],
+
+  "Sikkim": [
+    "Gangtok", "Namchi", "Gyalshing", "Mangan"
+  ],
+
+  "Tamil Nadu": [
+    "Chennai", "Coimbatore", "Madurai",
+    "Tiruchirappalli", "Salem", "Erode",
+    "Tiruppur", "Vellore", "Thoothukudi",
+    "Thanjavur", "Dindigul", "Kanchipuram",
+    "Nagercoil", "Karur", "Namakkal"
+  ],
+
+  "Telangana": [
+    "Hyderabad", "Warangal", "Nizamabad",
+    "Karimnagar", "Khammam", "Ramagundam",
+    "Mahabubnagar"
+  ],
+
+  "Tripura": [
+    "Agartala", "Udaipur", "Dharmanagar", "Kailasahar"
+  ],
+
+  "Uttar Pradesh": [
+    "Lucknow", "Kanpur", "Agra",
+    "Varanasi", "Prayagraj", "Meerut",
+    "Ghaziabad", "Noida", "Bareilly",
+    "Aligarh", "Moradabad"
+  ],
+
+  "Uttarakhand": [
+    "Dehradun", "Haridwar", "Roorkee",
+    "Haldwani", "Rishikesh", "Nainital"
+  ],
+
+  "West Bengal": [
+    "Kolkata", "Howrah", "Durgapur",
+    "Siliguri", "Asansol", "Kharagpur"
+  ],
+
+  // Union Territories
+
+  "Andaman and Nicobar Islands": [
+    "Port Blair", "Diglipur", "Mayabunder"
+  ],
+
+  "Chandigarh": [
+    "Chandigarh"
+  ],
+
+  "Dadra and Nagar Haveli and Daman and Diu": [
+    "Daman", "Diu", "Silvassa"
+  ],
+
+  "Delhi": [
+    "New Delhi", "Delhi", "Dwarka",
+    "Rohini", "Saket", "Karol Bagh"
+  ],
+
+  "Jammu and Kashmir": [
+    "Srinagar", "Jammu", "Anantnag",
+    "Baramulla", "Pulwama"
+  ],
+
+  "Ladakh": [
+    "Leh", "Kargil"
+  ],
+
+  "Lakshadweep": [
+    "Kavaratti", "Agatti", "Amini"
+  ],
+
+  "Puducherry": [
+    "Puducherry", "Karaikal", "Mahe", "Yanam"
+  ]
+};
+
 
 
 
@@ -170,7 +351,7 @@ export default function CheckoutPage() {
   const [useraddress, setUseraddress] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [useSavedAddress, setUseSavedAddress] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("Cash on Delivery");
+  const [paymentMethod, setPaymentMethod] = useState("online");
   const [error, setError] = useState("");
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authError, setAuthError] = useState('');
@@ -201,10 +382,7 @@ const [isSubmitting, setIsSubmitting] = useState(false);
     fetchStores();
   }, []);
 
-  const uniqueCities = [...new Set(stores.map(store => store.city))];
-  const extraCities = ["Ariyalur","Chennai","Coimbatore","Cuddalore","Dharmapuri","Dindigul","Erode","Kanchipuram","Kanyakumari","Karur","Krishnagiri","Madurai","Nagapattinam","Namakkal","Nilgiris","Perambalur","Pudukkottai","Ramanathapuram","Salem","Sivaganga","Thanjavur","Theni","Thoothukudi","Tirunelveli","Tiruvallur","Tiruvannamalai","Tiruvarur","Vellore","Viluppuram","Virudhunagar", "Singanallur", "Sivananthapuram", "Vadavalli", "Annur", "Mettupalayam", "Thennur", "Ariyamangalam", "Komarapalayam", "Kattur"];
-
-  const finalCities = [...new Set([...uniqueCities, ...extraCities])];
+  const finalCities = formData.state ? (indiaStatesAndCities[formData.state] || []) : [];
 
   useEffect(() => {
     const buyNowData = localStorage.getItem("buyNowData");
@@ -233,7 +411,11 @@ const [isSubmitting, setIsSubmitting] = useState(false);
   const fetchData = async () => {
   const token = localStorage.getItem("token");
   if (!token) {
-    setShowAuthModal(true);
+    // If there's no token, check for guestCartId and merge if available
+    const guestId = localStorage.getItem("guestCartId");
+    if (!guestId) { // Only show auth modal if no guest cart either
+      setShowAuthModal(true);
+    }
     setLoading(false);
     return;
   }
@@ -289,8 +471,14 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === "state" || name === "city") {
+      setFormData({ ...formData, [name]: value, postCode: "" });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
+
 
   const handlePaymentChange = (e) => {
     setPaymentMethod(e.target.value);
@@ -534,11 +722,7 @@ const grandTotal = subtotal - totalDiscount;
       let paymentStatus = "";
       let paymentMode = "";
   
-      if (paymentMethod === 'Cash on Delivery') {
-        paymentId = "COD_" + orderNumber;
-        paymentStatus = "pending";
-        paymentMode = "Cash on Delivery";
-      } else if (paymentMethod === 'online') {
+      if (paymentMethod === 'online') {
         paymentId = "PENDING_" + orderNumber;
         paymentStatus = "pending";
         paymentMode = "online";
@@ -1111,13 +1295,20 @@ const grandTotal = subtotal - totalDiscount;
       </div> */}
 
     <div className="relative mt-3 w-full">
-  <input
-    type="text"
+  <select
     name="state"
     value={formData.state}
-    readOnly
-    className="border rounded-md w-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-200 pt-5 pb-1 px-2 text-gray-700 cursor-not-allowed"
-  />
+    onChange={handleChange}
+    className="border rounded-md w-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-200 pt-5 pb-1 px-2"
+    required
+  >
+    <option value="" disabled hidden></option>
+    {Object.keys(indiaStatesAndCities).map((state) => (
+      <option key={state} value={state}>
+        {state}
+      </option>
+    ))}
+  </select>
   <label
     className="absolute left-2 text-xs text-gray-500 top-1 pointer-events-none transition-all duration-200"
   >
@@ -1422,19 +1613,6 @@ const grandTotal = subtotal - totalDiscount;
                     />
                     <span>Online Payment</span>
                   </label>
-                  {/* 
-                  <label className="flex items-center space-x-2">
-                    <input 
-                      type="radio" 
-                      name="payment" 
-                      value="Cash on Delivery" 
-                      checked={paymentMethod === "Cash on Delivery"} 
-                      onChange={handlePaymentChange} 
-                      className="w-4 h-4 text-orange-500"
-                    />
-                    <span>Cash on Delivery</span>
-                  </label>
-                    */}
                 </div>
               </div>
              <button 
