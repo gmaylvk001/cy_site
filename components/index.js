@@ -448,7 +448,7 @@ export default function HomeComponent() {
       });
 
       // Redirect to checkout
-      window.location.href = "/checkout";
+      window.location.href = "/cart";
     } catch (err) {
       console.error("Buy Now error", err);
     }

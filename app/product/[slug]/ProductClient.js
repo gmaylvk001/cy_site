@@ -284,7 +284,7 @@ export default function ProductClient() {
       */
 
       // ✅ Redirect
-      window.location.href = "/checkout";
+      window.location.href = "/cart";
     } catch (err) {
       console.error("Buy Now error:", err);
     }
@@ -1741,7 +1741,7 @@ export default function ProductClient() {
               <div className="mt-3 overflow-auto">
                 {Array.isArray(product.product_highlights) &&
                   product.product_highlights
-                    .flatMap(item => item.split(/[\n,]+/).map(i => i.trim()))
+                    .flatMap(item => item.split(/[\n]+/).map(i => i.trim()))
                     .filter(item => item.length > 0).length > 0 ? (
                   <table className="w-full text-xs text-left text-gray-700 border border-gray-200">
                     <thead className="bg-gray-100">
@@ -1752,7 +1752,7 @@ export default function ProductClient() {
                     </thead>
                     <tbody>
                       {product.product_highlights
-                        .flatMap(item => item.split(/[\n,]+/).map(i => i.trim()))
+                        .flatMap(item => item.split(/[\n]+/).map(i => i.trim()))
                         .filter(item => item.length > 0)
                         .map((item, index) => {
                           const cleanedItem = item

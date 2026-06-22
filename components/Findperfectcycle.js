@@ -391,7 +391,7 @@ export default function BicycleFilterSection() {
         }),
       });
 
-      window.location.href = "/checkout";
+      window.location.href = "/cart";
     } catch (err) {
       console.error("Buy Now error", err);
     }

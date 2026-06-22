@@ -68,7 +68,7 @@ const handleBuyNow = () => {
   localStorage.setItem("buyNowData", JSON.stringify(checkoutData));
 
   // Redirect the user to the checkout page
-  router.push("/checkout");
+  router.push("/cart");
 };
 
 
@@ -1508,7 +1508,7 @@ const fetchBrand = async () => {
             total: cartTotal,
           })
         );
-        window.location.href = "/checkout";
+        window.location.href = "/cart";
       }}
       className="w-full bg-gradient-to-r bg-white hover:bg-customBlue hover:text-white text-customBlue border border-blue-200 font-semibold py-3 rounded-md shadow-md flex items-center justify-center gap-3"
     >
