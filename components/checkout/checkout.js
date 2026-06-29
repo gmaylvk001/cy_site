@@ -200,7 +200,22 @@ const indiaStatesAndCities = {
   ]
 };
 
+const getItemUnitPrice = (item) => {
+  const price = Number(item?.price);
+  if (price > 0) return price;
+  return Number(item?.actual_price) || 0;
+};
 
+const getItemQuantity = (item) => Number(item?.quantity) || 0;
+
+const getItemLineTotal = (item) => getItemUnitPrice(item) * getItemQuantity(item);
+
+const calculateItemsTotal = (items = []) =>
+  items.reduce((sum, item) => {
+    const warranty = Number(item?.warranty) || 0;
+    const extendedWarranty = Number(item?.extendedWarranty) || 0;
+    return sum + getItemLineTotal(item) + warranty + extendedWarranty;
+  }, 0);
 
 
 const DeliveryOptions = ({ formData, handleChange, isDeliverySaved, setIsDeliverySaved, stores }) => {
@@ -390,22 +405,40 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
     if (buyNowData) {
       const parsedData = JSON.parse(buyNowData);
-      setCartItems(parsedData.cart.items);
+      const items = parsedData.cart.items || [];
+      const total = calculateItemsTotal(items);
+      setCartItems(items);
+      setOrderSummary({
+        discount: 0,
+        subtotal: total,
+        total
+      });
       localStorage.removeItem("buyNowData");
     } else if (checkoutData) {
       const parsedData = JSON.parse(checkoutData);
-      setCartItems(parsedData.cart.items);
+      const items = parsedData.cart.items || [];
+      const total = calculateItemsTotal(items);
+      setCartItems(items);
 
       // ✅ also load discount, subtotal, total
       setOrderSummary({
-        discount: parsedData.discount || 0,
-        subtotal: parsedData.subtotal || 0,
-        total: parsedData.total || 0
+        discount: 0,
+        subtotal: total,
+        total
       });
     }
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const total = calculateItemsTotal(cartItems);
+    setOrderSummary({
+      discount: 0,
+      subtotal: total,
+      total
+    });
+  }, [cartItems]);
 
 
   const fetchData = async () => {
@@ -648,10 +681,10 @@ const handleOnlinePayment = async (totalAmount) => {
   //     throw error;
   //   }
   // };
-// Calculate totals
-const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-const totalDiscount = cartItems.reduce((sum, item) => sum + (item.discount || 0), 0);
-const grandTotal = subtotal - totalDiscount;
+// Calculate totals from actual item prices only.
+const subtotal = calculateItemsTotal(cartItems);
+const totalDiscount = 0;
+const grandTotal = subtotal;
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -715,7 +748,7 @@ const grandTotal = subtotal - totalDiscount;
     setIsSubmitting(true);
       setError("");
   
-      const totalAmount = orderSummary.total;
+      const totalAmount = grandTotal;
       const orderNumber = "ORD" + Date.now();
 
       let paymentId = "";
@@ -801,7 +834,11 @@ const grandTotal = subtotal - totalDiscount;
           order_username: `${addressData.firstName} ${addressData.lastName}`,
           order_phonenumber: addressData.phonenumber,
           email_address: addressData.email,
-          order_item: cartItems,
+          order_item: cartItems.map((item) => ({
+            ...item,
+            discount: 0,
+            coupondetails: [],
+          })),
           order_amount: totalAmount,
           order_deliveryaddress: deliveryAddress,
           payment_method: paymentMethod,
@@ -818,13 +855,13 @@ const grandTotal = subtotal - totalDiscount;
             item_code: `ITEM${item.item_code}`,
             product_id: item.id,
             product_name: item.name,
-            product_price: item.price,
+            product_price: getItemUnitPrice(item),
             model: "N/A",
             user_id: userId,
             coupondiscount: 0,
             created_at: new Date(),
             updated_at: new Date(),
-            quantity: 1,
+            quantity: getItemQuantity(item),
             //store_id: formData.deliveryType === "store" ? formData.selectedStore : "STORE01",
             orderNumber: orderNumber,
           })),

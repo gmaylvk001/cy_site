@@ -1,9 +1,79 @@
 import dbConnect from "@/lib/db";
 import EcomOrderInfo from "@/models/ecom_order_info";
 import Product from "@/models/product";
+import Variant from "@/models/Variant";
 import mongoose from 'mongoose';
 import Coupon from '@/models/ecom_offer_info';
 import Usedcoupon from '@/models/ecom_coupon_track_info';
+
+function findMatchingVariant(variantDoc, selectedVariant = {}) {
+  if (!variantDoc?.variants?.length) return null;
+
+  const selectedEntries = Object.entries(selectedVariant || {}).filter(
+    ([, value]) => value !== "" && value !== null && value !== undefined
+  );
+
+  if (!selectedEntries.length) return null;
+
+  return variantDoc.variants.find((variant) =>
+    selectedEntries.every(([key, value]) =>
+      variant.variant_arr?.some(
+        (attribute) =>
+          attribute.variant_attribute_name === key &&
+          attribute.options === value
+      )
+    )
+  );
+}
+
+async function getOrderItemUnitPrice(item) {
+  if (!item?.productId) return Number(item?.price) || 0;
+
+  const product = await Product.findById(item.productId).lean();
+  if (!product) return Number(item?.price) || 0;
+
+  const variantDoc = await Variant.findOne({ parent_id: item.productId }).lean();
+  const matchedVariant = findMatchingVariant(variantDoc, item.variant);
+
+  if (matchedVariant) {
+    return Number(matchedVariant.special_price) > 0
+      ? Number(matchedVariant.special_price)
+      : Number(matchedVariant.price) || 0;
+  }
+
+  return Number(product.special_price) > 0
+    ? Number(product.special_price)
+    : Number(product.price) || 0;
+}
+
+async function normalizeOrderItems(orderItems = []) {
+  const items = [];
+
+  for (const item of orderItems) {
+    const quantity = Number(item?.quantity) || 0;
+    const unitPrice = await getOrderItemUnitPrice(item);
+
+    items.push({
+      ...item,
+      price: unitPrice,
+      actual_price: unitPrice,
+      quantity,
+      discount: 0,
+      coupondetails: [],
+    });
+  }
+
+  return items;
+}
+
+const calculateOrderAmount = (orderItems = []) =>
+  orderItems.reduce((sum, item) => {
+    const price = Number(item?.price) || 0;
+    const quantity = Number(item?.quantity) || 0;
+    const warranty = Number(item?.warranty) || 0;
+    const extendedWarranty = Number(item?.extendedWarranty) || 0;
+    return sum + (price * quantity) + warranty + extendedWarranty;
+  }, 0);
 
 export async function POST(req) {
   await dbConnect();
@@ -32,16 +102,23 @@ export async function POST(req) {
     } = body;
 
     // Validate required fields
-    if (!user_id || !email_address || !order_phonenumber || (order_item.length == 0) || !order_amount) {
+    if (!user_id || !email_address || !order_phonenumber || !Array.isArray(order_item) || order_item.length == 0) {
       return Response.json({ success: false, message: "Missing required fields" }, { status: 400 });
+    }
+
+    const sanitizedOrderItems = await normalizeOrderItems(order_item);
+    const calculatedOrderAmount = calculateOrderAmount(sanitizedOrderItems);
+
+    if (calculatedOrderAmount <= 0) {
+      return Response.json({ success: false, message: "Invalid order amount" }, { status: 400 });
     }
 
     const newOrder = new EcomOrderInfo({
       user_id,
       order_username,
       order_phonenumber,
-      order_item,
-      order_amount,
+      order_item: sanitizedOrderItems,
+      order_amount: calculatedOrderAmount,
       order_deliveryaddress,
       payment_method,
       payment_type,
@@ -58,7 +135,7 @@ export async function POST(req) {
 
     await newOrder.save();
     if(newOrder){
-        for(const item of  order_item){
+        for(const item of sanitizedOrderItems){
           if(item.productId){
             const productId = item.productId;
               const product = await Product.findById(item.productId);

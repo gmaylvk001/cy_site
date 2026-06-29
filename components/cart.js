@@ -457,16 +457,8 @@ export default function CartComponent() {
         setCartData(nextCart);
         saveCartState(nextCart);
 
-        // Apply saved coupon if present and persist
-        const savedCoupon = localStorage.getItem('appliedCoupon');
-        if (savedCoupon) {
-          const coupon = JSON.parse(savedCoupon);
-          setAppliedCoupon(coupon);
-          const discountedItems = applyDiscountToItems(coupon, nextCart.items);
-          const discountedCart = { ...nextCart, items: discountedItems };
-          setCartData(discountedCart);
-          saveCartState(discountedCart);
-        }
+        localStorage.removeItem('appliedCoupon');
+        setAppliedCoupon(null);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -850,15 +842,12 @@ export default function CartComponent() {
 };
 
   const calculateDiscount = () => {
-    if (!appliedCoupon || !cartData) return 0;
-    
-    return cartData.items.reduce((sum, item) => sum + (item.discount || 0), 0);
+    return 0;
   };
 
   const calculateTotal = () => {
     const subtotal = calculateSubtotal();
-    const discount = calculateDiscount();
-    return subtotal - discount;
+    return subtotal;
   };
 
   const proceedToCheckout = () => {
@@ -869,9 +858,9 @@ export default function CartComponent() {
 
   const subtotal = calculateSubtotal();
 
-  const discount = calculateDiscount();
+  const discount = 0;
 
-  const total = calculateTotal();
+  const total = subtotal;
 
   // Save cart and coupon data to localStorage for checkout page
 
@@ -899,7 +888,8 @@ export default function CartComponent() {
 
         extendedWarranty: item.extendedWarranty || 0,
 
-        discount: item.discount || 0,
+        discount: 0,
+        coupondetails: [],
 
         image: item.image
 
@@ -907,7 +897,7 @@ export default function CartComponent() {
 
     },
 
-    coupon: appliedCoupon,
+    coupon: null,
 
     discount,
 
@@ -1098,7 +1088,7 @@ export default function CartComponent() {
         <div className="text-center max-w-md mx-4">
           <div className="text-6xl mb-4">🛒</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Your cart is empty</h2>
-          <p className="text-gray-600 mb-6">Looks like you haven't added anything to your cart yet</p>
+          <p className="text-gray-600 mb-6">Looks like you haven&apos;t added anything to your cart yet</p>
           <button 
             onClick={() => router.push('/')}
             className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
@@ -1292,6 +1282,8 @@ export default function CartComponent() {
 
         {/* Right Side - Cart Totals (small width) */}
         <div className="lg:col-span-1 bg-white p-3 rounded-lg border shadow-sm space-y-4">
+          {false && (
+          <>
           {/* Coupon Section */}
           <div className="mt-0">
             {appliedCoupon ? (
@@ -1428,6 +1420,8 @@ export default function CartComponent() {
               </div>
             )}
           </div>
+          </>
+          )}
 
           {/* Cart Totals */}
           <h3 className="text-gray-700 text-sm font-semibold">Cart Total</h3>
