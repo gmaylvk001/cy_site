@@ -693,15 +693,13 @@ export default function HomeComponent() {
                       <div className="relative h-56">
                         {product.images?.[0] && (
                           <Link href={`/product/${product.slug}`} passHref>
-                            <Image
-                              src={
-                                product.images[0].startsWith("http")
-                                  ? product.images[0]
-                                  : `/uploads/products/${product.images[0]}`
-                              }
+                            <img
+                              src={product.images[0].startsWith("http") ? product.images[0] : `/uploads/products/${product.images[0]}`}
                               alt={product.name}
                               fill
                               className="object-contain p-4"
+                              loading="lazy"
+                              fetchPriority="auto"
                             />
                           </Link>
                         )}

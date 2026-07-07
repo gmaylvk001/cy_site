@@ -2281,7 +2281,7 @@ const Header = () => {
             modules={[Navigation]}
             slidesPerView="auto"
             spaceBetween={25}
-            lazy={true}
+            
             watchSlidesProgress={true}
             className={`max-w-7xl mx-auto px-5 ${categories?.length >= 1 && categories?.length <= 10 ? "cat-nav" : ""
               }`}

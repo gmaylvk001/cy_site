@@ -358,13 +358,18 @@ const RecentlyViewedProducts = () => {
 
                       {/* Product Info */}
                       <div className="p-4 flex flex-col bg-white">
+                        
                          <h4 className="text-xs text-gray-500 mb-2 uppercase">
-                            <Link
-                              href={`/brand/${product.brand.toLowerCase().replace(/\s+/g, "-")}`}
-                              className="hover:text-[#a3ca43]"
-                            >
-                              {product.brand}
-                            </Link>
+                            {product.brand ? (
+                              <Link
+                                href={`/brand/${product.brand.toLowerCase().replace(/\s+/g, "-")}`}
+                                className="hover:text-[#a3ca43]"
+                              >
+                                {product.brand}
+                              </Link>
+                            ) : (
+                              "No Brand"
+                            )}
                           </h4>
 
                         {/* Title truncate */}
