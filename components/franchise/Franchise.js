@@ -34,7 +34,7 @@ export default function Franchise() {
         title: "Quality Products &amp; Strong Brand Trust",
         description:
           "Customers trust the brand, and that has made selling much easier. The store gets continuous walk-ins and repeat customers. I’m proud to be a part of Cycle World’s growing network.",
-        author: "— Harish Patel, Franchise Owner – Kalyan Nagar",
+        author: "— JATIN A MANEK , Franchise Owner – Kalyan Nagar",
       },
       {
         image: "/images/pondicherry.jpg",
