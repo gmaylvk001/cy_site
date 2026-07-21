@@ -136,33 +136,57 @@ export default function Franchise() {
       setLoading(true); // disable button
       const { utm_source, utm_medium, utm_campaign } = getUrlParams();
 
-        const payload = {
-          api_token: "mvaosaMlrLEU9i0tWRh4Jr8RYvq9eueq",
-          first_name: formData.name,
-          mobile: formData.phone,
-          email: formData.email,
-          city: formData.city,
-          //company: formData.company,
-          investment_budget: formData.invest,
-          opening_timeline: formData.start,
-          occupation_type: formData.job,
-          lead_source: utm_source,
-          lead_campaign: utm_campaign,
-        };
+      const payload = {
+        api_token: "mvaosaMlrLEU9i0tWRh4Jr8RYvq9eueq",
+        first_name: formData.name,
+        mobile: formData.phone,
+        email: formData.email,
+        city: formData.city,
+        //company: formData.company,
+        investment_budget: formData.invest,
+        opening_timeline: formData.start,
+        occupation_type: formData.job,
+        lead_source: utm_source,
+        lead_campaign: utm_campaign,
+      };
 
-        // console.log("Data to send:", payload);
+      const localPayload = {
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+        city: formData.city,
+        company: formData.company,
+        investment_range: formData.invest,
+        start_time: formData.start,
+        occupation_type: formData.job,
+        utm_source,
+        utm_medium,
+        utm_campaign,
+      };
 
       try {
-        const res = await fetch("https://adtarbo.eywamedia.com/api/lead", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-  
-        if (!res.ok) throw new Error("Failed to submit");
-        {
-          router.push("/thank-you");
+        const [externalRes, localRes] = await Promise.allSettled([
+          fetch("https://adtarbo.eywamedia.com/api/lead", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }),
+          fetch("/api/franchise-enquiry", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(localPayload),
+          }),
+        ]);
+
+        if (externalRes.status === "rejected" || (externalRes.value && !externalRes.value.ok)) {
+          console.warn("External franchise lead submission failed");
         }
+
+        if (localRes.status === "rejected" || (localRes.value && !localRes.value.ok)) {
+          console.warn("Local franchise enquiry save failed");
+        }
+
+        router.push("/thank-you");
 
         setSuccess(true);
         setFormData({

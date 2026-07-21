@@ -52,6 +52,7 @@ export default function AdminSider({ collapsed }) {
  
   //   ]
   // },
+  { icon: 'mdi:phone-outline', label: 'Franchise', link: 'franchise' },
     { icon: 'mdi:tag-outline', label: 'Offer', link: 'offer' },
   //  { icon: "mdi:briefcase-account-outline", label: "Job Positions", link: "careers" },
     { icon: 'mdi:note-text-outline', label: 'Blog', link: 'blog' },
