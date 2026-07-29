@@ -417,17 +417,6 @@ const capitalizeFirstLetter = (str) =>
         <div className="container mx-auto px-2">
           {/* LEFT SECTION (Categories + Brands) grid grid-cols-1 md:grid-cols-[55%_45%] gap-8 */}
           <div>
-            <div className="mb-2  flex flex-col md:flex-row justify-between items-center gap-6">
-              <div className="text-center md:text-left ml-1 mb-1">
-                <p>
-                  <a href="#" className="hover:underline text-white">
-                    Cycle World ©
-                  </a>{" "}
-                  2025 All rights reserved.
-                </p>
-              </div>
-            </div>
-
             <div className="space-y-4 mt-4 ml-1 mb-1">
               {preparedSections.map((section) => {
                 if (section.type === "la") {
@@ -587,6 +576,17 @@ const capitalizeFirstLetter = (str) =>
                   <p className="text-sm text-gray-400">{orgs.join(", ")}</p>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="mt-6 flex justify-end">
+            <div className="text-right ml-1 mb-1">
+              <p>
+                <a href="https://eywamedia.com/" className="hover:underline text-white">
+                  EYWAMEDIA ©
+                </a>{" "}
+                2026 All rights reserved.
+              </p>
             </div>
           </div>
           
