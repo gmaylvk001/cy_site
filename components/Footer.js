@@ -407,7 +407,7 @@ const capitalizeFirstLetter = (str) =>
                       <FaLinkedinIn className="text-xl text-customBlue" />
                     </Link>
                   </div>
-                  <div className="mt-6 py-4">
+                  <div className="">
                     <div className=" ml-1 mb-1">
                       <p>
                         <a href="https://eywamedia.com/" className="hover:underline text-white">

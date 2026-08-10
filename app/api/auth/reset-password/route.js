@@ -4,31 +4,54 @@ import Otp from "@/models/Otp";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 
+function emailRegexExact(email) {
+  return new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+}
+
 export async function POST(req) {
   try {
     await connectDB();
 
     const body = await req.json();
-    const { email, otp, newPassword } = body;
+    const email = (body.email || "").trim();
+    const otp = (body.otp || "").trim();
+    const { newPassword } = body;
 
     if (!email || !otp || !newPassword) {
-      return NextResponse.json({ message: "All fields are required." }, { status: 400 });
+      return NextResponse.json(
+        { message: "All fields are required.", error: "All fields are required." },
+        { status: 400 }
+      );
     }
 
-    // Check OTP
-    const otpRecord = await Otp.findOne({ email, otp });
+    // Check OTP (case-insensitive email)
+    const otpRecord = await Otp.findOne({
+      email: { $regex: emailRegexExact(email) },
+      otp,
+    });
     if (!otpRecord) {
-      return NextResponse.json({ message: "Invalid OTP." }, { status: 400 });
+      return NextResponse.json(
+        { message: "Invalid OTP.", error: "Invalid OTP." },
+        { status: 400 }
+      );
     }
 
     if (otpRecord.expiresAt < new Date()) {
-      return NextResponse.json({ message: "OTP expired." }, { status: 400 });
+      return NextResponse.json(
+        { message: "OTP expired.", error: "OTP expired." },
+        { status: 400 }
+      );
     }
 
-    // Find user
-    const user = await User.findOne({ email });
+    // Find user (case-insensitive)
+    const user = await User.findOne({
+      email: { $regex: emailRegexExact(email) },
+    });
     if (!user) {
-      return NextResponse.json({ message: "User not found." }, { status: 400 });
+      return NextResponse.json(
+        { message: "User not found.", error: "User not found." },
+        { status: 400 }
+      );
     }
 
     // Hash password
@@ -42,6 +65,9 @@ export async function POST(req) {
     return NextResponse.json({ message: "Password reset successfully." });
   } catch (error) {
     console.error("Reset password error:", error);
-    return NextResponse.json({ message: "Server error." }, { status: 500 });
+    return NextResponse.json(
+      { message: "Server error.", error: "Server error." },
+      { status: 500 }
+    );
   }
 }

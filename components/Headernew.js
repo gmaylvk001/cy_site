@@ -2048,7 +2048,7 @@ const Header = () => {
                           body: JSON.stringify({ email: forgotPasswordEmail }),
                         });
                         const data = await res.json();
-                        if (!res.ok) throw new Error(data.message || 'Error sending OTP');
+                        if (!res.ok) throw new Error(data.error || data.message || 'Error sending OTP');
                         setForgotPasswordMessage('OTP sent to your email.');
                         setForgotStep(2);
                       } catch (err) {
@@ -2104,7 +2104,7 @@ const Header = () => {
                           }),
                         });
                         const data = await res.json();
-                        if (!res.ok) throw new Error(data.message || 'Invalid OTP');
+                        if (!res.ok) throw new Error(data.error || data.message || 'Invalid OTP');
                         setForgotPasswordMessage('OTP verified. Please set your new password.');
                         setForgotStep(3);
                       } catch (err) {
@@ -2152,7 +2152,7 @@ const Header = () => {
                         });
 
                         const data = await res.json();
-                        if (!res.ok) throw new Error(data.message || 'Error resetting password');
+                        if (!res.ok) throw new Error(data.error || data.message || 'Error resetting password');
 
                         setForgotPasswordMessage('Password reset successful.');
                         setTimeout(() => {
