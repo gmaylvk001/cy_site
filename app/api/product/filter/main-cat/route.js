@@ -3,6 +3,8 @@ import Product from "@/models/product";
 import ProductFilter from "@/models/ecom_productfilter_info";
 import Filter from "@/models/ecom_filter_infos";
 import FilterGroup from "@/models/ecom_filter_group_infos";
+import ecom_category_info from "@/models/ecom_category_info";
+import { isOffersCategory } from "@/lib/offersCategory";
 
 export async function GET(req) {
   try {
@@ -12,6 +14,7 @@ export async function GET(req) {
     //console.log(searchParams);
     const categoryIds = searchParams.get('categoryIds')?.split(',') || [];
     const sub_category_new = searchParams.get('sub_category_new');
+    const categorySlug = searchParams.get('category_slug') || "";
     const brandIds = searchParams.get('brands')?.split(',') || [];
     const minPrice = parseFloat(searchParams.get('minPrice')) || 0;
     const maxPrice = parseFloat(searchParams.get('maxPrice')) || 1000000;
@@ -26,33 +29,45 @@ export async function GET(req) {
         quantity: { $gt: 0 } 
       };
 
+    let isOffers = isOffersCategory(categorySlug);
+    if (!isOffers && sub_category_new && typeof sub_category_new === "string") {
+      const category = await ecom_category_info.findOne({
+        md5_cat_name: sub_category_new,
+      }).lean();
+      isOffers = isOffersCategory(category);
+    }
+
+    if (isOffers) {
+      query.offer_price = { $gt: 0, $gte: minPrice, $lte: maxPrice };
+    } else {
       if (sub_category_new && typeof sub_category_new === "string") {
-  query.sub_category_new = { 
-    $regex: sub_category_new,
-    $options: "i"
-  };
-}
+        query.sub_category_new = { 
+          $regex: sub_category_new,
+          $options: "i"
+        };
+      }
+
+      // Price range filter (considers both price and special_price)
+      query.$or = [
+        { 
+          $and: [
+            { special_price: { $ne: null } },
+            { special_price: { $gte: minPrice, $lte: maxPrice } }
+          ]
+        },
+        { 
+          $and: [
+            { special_price: null },
+            { special_price: { $gte: minPrice, $lte: maxPrice } }
+          ]
+        }
+      ];
+    }
 
     // Add brand filters if any
     if (brandIds.length > 0) {
       query.brand = { $in: brandIds };
     }
-    
-    // Price range filter (considers both price and special_price)
-    query.$or = [
-      { 
-        $and: [
-          { special_price: { $ne: null } },
-          { special_price: { $gte: minPrice, $lte: maxPrice } }
-        ]
-      },
-      { 
-        $and: [
-          { special_price: null },
-          { special_price: { $gte: minPrice, $lte: maxPrice } }
-        ]
-      }
-    ];
     
     const baseProductIds = await Product.find(query).distinct("_id");
     const baseProductIdStrings = baseProductIds.map((id) => id.toString());

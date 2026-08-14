@@ -6,6 +6,7 @@ import Filter from "@/models/ecom_filter_infos";
 import FilterGroup from "@/models/ecom_filter_group_infos";
 import CategoryFilter from "@/models/ecom_categoryfilters_infos"; // <-- new import
 import mongoose from "mongoose";
+import { isOffersCategory } from "@/lib/offersCategory";
 
 async function getCategoryTree(parentId) {
   const categories = await ecom_category_info.find({ parentid: parentId }).lean();
@@ -48,16 +49,31 @@ export async function GET(request, { params }) {
       status: "Active"
     });
     */
-    const products = await Product.find({
+    const productQuery = {
       status: "Active",
-      sub_category_new: { 
+      quantity: { $gt: 0 },
+    };
+
+    if (isOffersCategory(main_category)) {
+      productQuery.offer_price = { $gt: 0 };
+    } else {
+      productQuery.sub_category_new = {
         $regex: main_category.md5_cat_name,
-        $options: "i"
-      }, quantity: { $gt: 0 }
-    });
+        $options: "i",
+      };
+    }
+
+    const products = await Product.find(productQuery);
 
     if (!products || products.length === 0) {
-      return Response.json({ category: categoryTree, products: [], brands: [], filters: [] });
+      return Response.json({
+        main_category,
+        category: categoryTree,
+        allCategoryIds,
+        products: [],
+        brands: [],
+        filters: [],
+      });
     }
 
     // ✅ Fetch brand info & count

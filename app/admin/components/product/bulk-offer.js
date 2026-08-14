@@ -188,8 +188,8 @@ export default function BulkOfferComponent() {
 
     const confirmed = window.confirm(
       action === "remove"
-        ? `Remove offer_price from ${selectedIds.size} selected product(s)?\nSpecial price will show again on storefront/cart/checkout.`
-        : `Apply ${pct}% offer into offer_price for ${selectedIds.size} selected product(s)?\n\noffer_price = special_price − ${pct}% (special_price stays unchanged)`
+        ? `Remove offer_price from ${selectedIds.size} selected product(s)?\nThey will also be removed from the Offers category.\nSpecial price will show again on storefront/cart/checkout.`
+        : `Apply ${pct}% offer into offer_price for ${selectedIds.size} selected product(s)?\nThey will also be added to the Offers category.\n\noffer_price = special_price − ${pct}% (special_price stays unchanged)`
     );
     if (!confirmed) return;
 
@@ -239,7 +239,7 @@ export default function BulkOfferComponent() {
         <div>
           <h2 className="text-2xl font-bold">Bulk Percentage Offer</h2>
           <p className="text-sm text-gray-600 mt-1">
-            Sets <strong>offer_price</strong> only. Special price is never changed. Remove offer to fall back to special price.
+            Sets <strong>offer_price</strong> only. Special price is never changed. Apply offer also adds products to the <strong>Offers</strong> category; remove offer also removes them from it.
           </p>
         </div>
         <Link

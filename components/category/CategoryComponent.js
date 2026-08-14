@@ -407,6 +407,11 @@ export default function CategoryPage(params) {
           categoryData?.main_category?.md5_cat_name || null
         );
 
+        query.set(
+          "category_slug",
+          categoryData?.main_category?.category_slug || slug || ""
+        );
+
 
         query.set("page", pageNum);
         query.set("limit", itemsPerPage);
@@ -454,7 +459,7 @@ export default function CategoryPage(params) {
         if (!initialLoad) setLoading(false);
       }
     },
-    [itemsPerPage, router, selectedFilters, syncFilterGroups]
+    [itemsPerPage, router, selectedFilters, slug, syncFilterGroups]
   );
 
 
