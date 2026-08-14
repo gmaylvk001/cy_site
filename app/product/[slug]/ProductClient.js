@@ -26,6 +26,11 @@ import RelatedProducts from "@/components/RelatedProducts";
 import RazorpayOffers from "@/components/RazorpayOffers";
 import { v4 as uuidv4 } from "uuid";
 import { useSearchParams } from "next/navigation";
+import {
+  getSellingPrice,
+  shouldShowStrikeThrough,
+  hasOfferPrice,
+} from "@/lib/pricing";
 // import Variant from "@/models/Variant";
 // import { size } from "pdfkit/js/page";
 export default function ProductClient() {
@@ -261,9 +266,7 @@ export default function ProductClient() {
 
       const total = items.reduce((sum, item) => {
         const basePrice =
-          (item.special_price && item.special_price > 0
-            ? item.special_price
-            : item.price) * item.quantity;
+          getSellingPrice(item) * item.quantity;
 
         const warrantyCost = (item.warranty || 0) * item.quantity;
         const extendedCost = (item.extendedWarranty || 0) * item.quantity;
@@ -392,15 +395,15 @@ export default function ProductClient() {
   //  Add this useEffect to calculate the cart total whenever selected products change
   // Calculate cart total
   useEffect(() => {
-    let total = product ? (product.special_price || product.price) * quantity : 0;
+    let total = product ? getSellingPrice(product) * quantity : 0;
 
     selectedFrequentProducts.forEach(item => {
-      total += (item.special_price || item.price);
+      total += getSellingPrice(item);
     });
 
     // NEW: Add selected related products to total
     selectedRelatedProducts.forEach(item => {
-      total += (item.special_price || item.price);
+      total += getSellingPrice(item);
     });
 
     if (selectedWarranty) total += selectedWarranty;
@@ -707,7 +710,8 @@ export default function ProductClient() {
       ...prev,
       images: selectedVariant.images || prev.image,
       price: selectedVariant.price || prev.price,
-      special_price: selectedVariant.special_price || prev.special_price,
+      special_price: selectedVariant.special_price ?? prev.special_price,
+      offer_price: selectedVariant.offer_price ?? prev.offer_price,
       quantity: selectedVariant.quantity >= 0 ? selectedVariant.quantity : prev.quantity,
       stock_status: selectedVariant.stock_status || prev.stock_status
     })
@@ -1127,17 +1131,20 @@ export default function ProductClient() {
               <div className="flex items-center gap-2">
                 {/* Price Section */}
                 <div className="flex items-baseline gap-2">
-                  {(Number(product.special_price) > 0 || Number(product.price) > 0) && (
+                  {(getSellingPrice(product) > 0 || Number(product.price) > 0) && (
                     <>
                       <span className="text-2xl font-bold text-blue-800">
-                        Rs.{Math.round(Number(product.special_price) || Number(product.price))}
+                        Rs.{Math.round(getSellingPrice(product))}
                       </span>
 
-                      {Number(product.special_price) > 0 &&
-                        Number(product.price) > 0 &&
-                        Number(product.special_price) < Number(product.price) && (
+                      {shouldShowStrikeThrough(product) && (
                         <span className="text-gray-800 line-through text-sm">
                           Rs.{Math.round(Number(product.price))}
+                        </span>
+                      )}
+                      {hasOfferPrice(product) && (
+                        <span className="text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded">
+                          Special Offer
                         </span>
                       )}
                     </>
@@ -1405,7 +1412,7 @@ export default function ProductClient() {
                         className="h-6 w-auto"
                       />
                       <span className="text-sm text-blue-700">
-                        From <span className="font-bold">₹{Math.floor((product.special_price || product.price) / 6)}</span>/month
+                        From <span className="font-bold">₹{Math.floor(getSellingPrice(product) / 6)}</span>/month
                       </span>
                     </div>
                     <button className="text-sm font-semibold text-blue-700 hover:underline">
@@ -1445,10 +1452,10 @@ export default function ProductClient() {
           <h4 className="font-medium text-sm mb-2">Credit Card EMI</h4>
           <div className="space-y-3">
             {[
-              { bank: 'HDFC Bank', tenure: '3 Months', emi: Math.floor((product.special_price || product.price) / 3) },
-              { bank: 'ICICI Bank', tenure: '6 Months', emi: Math.floor((product.special_price || product.price) / 6) },
-              { bank: 'SBI Card', tenure: '9 Months', emi: Math.floor((product.special_price || product.price) / 9) },
-              { bank: 'Axis Bank', tenure: '12 Months', emi: Math.floor((product.special_price || product.price) / 12) },
+              { bank: 'HDFC Bank', tenure: '3 Months', emi: Math.floor(getSellingPrice(product) / 3) },
+              { bank: 'ICICI Bank', tenure: '6 Months', emi: Math.floor(getSellingPrice(product) / 6) },
+              { bank: 'SBI Card', tenure: '9 Months', emi: Math.floor(getSellingPrice(product) / 9) },
+              { bank: 'Axis Bank', tenure: '12 Months', emi: Math.floor(getSellingPrice(product) / 12) },
             ].map((option, index) => (
               <div key={index} className="flex justify-between items-center p-2 border rounded">
                 <div>
@@ -1465,8 +1472,8 @@ export default function ProductClient() {
           <h4 className="font-medium text-sm mb-2">Debit Card EMI</h4>
           <div className="space-y-3">
             {[
-              { bank: 'Kotak Bank', tenure: '6 Months', emi: Math.floor((product.special_price || product.price) / 6) },
-              { bank: 'IndusInd Bank', tenure: '9 Months', emi: Math.floor((product.special_price || product.price) / 9) },
+              { bank: 'Kotak Bank', tenure: '6 Months', emi: Math.floor(getSellingPrice(product) / 6) },
+              { bank: 'IndusInd Bank', tenure: '9 Months', emi: Math.floor(getSellingPrice(product) / 9) },
             ].map((option, index) => (
               <div key={index} className="flex justify-between items-center p-2 border rounded">
                 <div>
@@ -1572,13 +1579,13 @@ export default function ProductClient() {
                             <tbody>
                               <tr>
                                 <td className="py-2 font-semibold text-gray-900">
-                                  ₹{(product.special_price || product.price).toLocaleString()}
+                                  ₹{getSellingPrice(product).toLocaleString()}
                                 </td>
                                 <td className="py-2 font-semibold text-gray-900">
                                   ₹{selectedWarrantyAmount.toLocaleString()}
                                 </td>
                                 <td className="py-2 text-right font-bold text-blue-800 text-lg">
-                                  ₹{((product.special_price || product.price) + selectedWarrantyAmount).toLocaleString()}
+                                  ₹{(getSellingPrice(product) + selectedWarrantyAmount).toLocaleString()}
                                 </td>
                               </tr>
                             </tbody>
@@ -1587,7 +1594,7 @@ export default function ProductClient() {
                           <div className="md:hidden mt-3 space-y-2">
                             <div className="flex justify-between">
                               <span className="text-gray-700">Product:</span>
-                              <span className="font-semibold">₹{(product.special_price || product.price).toLocaleString()}</span>
+                              <span className="font-semibold">₹{getSellingPrice(product).toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-gray-700">Warranty:</span>
@@ -1596,7 +1603,7 @@ export default function ProductClient() {
                             <div className="flex justify-between border-t border-gray-300 pt-2">
                               <span className="font-semibold text-gray-900">Total:</span>
                               <span className="font-bold text-blue-800 text-lg">
-                                ₹{((product.special_price || product.price) + selectedWarrantyAmount).toLocaleString()}
+                                ₹{(getSellingPrice(product) + selectedWarrantyAmount).toLocaleString()}
                               </span>
                             </div>
                           </div>
@@ -2031,19 +2038,11 @@ export default function ProductClient() {
                           <div className="flex items-center gap-2">
                             <span className="text-base font-semibold text-red-600">
                               ₹ {(
-                                item.special_price &&
-                                  item.special_price > 0 &&
-                                  item.special_price !== "0" &&
-                                  item.special_price < item.price
-                                  ? item.special_price
-                                  : item.price
+                                getSellingPrice(item)
                               ).toLocaleString()}
                             </span>
 
-                            {item.special_price &&
-                              item.special_price > 0 &&
-                              item.special_price !== "0" &&
-                              item.special_price < item.price && (
+                            {shouldShowStrikeThrough(item) && (
                                 <span className="text-xs text-gray-500 line-through">
                                   ₹ {item.price.toLocaleString()}
                                 </span>
@@ -2186,19 +2185,11 @@ export default function ProductClient() {
                             <div className="flex items-center gap-2">
                               <span className="text-base font-semibold">
                                 ₹ {(
-                                  item.special_price &&
-                                    item.special_price > 0 &&
-                                    item.special_price !== "0" &&
-                                    item.special_price < item.price
-                                    ? item.special_price
-                                    : item.price
+                                  getSellingPrice(item)
                                 ).toLocaleString()}
                               </span>
 
-                              {item.special_price &&
-                                item.special_price > 0 &&
-                                item.special_price !== "0" &&
-                                item.special_price < item.price && (
+                              {shouldShowStrikeThrough(item) && (
                                   <span className="text-xs text-gray-500 line-through">
                                     ₹ {item.price.toLocaleString()}
                                   </span>
@@ -2265,19 +2256,11 @@ export default function ProductClient() {
                   <div className="flex items-center gap-2">
                     <span className="text-base font-semibold text-red-600">
                       ₹ {(
-                        item.special_price &&
-                        item.special_price > 0 &&
-                        item.special_price !== "0" &&
-                        item.special_price < item.price
-                          ? item.special_price
-                          : item.price
+                        getSellingPrice(item)
                       ).toLocaleString()}
                     </span>
   
-                    {item.special_price &&
-                      item.special_price > 0 &&
-                      item.special_price !== "0" &&
-                      item.special_price < item.price && (
+                    {shouldShowStrikeThrough(item) && (
                         <span className="text-xs text-gray-500 line-through">
                           ₹ {item.price.toLocaleString()}
                         </span>
@@ -2358,6 +2341,9 @@ export default function ProductClient() {
                 // extendedWarranty={selectedExtendedWarranty}
                 extendedWarranty={selectedWarrantyAmount}
                 selectedFrequentProducts={selectedFrequentProducts}
+                price={product.price}
+                special_price={product.special_price}
+                offer_price={product.offer_price}
                 variant={{
                   color: selectedColor || "",
                   size: selectedSize || ""

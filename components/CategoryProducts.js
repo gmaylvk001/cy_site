@@ -1,3 +1,4 @@
+import { getSellingPrice, getDiscountPercent, shouldShowStrikeThrough } from "@/lib/pricing";
 // components/CategoryProducts.jsx
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
@@ -280,9 +281,9 @@ const CategoryProducts = () => {
                                               sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 18vw"
                                               unoptimized
                                             />
-                                            {Number(product.special_price) > 0 && Number(product.special_price) < Number(product.price) && (
+                                            {shouldShowStrikeThrough(product) && (
                                               <span className="absolute top-2 left-2 bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded">
-                                                -{Math.round(100 - (Number(product.special_price) / Number(product.price)) * 100)}%
+                                                -{Math.round(getDiscountPercent(product))}%
                                               </span>
                                             )}
                                             <div className="absolute top-2 right-2">
@@ -331,7 +332,7 @@ const CategoryProducts = () => {
                                                : Math.round(product.price)
                                              ).toLocaleString()}
                                            </span>
-                                           {product.special_price > 0 && product.special_price < product.price && (
+                                           {shouldShowStrikeThrough(product) && (
                                              <span className="text-[10px] sm:text-xs text-gray-500 line-through">
                                                ₹ {Math.round(product.price).toLocaleString()}
                                              </span>
@@ -349,7 +350,7 @@ const CategoryProducts = () => {
                                           <Addtocart
                                             productId={product._id}
                                             stockQuantity={product.quantity}
-                                            special_price={product.special_price}
+                                            special_price={getSellingPrice(product)} offer_price={product.offer_price} price={product.price}
                                             className="flex-1 whitespace-nowrap text-[10px] sm:text-sm py-1.5"
                                             
                                           />

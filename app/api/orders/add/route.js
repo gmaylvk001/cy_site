@@ -5,6 +5,7 @@ import Variant from "@/models/Variant";
 import mongoose from 'mongoose';
 import Coupon from '@/models/ecom_offer_info';
 import Usedcoupon from '@/models/ecom_coupon_track_info';
+import { getSellingPrice } from "@/lib/pricing";
 
 function findMatchingVariant(variantDoc, selectedVariant = {}) {
   if (!variantDoc?.variants?.length) return null;
@@ -36,14 +37,10 @@ async function getOrderItemUnitPrice(item) {
   const matchedVariant = findMatchingVariant(variantDoc, item.variant);
 
   if (matchedVariant) {
-    return Number(matchedVariant.special_price) > 0
-      ? Number(matchedVariant.special_price)
-      : Number(matchedVariant.price) || 0;
+    return getSellingPrice(matchedVariant);
   }
 
-  return Number(product.special_price) > 0
-    ? Number(product.special_price)
-    : Number(product.price) || 0;
+  return getSellingPrice(product);
 }
 
 async function normalizeOrderItems(orderItems = []) {

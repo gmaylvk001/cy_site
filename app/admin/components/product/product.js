@@ -727,6 +727,14 @@ export default function CategoryComponent() {
             Export to Excel
           </button>
 
+          <Link
+            href="/admin/product/bulk_offer"
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md flex items-center gap-2"
+          >
+            <Icon icon="mdi:tag-percent" className="text-lg" />
+            Bulk Offer
+          </Link>
+
           <Link href="/admin/product/create" className="bg-red-500 text-white px-4 py-2 rounded-md">
             + Add Product
           </Link>
@@ -834,6 +842,7 @@ export default function CategoryComponent() {
                 <th className="p-2">Name</th>
                 <th className="p-2">Price</th>
                 <th className="p-2 whitespace-nowrap">Spl Price</th>
+                <th className="p-2 whitespace-nowrap">Offer Price</th>
                 <th className="p-2">Quantity</th>
                 <th className="p-2">Status</th>
                 <th className="p-2">Action</th>
@@ -885,6 +894,12 @@ export default function CategoryComponent() {
 
                     <td className="p-2 whitespace-nowrap">
                       ₹ {Number(product.special_price).toLocaleString("en-IN")}
+                    </td>
+
+                    <td className="p-2 whitespace-nowrap text-purple-700 font-medium">
+                      {Number(product.offer_price) > 0
+                        ? `₹ ${Number(product.offer_price).toLocaleString("en-IN")}`
+                        : "—"}
                     </td>
 
                     {/* Quantity Column */}

@@ -4,6 +4,7 @@ import { verifyToken } from "@/lib/verifyToken";
 import connectDB from "@/lib/db";
 import Wishlist from "@/models/ecom_wishlist_info";
 import Product from "@/models/product";
+import { getSellingPrice } from "@/lib/pricing";
 
 export async function GET(req) {
   try {
@@ -23,7 +24,9 @@ export async function GET(req) {
         productId: product._id,
         name: product.name,
         image: product.images[0] || "/placeholder.jpg", // fallback if no image
-        price: product.special_price > 0 ? product.special_price : product.price,
+        price: getSellingPrice(product),
+        special_price: product.special_price,
+        offer_price: product.offer_price,
         rating: 4.5, // Default or calculate dynamically if needed
         reviews: 50, // Same here
         tags: [product.brand, product.category],

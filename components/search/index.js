@@ -1,3 +1,4 @@
+import { getSellingPrice, getDiscountPercent, shouldShowStrikeThrough } from "@/lib/pricing";
 // search-page.js (client)
 "use client";
 

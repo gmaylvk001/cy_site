@@ -11,6 +11,7 @@ import ProductCard from "@/components/ProductCard";
 import { FiChevronLeft, FiChevronRight, FiRefreshCw } from "react-icons/fi";
 import { v4 as uuidv4 } from "uuid";
 
+import { getSellingPrice, getDiscountPercent, shouldShowStrikeThrough } from "@/lib/pricing";
 /* ------------------- useOutside Hook ------------------- */
 function useOutside(ref, cb) {
   useEffect(() => {
@@ -553,14 +554,10 @@ export default function BicycleFilterSection() {
                         <div className="flex gap-2 items-center">
                           <span className="text-lg font-bold">
                             ₹{" "}
-                            {Number(product.special_price) > 0 &&
-                              Number(product.special_price) < Number(product.price)
-                              ? Number(product.special_price).toLocaleString()
-                              : Number(product.price).toLocaleString()}
+                            {getSellingPrice(product).toLocaleString()}
                           </span>
 
-                          {Number(product.special_price) > 0 &&
-                            Number(product.special_price) < Number(product.price) && (
+                          {shouldShowStrikeThrough(product) && (
                               <>
                                 <span className="text-sm text-gray-400 line-through">
                                   ₹ {Number(product.price).toLocaleString()}
@@ -568,7 +565,7 @@ export default function BicycleFilterSection() {
 
                                 <span className="text-sm text-[#a3ca43] font-semibold">
                                   {Math.round(
-                                    100 - (Number(product.special_price) / Number(product.price)) * 100
+                                    getDiscountPercent(product)
                                   )}
                                   % OFF
                                 </span>
@@ -617,7 +614,7 @@ export default function BicycleFilterSection() {
                     <Addtocart
                       productId={product._id}
                       stockQuantity={product.quantity}
-                      special_price={product.special_price}
+                      special_price={getSellingPrice(product)} offer_price={product.offer_price} price={product.price}
                       className="flex-1 whitespace-nowrap text-xs sm:text-sm py-1.5 my-2"
                     />
                     <button

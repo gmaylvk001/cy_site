@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { FaSortAmountDown, FaSlidersH } from "react-icons/fa";
 import {
+import { getSellingPrice, getDiscountPercent, shouldShowStrikeThrough } from "@/lib/pricing";
   ChevronDown,
   ChevronUp,
   ChevronLeft,
@@ -221,7 +222,7 @@ export default function CategoryPage(params) {
       // Price range logic
       if (categoryData.products?.length > 0) {
         const prices = categoryData.products.map(
-          (p) => p.special_price || p.price,
+          (p) => getSellingPrice(p),
         );
         let minPrice = Math.min(...prices);
         let maxPrice = Math.max(...prices);
@@ -478,9 +479,9 @@ export default function CategoryPage(params) {
     const sortedProducts = [...products];
     switch (sortOption) {
       case "price-low-high":
-        return sortedProducts.sort((a, b) => a.special_price - b.special_price);
+        return sortedProducts.sort((a, b) => getSellingPrice(a) - getSellingPrice(b));
       case "price-high-low":
-        return sortedProducts.sort((a, b) => b.special_price - a.special_price);
+        return sortedProducts.sort((a, b) => getSellingPrice(b) - getSellingPrice(a));
       case "name-a-z":
         return sortedProducts.sort((a, b) => a.name.localeCompare(b.name));
       case "name-z-a":
@@ -1895,18 +1896,11 @@ export default function CategoryPage(params) {
                                   <div className="flex items-center gap-2 flex-wrap">
                                     <span className="text-base font-semibold">
                                       ₹{" "}
-                                      {(product.special_price &&
-                                        product.special_price > 0 &&
-                                        product.special_price !== "0" &&
-                                        product.special_price < product.price
-                                        ? Math.round(product.special_price)
-                                        : Math.round(product.price)
+                                      {(Math.round(getSellingPrice(product))
                                       ).toLocaleString()}
                                     </span>
 
-                                    {product.special_price > 0 &&
-                                      product.special_price !== "0" &&
-                                      product.special_price < product.price && (
+                                    {shouldShowStrikeThrough(product) && (
                                         <span className="text-xs text-gray-500 line-through">
                                           ₹{" "}
                                           {Math.round(
@@ -1916,16 +1910,11 @@ export default function CategoryPage(params) {
                                       )}
 
                                     {/* Discount Badge */}
-                                    {Number(product.special_price) > 0 &&
-                                      Number(product.special_price) <
-                                      Number(product.price) && (
+                                    {shouldShowStrikeThrough(product) && (
                                         <span className="text-[#a3ca43] text-sm font-semibold">
                                           -
                                           {Math.round(
-                                            100 -
-                                            (Number(product.special_price) /
-                                              Number(product.price)) *
-                                            100,
+                                            getDiscountPercent(product),
                                           )}
                                           %
                                         </span>
@@ -1978,7 +1967,7 @@ export default function CategoryPage(params) {
                             <Addtocart
                               productId={product._id}
                               stockQuantity={product.quantity}
-                              special_price={product.special_price}
+                              special_price={getSellingPrice(product)} offer_price={product.offer_price} price={product.price}
                               className="w-full text-xs sm:text-sm py-1.5"
                             />
                             <button

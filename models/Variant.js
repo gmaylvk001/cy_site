@@ -18,6 +18,7 @@ const SingleVariantSchema = new mongoose.Schema(
     item_code: { type: String, default: "", trim: true },
     price: { type: Number, default: 0 },
     special_price: { type: Number, default: 0 },
+    offer_price: { type: Number, default: null },
     quantity: { type: Number, default: 0 },
 
     stock_status: {

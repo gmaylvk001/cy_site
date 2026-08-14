@@ -10,6 +10,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import { Range as ReactRange } from "react-range";
 import { v4 as uuidv4 } from "uuid";
 
+import { getSellingPrice, getDiscountPercent, shouldShowStrikeThrough } from "@/lib/pricing";
 export default function BrandPage() {
   const [brandData, setBrandData] = useState({
     brand: null,
@@ -79,7 +80,7 @@ export default function BrandPage() {
       });
 
       if (brandData.products?.length > 0) {
-        const prices = brandData.products.map(p => p.special_price);
+        const prices = brandData.products.map(p => getSellingPrice(p));
         const minPrice = Math.min(...prices);
         const maxPrice = Math.max(...prices);
         setPriceRange([minPrice, maxPrice]);
@@ -254,9 +255,9 @@ export default function BrandPage() {
     const sortedProducts = [...products];
     switch(sortOption) {
       case 'price-low-high':
-        return sortedProducts.sort((a, b) => a.special_price - b.special_price);
+        return sortedProducts.sort((a, b) => getSellingPrice(a) - getSellingPrice(b));
       case 'price-high-low':
-        return sortedProducts.sort((a, b) => b.special_price - a.special_price);
+        return sortedProducts.sort((a, b) => getSellingPrice(b) - getSellingPrice(a));
       case 'name-a-z':
         return sortedProducts.sort((a, b) => a.name.localeCompare(b.name));
       case 'name-z-a':
@@ -951,10 +952,9 @@ export default function BrandPage() {
                           )}
        
                           {/* Discount Badge */}
-                          {Number(product.special_price) > 0 &&
-                            Number(product.special_price) < Number(product.price) && (
+                          {shouldShowStrikeThrough(product) && (
                               <span className="absolute top-3 left-2 bg-orange-500 tracking-wider text-white text-xs font-bold px-4 py-0.5 rounded z-10">
-                                -{Math.round(100 - (Number(product.special_price) / Number(product.price)) * 100)}%
+                                -{Math.round(getDiscountPercent(product))}%
                               </span>
                           )}
        
@@ -1046,7 +1046,7 @@ export default function BrandPage() {
                               </svg>
                             </Link>
                             <Addtocart
-                              productId={product._id} stockQuantity={product.quantity}  special_price={product.special_price}
+                              productId={product._id} stockQuantity={product.quantity}  special_price={getSellingPrice(product)} offer_price={product.offer_price} price={product.price}
                               className="w-full text-xs sm:text-sm py-1.5"
                             />
                              <button

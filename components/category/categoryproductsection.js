@@ -11,6 +11,7 @@ import Addtocart from "@/components/AddToCart";
 import ProductCard from "@/components/ProductCard";
 
 // Custom Product Card for Category Section
+import { getSellingPrice, getDiscountPercent, shouldShowStrikeThrough } from "@/lib/pricing";
 const CategoryProductCard = ({ product }) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -77,10 +78,9 @@ const CategoryProductCard = ({ product }) => {
     </Link>
 
     {/* Discount Badge */}
-    {Number(product.special_price) > 0 &&
-      Number(product.special_price) < Number(product.price) && (
+    {shouldShowStrikeThrough(product) && (
         <span className="absolute top-3 left-2 bg-orange-500 text-white tracking-wider text-xs font-bold px-2 py-0.5 rounded z-10">
-          -{Math.round(100 - (Number(product.special_price) / Number(product.price)) * 100)}%
+          -{Math.round(getDiscountPercent(product))}%
         </span>
       )}
 
@@ -132,18 +132,11 @@ const CategoryProductCard = ({ product }) => {
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-base font-semibold text-red-600">
                     ₹ {(
-                      product.special_price &&
-                      product.special_price > 0 &&
-                      product.special_price !== '0' &&
-                      product.special_price < product.price
-                        ? Math.round(product.special_price)
-                        : Math.round(product.price)
+                      Math.round(getSellingPrice(product))
                     ).toLocaleString()}
                   </span>
 
-                  {product.special_price > 0 &&
-                    product.special_price !== '0' &&
-                    product.special_price < product.price && (
+                  {shouldShowStrikeThrough(product) && (
                       <span className="text-xs text-gray-500 line-through">
                         ₹ {Math.round(product.price).toLocaleString()}
                       </span>
@@ -167,7 +160,7 @@ const CategoryProductCard = ({ product }) => {
       <Addtocart
         productId={product._id}
         stockQuantity={product.quantity}
-        special_price={product.special_price}
+        special_price={getSellingPrice(product)} offer_price={product.offer_price} price={product.price}
         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
       >
         <svg

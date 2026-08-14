@@ -10,8 +10,9 @@ import { trackAddToCart } from "@/utils/nextjs-event-tracking.js";
 import { FaShoppingCart} from "react-icons/fa";
 
 import { v4 as uuidv4 } from "uuid";
+import { getSellingPrice } from "@/lib/pricing";
 
-const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts = [],extendedWarranty, selectedFrequentProducts = [], stockQuantity = 1,special_price,variant={},selectedVariant={} }) => {
+const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts = [],extendedWarranty, selectedFrequentProducts = [], stockQuantity = 1,special_price, offer_price, price, variant={},selectedVariant={} }) => {
   const { openAuthModal } = useModal();
   const { updateHeaderdetails, setIsLoggedIn, setUserData, setIsAdmin } = useHeaderdetails();
   const [isLoading, setIsLoading] = useState(false);
@@ -20,7 +21,12 @@ const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts
   // const [authError, setAuthError] = useState('');
   const [cartSuccess, setCartSuccess] = useState(false);
   const isOutOfStock = stockQuantity <= 0;
-  const isprice = special_price <= 0;
+  const sellingPrice = getSellingPrice(
+    selectedVariant && (selectedVariant.offer_price || selectedVariant.special_price || selectedVariant.price)
+      ? selectedVariant
+      : { offer_price, special_price, price }
+  );
+  const isprice = sellingPrice <= 0;
   const { cartCount, updateCartCount } = useCart();
 
   const handleAddToCart = async () => {

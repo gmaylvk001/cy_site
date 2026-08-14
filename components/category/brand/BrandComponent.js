@@ -10,6 +10,7 @@ import Addtocart from "@/components/AddToCart";
 import { ToastContainer, toast } from 'react-toastify';
 import { Range as ReactRange } from "react-range";
 
+import { getSellingPrice, getDiscountPercent, shouldShowStrikeThrough } from "@/lib/pricing";
 export default function CategoryBrandComponent({ categorySlug, brandSlug }) {
   const [categoryData, setCategoryData] = useState({
     category: null,
@@ -79,7 +80,7 @@ export default function CategoryBrandComponent({ categorySlug, brandSlug }) {
       });
 
       if (data.products?.length > 0) {
-        const prices = data.products.map(p => p.special_price || p.price);
+        const prices = data.products.map(p => getSellingPrice(p));
         let minPrice = Math.min(...prices);
         const maxPrice = Math.max(...prices);
         if(minPrice === maxPrice) {
@@ -281,9 +282,9 @@ export default function CategoryBrandComponent({ categorySlug, brandSlug }) {
     const sortedProducts = [...products];
     switch(sortOption) {
       case 'price-low-high':
-        return sortedProducts.sort((a, b) => (a.special_price || a.price) - (b.special_price || b.price));
+        return sortedProducts.sort((a, b) => getSellingPrice(a) - getSellingPrice(b));
       case 'price-high-low':
-        return sortedProducts.sort((a, b) => (b.special_price || b.price) - (a.special_price || a.price));
+        return sortedProducts.sort((a, b) => getSellingPrice(b) - getSellingPrice(a));
       case 'name-a-z':
         return sortedProducts.sort((a, b) => a.name.localeCompare(b.name));
       case 'name-z-a':
@@ -1268,7 +1269,7 @@ export default function CategoryBrandComponent({ categorySlug, brandSlug }) {
                           {/* Discount Badge */}
                           {(() => {
                             const discount = Math.round(
-                              100-(Number(product.special_price) / Number(product.price)) * 100
+                              getDiscountPercent(product)
                             );
 
                             return (
@@ -1330,12 +1331,7 @@ export default function CategoryBrandComponent({ categorySlug, brandSlug }) {
                             <div className="flex items-center gap-2 mt-1">
                               <span className="text-base font-semibold text-red-600">
                                 ₹ {(
-                                  product.special_price &&
-                                  product.special_price > 0 &&
-                                  product.special_price !== '0' &&
-                                  product.special_price < product.price
-                                    ? Math.round(product.special_price)
-                                    : Math.round(product.price)
+                                  Math.round(getSellingPrice(product))
                                 ).toLocaleString()}
                               </span>
 
@@ -1358,7 +1354,7 @@ export default function CategoryBrandComponent({ categorySlug, brandSlug }) {
                             <Addtocart
                               productId={product._id} 
                               stockQuantity={product.quantity}  
-                              special_price={product.special_price}
+                              special_price={getSellingPrice(product)} offer_price={product.offer_price} price={product.price}
                               className="w-full text-xs sm:text-sm py-1.5"
                             />
                             <a

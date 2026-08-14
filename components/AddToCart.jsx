@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { FaShoppingCart} from "react-icons/fa";
 
-const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts = [],extendedWarranty, selectedFrequentProducts = [], stockQuantity = 1,special_price }) => {
+const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts = [],extendedWarranty, selectedFrequentProducts = [], stockQuantity = 1,special_price, offer_price, price }) => {
   const { openAuthModal } = useModal();
   const { updateHeaderdetails, setIsLoggedIn, setUserData,setIsAdmin } = useHeaderdetails();
   const [isLoading, setIsLoading] = useState(false);

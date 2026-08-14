@@ -1,3 +1,4 @@
+import { getSellingPrice, getDiscountPercent, shouldShowStrikeThrough } from "@/lib/pricing";
 // components/RecentlyViewedProducts.jsx
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -344,7 +345,7 @@ const RecentlyViewedProducts = () => {
   {Number(product.special_price) > 0 &&
     Number(product.special_price) < Number(product.price) && (
       <span className="absolute top-2 left-2 bg-orange-500 tracking-wider text-white text-xs font-bold px-2 py-1 rounded z-20">
-        -{Math.round(100 - (Number(product.special_price) / Number(product.price)) * 100)}%
+        -{Math.round(getDiscountPercent(product))}%
       </span>
     )}
 
@@ -387,15 +388,12 @@ const RecentlyViewedProducts = () => {
                         <div className="flex items-center gap-2 mb-3">
                           <span className="text-base font-semibold text-red-600">
                             ₹ {(
-                              product.special_price && product.special_price > 0 && product.special_price != '0'  && product.special_price != 0 && product.special_price < product.price
-                                ? product.special_price
-                                : product.price
+                              getSellingPrice(product)
                             ).toLocaleString()}
                           </span>
     
     
-                          {product.special_price > 0 && product.special_price != '0'  && product.special_price != 0 &&   product.special_price &&
-                            product.special_price < product.price &&
+                          {shouldShowStrikeThrough(product) &&
                             (
                               <span className="text-xs text-gray-500 line-through">
                                 ₹ {product.price.toLocaleString()}
@@ -411,7 +409,7 @@ const RecentlyViewedProducts = () => {
                         {/* Add To Cart Button */}
                         {/* <div className="mt-auto flex items-center justify-between gap-2">
                           <Addtocart
-                            productId={product._id} stockQuantity={product.quantity}  special_price={product.special_price}
+                            productId={product._id} stockQuantity={product.quantity}  special_price={getSellingPrice(product)} offer_price={product.offer_price} price={product.price}
                             className="w-full text-xs sm:text-sm py-1.5"
                           />
                           <a
@@ -456,7 +454,7 @@ const RecentlyViewedProducts = () => {
                           <Addtocart
                             productId={product._id} 
                             stockQuantity={product.quantity}  
-                            special_price={product.special_price}
+                            special_price={getSellingPrice(product)} offer_price={product.offer_price} price={product.price}
                             className="w-full text-xs sm:text-sm py-1.5"
                           />
                           <button

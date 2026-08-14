@@ -4,6 +4,7 @@ import Cart from "@/models/ecom_cart_info";
 import Product from "@/models/product";
 import jwt from "jsonwebtoken";
 import Variant from "@/models/Variant";
+import { getSellingPrice } from "@/lib/pricing";
 /** Utils **/
 const extractToken = (req) => {
   const authHeader = req.headers.get("authorization");
@@ -137,7 +138,7 @@ export async function POST(req) {
         ? findMatchingVariant(variantDoc, selectedVariantValues)
         : null;
 
-    let finalPrice = product.special_price ?? product.price;
+    let finalPrice = getSellingPrice(product);
     let finalImage = product.images?.[0] || "";
     let finalItemCode = product.item_code;
     let finalStockQty = product.quantity;
@@ -151,9 +152,7 @@ export async function POST(req) {
         );
       }
 
-      finalPrice = matchedVariant.special_price > 0
-        ? matchedVariant.special_price
-        : matchedVariant.price;
+      finalPrice = getSellingPrice(matchedVariant);
 
       finalImage = matchedVariant.images?.[0] || finalImage;
       finalItemCode = matchedVariant.item_code || finalItemCode;
@@ -261,7 +260,7 @@ export async function GET(req) {
 
       cart = await Cart.findOne({ userId }).populate(
         "items.productId",
-        "name price images item_code quantity"
+        "name price special_price offer_price images item_code quantity"
       );
 
     }
@@ -271,7 +270,7 @@ export async function GET(req) {
       guestId = guestId_use;
       cart = await Cart.findOne({ guestId }).populate(
         "items.productId",
-        "name price images item_code quantity"
+        "name price special_price offer_price images item_code quantity"
       );
 
     }
@@ -283,35 +282,61 @@ export async function GET(req) {
       );
     }
 
+    let pricesChanged = false;
+
     const items = await Promise.all(
       cart.items.map(async (item) => {
-        // console.log(item);
-        const original_quantity = await getQuantity(item.productId.item_code);
+        const productDoc = item.productId;
+        let livePrice = getSellingPrice(productDoc);
+
+        // Re-resolve variant offer/special if cart line has a variant
+        if (item.variant && (item.variant.color || item.variant.size)) {
+          const variantDoc = await Variant.findOne({ parent_id: productDoc._id }).lean();
+          const matched = findMatchingVariant(variantDoc, item.variant || {});
+          if (matched) {
+            livePrice = getSellingPrice(matched);
+          }
+        }
+
+        if (Number(item.price) !== Number(livePrice)) {
+          item.price = livePrice;
+          pricesChanged = true;
+        }
+
+        const original_quantity = await getQuantity(productDoc.item_code);
         return {
           original_quantity,
-          item_code: item.productId.item_code,
-          productId: item.productId._id,
-          name: item.productId.name,
-          price: item.price,
-          image: item.productId.images[0],
+          item_code: productDoc.item_code,
+          productId: productDoc._id,
+          name: productDoc.name,
+          price: livePrice,
+          image: productDoc.images?.[0],
           quantity: item.quantity,
           warranty: item.warranty || 0,
           variant: item.variant || { color: "", size: "" },
           extendedWarranty: item.extendedWarranty || 0,
-          actual_price: item.productId.price,
+          actual_price: productDoc.price,
+          offer_price: productDoc.offer_price ?? null,
+          special_price: productDoc.special_price ?? null,
         };
       })
     );
-    // console.log(items);
 
+    if (pricesChanged) {
+      const totals = calculateCartTotals(cart.items);
+      cart.totalItems = totals.totalItems;
+      cart.totalPrice = totals.totalPrice;
+      await cart.save();
+    }
 
+    const responseTotals = calculateCartTotals(cart.items);
 
     return NextResponse.json(
       {
         cart: {
           id: cart._id,
-          totalItems: cart.totalItems,
-          totalPrice: cart.totalPrice,
+          totalItems: responseTotals.totalItems,
+          totalPrice: responseTotals.totalPrice,
           items,
         },
         products: { productdata },

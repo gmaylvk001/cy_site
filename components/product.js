@@ -1,3 +1,4 @@
+import { getSellingPrice, getDiscountPercent, shouldShowStrikeThrough } from "@/lib/pricing";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/router";
 import { FaShoppingCart, FaHeart, FaShareAlt, FaBell } from "react-icons/fa";

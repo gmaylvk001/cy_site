@@ -12,6 +12,7 @@ const poppins = Poppins({ subsets: ["latin"], weight: ["400","500","600"] });
 import { formatDistanceToNow, format } from "date-fns";
 import { useHeaderdetails } from '@/context/HeaderContext';
 import { ToastContainer, toast } from 'react-toastify';
+import { getSellingPrice, getDiscountPercent, shouldShowStrikeThrough } from "@/lib/pricing";
 export default function ProductDetailsSection({ product, reviews=[], avgRating=0, reviewCount=0}) {
   const [brand, setBrand] = useState([]);
   const [activeTab, setActiveTab] = useState("overview");
@@ -701,9 +702,7 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
     }
   };
   const renderProductCard = (product) => {
-    const discountPercentage = product.special_price 
-      ? Math.round(((product.price - product.special_price) / product.price) * 100)
-      : 0;
+    const discountPercentage = getDiscountPercent(product);
 
     return (
       <div key={product._id} className="border rounded-lg p-2 sm:p-3 hover:shadow-md transition-shadow relative">
@@ -735,8 +734,8 @@ export default function ProductDetailsSection({ product, reviews=[], avgRating=0
         </Link>
         <p className="text-gray-600 text-xs">By {product.brand?.brand_name || "Our Store"}</p>
         <div className="flex items-center mt-1">
-          <p className="text-sm sm:text-lg font-bold">${product.special_price || product.price}</p>
-          {product.special_price && (
+          <p className="text-sm sm:text-lg font-bold">${getSellingPrice(product)}</p>
+          {shouldShowStrikeThrough(product) && (
             <p className="text-gray-500 text-xs sm:text-sm line-through ml-1 sm:ml-2">${product.price}</p>
           )}
         </div>

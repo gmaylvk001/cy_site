@@ -8,6 +8,7 @@ import Addtocart from "@/components/AddToCart";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
 
+import { getSellingPrice, getDiscountPercent, shouldShowStrikeThrough } from "@/lib/pricing";
 const RelatedProducts = ({ currentProductId,categoryId }) => {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [startIndex, setStartIndex] = useState(0);
@@ -169,7 +170,7 @@ const RelatedProducts = ({ currentProductId,categoryId }) => {
                   {Number(product.special_price) > 0 &&
                     Number(product.special_price) < Number(product.price) && (
                       <span className="absolute top-3 left-3 bg-orange-500 tracking-wider text-white text-xs font-bold px-2 py-0.5 rounded z-10">
-                        -{Math.round(100 - (Number(product.special_price) / Number(product.price)) * 100)}%
+                        -{Math.round(getDiscountPercent(product))}%
                       </span>
                     )}
 
@@ -199,14 +200,11 @@ const RelatedProducts = ({ currentProductId,categoryId }) => {
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-base font-semibold text-red-600">
                       ₹ {(
-                        product.special_price && product.special_price > 0 && product.special_price < product.price
-                          ? product.special_price
-                          : product.price
+                        getSellingPrice(product)
                       ).toLocaleString()}
                     </span>
 
-                    {product.special_price > 0 &&
-                      product.special_price < product.price && (
+                    {shouldShowStrikeThrough(product) && (
                         <span className="text-xs text-gray-500 line-through">
                           ₹ {product.price.toLocaleString()}
                         </span>
@@ -222,7 +220,7 @@ const RelatedProducts = ({ currentProductId,categoryId }) => {
                     <Addtocart
                       productId={product._id}
                       stockQuantity={product.quantity}
-                      special_price={product.special_price}
+                      special_price={getSellingPrice(product)} offer_price={product.offer_price} price={product.price}
                       className="w-full text-xs sm:text-sm py-1.5"
                     />
                     <a
