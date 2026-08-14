@@ -1,4 +1,3 @@
-import { getSellingPrice, getDiscountPercent, shouldShowStrikeThrough } from "@/lib/pricing";
 // search-page.js (client)
 "use client";
 
@@ -11,6 +10,7 @@ import { FaSpinner } from "react-icons/fa";
 import { ChevronDown, ChevronUp } from "react-feather";
 import Addtocart from "@/components/AddToCart";
 import ProductCard from "@/components/ProductCard";
+import { getSellingPrice, getDiscountPercent, shouldShowStrikeThrough } from "@/lib/pricing";
 
 const safeArray = (v) => (Array.isArray(v) ? v : []);
 

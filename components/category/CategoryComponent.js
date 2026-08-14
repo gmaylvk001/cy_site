@@ -5,12 +5,12 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { FaSortAmountDown, FaSlidersH } from "react-icons/fa";
 import {
-import { getSellingPrice, getDiscountPercent, shouldShowStrikeThrough } from "@/lib/pricing";
   ChevronDown,
   ChevronUp,
   ChevronLeft,
   ChevronRight,
 } from "react-feather";
+import { getSellingPrice, getDiscountPercent, shouldShowStrikeThrough } from "@/lib/pricing";
 import ProductCard from "@/components/ProductCard";
 import Addtocart from "@/components/AddToCart";
 import { ToastContainer, toast } from "react-toastify";
