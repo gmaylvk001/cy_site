@@ -1573,7 +1573,7 @@ const Header = () => {
               </button>
 
               <Link href="/" className="mx-auto">
-                <Image
+                <img
                   src="/user/cw-logo.jpg"
                   alt="Logo"
                   width={83}
@@ -2300,7 +2300,7 @@ const Header = () => {
                       className="flex flex-col items-center justify-center gap-2 text-[#333333] hover:text-[#A3CA43] transition cursor-pointer"
                     >
                       {/* Category Image */}
-                      <Image
+                      <img
                         src={getCategoryImage(category)}
                         alt={category.category_name}
                         width={64}
