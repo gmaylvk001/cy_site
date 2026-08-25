@@ -7,6 +7,7 @@ import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } fr
 import { IoLogOut } from "react-icons/io5";
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from "@/context/WishlistContext";
+import { toPublicImageSrc } from "@/lib/imageSrc";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -1529,9 +1530,8 @@ const Header = () => {
   };
 
   const getCategoryImage = (category) => {
-    return (
-      category?.navImage ||
-      category?.image ||
+    return toPublicImageSrc(
+      category?.navImage || category?.image,
       "/images/placeholder-category-image.jpg"
     );
   };

@@ -3,9 +3,49 @@ import Category from "@/models/ecom_category_info";
 import CategoryFilter from "@/models/ecom_categoryfilters_infos"; // Import the new model
 import { NextResponse } from "next/server";
 import md5 from "md5";
-import { writeFile, unlink } from "fs/promises";
+import { mkdir, writeFile, unlink } from "fs/promises";
 import path from "path";
 import mongoose from "mongoose";
+import { toPublicImageSrc } from "@/lib/imageSrc";
+
+function isUploadedFile(file) {
+  return Boolean(
+    file &&
+      typeof file !== "string" &&
+      typeof file.arrayBuffer === "function" &&
+      file.size > 0 &&
+      file.name
+  );
+}
+
+function toRelativeUploadPath(imageUrl) {
+  return toPublicImageSrc(imageUrl, "");
+}
+
+function publicFilePath(imageUrl) {
+  const relative = toRelativeUploadPath(imageUrl);
+  if (!relative) return null;
+  return path.join(process.cwd(), "public", relative.replace(/^[/\\]+/, ""));
+}
+
+async function deletePublicFile(imageUrl) {
+  const filePath = publicFilePath(imageUrl);
+  if (!filePath) return;
+  try {
+    await unlink(filePath);
+  } catch (err) {
+    console.error("Error deleting old image:", err);
+  }
+}
+
+async function saveCategoryUpload(file, prefix) {
+  const uploadDir = path.join(process.cwd(), "public", "uploads", "categories");
+  await mkdir(uploadDir, { recursive: true });
+  const fileName = `${prefix}_${Date.now()}${path.extname(file.name)}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await writeFile(path.join(uploadDir, fileName), buffer);
+  return `/uploads/categories/${fileName}`;
+}
 
 function convertSlug(slug) {
   let result = slug.replace(/ /g, "-"); // replace spaces with hyphens
@@ -64,56 +104,27 @@ export async function PUT(req) {
       return NextResponse.json({ error: "Category name already exists" }, { status: 400 });
     }
 
-    // Handle image upload/update
-    let image_url = existingImage;
+    // Handle image upload/update — always store a relative public path
+    let image_url =
+      toRelativeUploadPath(existingImage) ||
+      toRelativeUploadPath(existingCategory.image) ||
+      "";
 
-    if (file) {
-      // Delete old image if it exists
-      if (existingImage) {
-        try {
-          const oldImagePath = path.join(
-            process.cwd(),
-            "public",
-            existingImage.replace("http://localhost:3000", "")
-          );
-          await unlink(oldImagePath);
-        } catch (err) {
-          console.error("Error deleting old image:", err);
-        }
-      }
-
-      // Save new image
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const uploadDir = path.join(process.cwd(), "public/uploads/categories");
-      const fileName = `category_${Date.now()}${path.extname(file.name)}`;
-      await writeFile(path.join(uploadDir, fileName), buffer);
-      image_url = `/uploads/categories/${fileName}`;
+    if (isUploadedFile(file)) {
+      await deletePublicFile(image_url || existingImage);
+      image_url = await saveCategoryUpload(file, "category");
     }
 
     // Handle navImage upload/update BEFORE updating category
     const existingNavImage = formData.get("existingNavImage");
-    let nav_image_url = existingNavImage;
+    let nav_image_url =
+      toRelativeUploadPath(existingNavImage) ||
+      toRelativeUploadPath(existingCategory.navImage) ||
+      "";
     const navFile = formData.get("navImage");
-    if (navFile) {
-      // console.log('navFile:', navFile);
-      if (nav_image_url) {
-        try {
-          const oldNavImagePath = path.join(
-            process.cwd(),
-            "public",
-            nav_image_url.replace("http://localhost:3000", "")
-          );
-          await unlink(oldNavImagePath);
-        } catch (err) {
-          console.error("Error deleting old navImage:", err);
-        }
-      }
-      const buffer = Buffer.from(await navFile.arrayBuffer());
-      const uploadDir = path.join(process.cwd(), "public/uploads/categories");
-      const fileName = `category_nav_${Date.now()}${path.extname(navFile.name)}`;
-      await writeFile(path.join(uploadDir, fileName), buffer);
-      nav_image_url = `http://localhost:3000/uploads/categories/${fileName}`;
-      // console.log('nav_image_url:', nav_image_url);
+    if (isUploadedFile(navFile)) {
+      await deletePublicFile(nav_image_url || existingNavImage);
+      nav_image_url = await saveCategoryUpload(navFile, "category_nav");
     }
 
     // UPDATE FILTERS LOGIC - Same as product filters

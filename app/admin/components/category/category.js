@@ -8,7 +8,7 @@ import dynamic from 'next/dynamic';
 import Link from "next/link";
 import { components } from "react-select";
 import { Check } from "react-feather";
-import Image from "next/image";
+import { toPublicImageSrc } from "@/lib/imageSrc";
 const Select = dynamic(() => import('react-select'), { ssr: false });
 
 // ✅ Custom Option with tick symbol
@@ -753,13 +753,13 @@ export default function CategoryComponent() {
         </td>
         <td>{getParentCategoryName(category.parentid)}</td>
         <td>
-          {category.image ? (
-            <Image
-              src={category.image}
-              alt="Category"
+          {toPublicImageSrc(category.image) ? (
+            <img
+              src={toPublicImageSrc(category.image)}
+              alt={category.category_name || "Category"}
               width={32}
               height={32}
-              className="mx-auto rounded-lg object-contain"
+              className="mx-auto rounded-lg object-contain w-8 h-8"
             />
           ) : (
             "No Image"
@@ -1271,7 +1271,7 @@ export default function CategoryComponent() {
                         src={
                           categoryToUpdate.image instanceof File
                             ? URL.createObjectURL(categoryToUpdate.image)
-                            : categoryToUpdate.existingImage
+                            : toPublicImageSrc(categoryToUpdate.existingImage)
                         }
                         alt="Preview"
                         className="h-16 rounded-md object-contain"
@@ -1306,7 +1306,7 @@ export default function CategoryComponent() {
                         src={
                           categoryToUpdate.navImage instanceof File
                             ? URL.createObjectURL(categoryToUpdate.navImage)
-                            : categoryToUpdate.existingNavImage
+                            : toPublicImageSrc(categoryToUpdate.existingNavImage)
                         }
                         alt="Preview"
                         className="h-16 rounded-md object-contain"
