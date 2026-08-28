@@ -1,8 +1,10 @@
 import Variant from "@/models/Variant";
 import { NextResponse } from "next/server";
+import dbConnect from "@/lib/db";
 
 export async function GET(request) {
   try {
+    await dbConnect();
     const { searchParams } = new URL(request.url);
     const _id = searchParams.get("_id");
 

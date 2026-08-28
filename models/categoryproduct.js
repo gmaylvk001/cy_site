@@ -28,8 +28,7 @@ const CategoryProductSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Add index for better performance
-CategoryProductSchema.index({ subcategoryId: 1 });
+// unique: true on subcategoryId already creates an index
 CategoryProductSchema.index({ status: 1 });
 CategoryProductSchema.index({ position: 1 });
 

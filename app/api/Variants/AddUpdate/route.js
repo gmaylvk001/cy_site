@@ -1,10 +1,12 @@
 import Variant from "@/models/Variant";
 import { NextResponse } from "next/server";
+import dbConnect from "@/lib/db";
 import path from "path";
 import fs from "fs/promises";
 
 export async function POST(request) {
   try {
+    await dbConnect();
     const formData = await request.formData();
 
     const parent_id = formData.get("parent_id");
