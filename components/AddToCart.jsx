@@ -56,19 +56,21 @@ const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts
       isLoggedIn = data.loggedIn;
       userData = data.user;
 
-          updateHeaderdetails({ user: data.user });
-          setIsLoggedIn(true);
-          const role = data.role;
-          if(role == 'admin'){
-            setIsAdmin(true);
-          }
+      if (isLoggedIn) {
+        updateHeaderdetails({ user: data.user });
+        setIsLoggedIn(true);
+        const role = data.role;
+        if (role == "admin") {
+          setIsAdmin(true);
         }
+      }
+    }
 
-        // ✅ If not logged in → use guestCartId
-        let guestCartId = null;
-        if (!isLoggedIn) {
-          guestCartId = localStorage.getItem("guestCartId") || uuidv4();
-          localStorage.setItem("guestCartId", guestCartId);
+        // ✅ Always keep a guest cart id; use it when not logged in
+        let guestCartId = localStorage.getItem("guestCartId") || uuidv4();
+        localStorage.setItem("guestCartId", guestCartId);
+        if (isLoggedIn) {
+          guestCartId = null;
         }
         
         /*
@@ -105,6 +107,7 @@ const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts
       headers: {
         "Content-Type": "application/json",
         ...(isLoggedIn && { Authorization: `Bearer ${token}` }),
+        ...(guestCartId && { guestCartId }),
       },
       body: JSON.stringify({
         productId,
@@ -150,6 +153,13 @@ const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts
 
     const responseData = await cartResponse.json();
     updateCartCount(responseData.cart.totalItems + additionalProducts.length);
+
+    try {
+      localStorage.setItem("cartData", JSON.stringify(responseData.cart));
+      localStorage.setItem("cartCount", String(responseData.cart.totalItems + additionalProducts.length));
+    } catch {
+      // ignore quota errors
+    }
 
     // ✅ Track events (skip if guest)
     if (isLoggedIn) {

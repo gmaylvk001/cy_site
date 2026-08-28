@@ -408,56 +408,68 @@ export default function CartComponent() {
   }, []);
 
   useEffect(() => {
+    const getGuestCartId = () => {
+      let id = localStorage.getItem("guestCartId");
+      if (!id) {
+        id = uuidv4();
+        localStorage.setItem("guestCartId", id);
+      }
+      return id;
+    };
+
     const fetchCartData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        let response = '';
-        
-        if(token)
-        {
-          response = await fetch('/api/cart', {
+        const token = localStorage.getItem("token");
+        const guestCartId = getGuestCartId();
+        let response;
+
+        if (token) {
+          response = await fetch("/api/cart", {
             headers: {
-              'Authorization': `Bearer ${token}`
+              Authorization: `Bearer ${token}`,
+              guestCartId,
             },
-            method: "GET"
+            method: "GET",
           });
-        }
-        else
-        {
-          const guestCartId = localStorage.getItem("guestCartId") || uuidv4();
-          response = await fetch('/api/cart', {
-            headers: {
-              'guestCartId': guestCartId
-            },
-            method: "GET"
+
+          if (!response.ok) {
+            const datares = await response.json();
+            if (
+              datares.error === "Token has expired" ||
+              datares.error === "Invalid token" ||
+              datares.error === "Authorization token required"
+            ) {
+              localStorage.removeItem("token");
+              response = await fetch("/api/cart", {
+                headers: { guestCartId },
+                method: "GET",
+              });
+            }
+          }
+        } else {
+          response = await fetch("/api/cart", {
+            headers: { guestCartId },
+            method: "GET",
           });
         }
 
-        if (!response.ok) {
-          const datares = await response.json();
-          if (
-            datares.error === "Token has expired" ||
-            datares.error === "Invalid token" ||
-            datares.error === "Authorization token required"
-          ) {
-            localStorage.removeItem("token");
-            window.location.reload();
-            return;
-          }
+        if (!response?.ok) {
+          const datares = await response.json().catch(() => ({}));
+          throw new Error(datares.error || "Failed to load cart");
         }
 
         const data = await response.json();
-        const itemsWithDiscount = data.cart.items.map(item => ({
+        const itemsWithDiscount = (data.cart?.items || []).map((item) => ({
           ...item,
-          discount: 0
+          discount: 0,
         }));
 
-        // Persist and set state
         const nextCart = { ...data.cart, items: itemsWithDiscount };
         setCartData(nextCart);
         saveCartState(nextCart);
+        updateCartCount(nextCart.totalItems || 0);
 
-        localStorage.removeItem('appliedCoupon');
+        localStorage.removeItem("appliedCoupon");
         setAppliedCoupon(null);
       } catch (err) {
         setError(err.message);
@@ -467,7 +479,7 @@ export default function CartComponent() {
     };
 
     fetchCartData();
-  }, [router]);
+  }, [router, updateCartCount]);
 
   // Apply discount to specific items based on coupon
   const applyDiscountToItems = (coupon, items) => {

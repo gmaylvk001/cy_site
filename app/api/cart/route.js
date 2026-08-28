@@ -5,6 +5,7 @@ import Product from "@/models/product";
 import jwt from "jsonwebtoken";
 import Variant from "@/models/Variant";
 import { getSellingPrice } from "@/lib/pricing";
+import { getGuestCartIdFromRequest } from "@/lib/cartGuest";
 /** Utils **/
 const extractToken = (req) => {
   const authHeader = req.headers.get("authorization");
@@ -111,8 +112,10 @@ export async function POST(req) {
       selectedExtendedWarranty = 0,
       upsellProducts = [],
       variant = {},
-      guestCartId, // frontend sends UUID from localStorage
+      guestCartId: guestCartIdBody,
     } = await req.json();
+
+    const guestCartId = guestCartIdBody || getGuestCartIdFromRequest(req);
 
     const selectedColor = variant?.color || "";
     const selectedSize = variant?.size || "";
@@ -169,6 +172,13 @@ export async function POST(req) {
 
 
     // choose key
+    if (!userId && !guestCartId) {
+      return NextResponse.json(
+        { error: "Guest cart id is required for guest checkout" },
+        { status: 400 }
+      );
+    }
+
     const query = userId ? { userId } : { guestId: guestCartId };
     let cart = await Cart.findOne(query);
 
@@ -245,34 +255,32 @@ export async function POST(req) {
 /** GET - Fetch Cart **/
 export async function GET(req) {
   try {
-
-
-    let guestId = null;
-    let cart = null;
-    //let guestCartId = null;
     await connectDB();
+
     const token = extractToken(req);
-    const productdata = [];
+    const guestCartId = getGuestCartIdFromRequest(req);
+    let cart = null;
+
     if (token) {
-      const decoded = verifyToken(token);
-      const userId = decoded.userId;
-
-
-      cart = await Cart.findOne({ userId }).populate(
+      try {
+        const decoded = verifyToken(token);
+        cart = await Cart.findOne({ userId: decoded.userId }).populate(
+          "items.productId",
+          "name price special_price offer_price images item_code quantity"
+        );
+      } catch {
+        if (guestCartId) {
+          cart = await Cart.findOne({ guestId: guestCartId }).populate(
+            "items.productId",
+            "name price special_price offer_price images item_code quantity"
+          );
+        }
+      }
+    } else if (guestCartId) {
+      cart = await Cart.findOne({ guestId: guestCartId }).populate(
         "items.productId",
         "name price special_price offer_price images item_code quantity"
       );
-
-    }
-    else {
-
-      const guestId_use = req.headers.get("GuestCartId");
-      guestId = guestId_use;
-      cart = await Cart.findOne({ guestId }).populate(
-        "items.productId",
-        "name price special_price offer_price images item_code quantity"
-      );
-
     }
 
     if (!cart) {
@@ -284,10 +292,13 @@ export async function GET(req) {
 
     let pricesChanged = false;
 
-    const items = await Promise.all(
-      cart.items.map(async (item) => {
-        const productDoc = item.productId;
-        let livePrice = getSellingPrice(productDoc);
+    const items = (
+      await Promise.all(
+        cart.items.map(async (item) => {
+          const productDoc = item.productId;
+          if (!productDoc) return null;
+
+          let livePrice = getSellingPrice(productDoc);
 
         // Re-resolve variant offer/special if cart line has a variant
         if (item.variant && (item.variant.color || item.variant.size)) {
@@ -320,7 +331,8 @@ export async function GET(req) {
           special_price: productDoc.special_price ?? null,
         };
       })
-    );
+      )
+    ).filter(Boolean);
 
     if (pricesChanged) {
       const totals = calculateCartTotals(cart.items);
@@ -339,7 +351,7 @@ export async function GET(req) {
           totalPrice: responseTotals.totalPrice,
           items,
         },
-        products: { productdata },
+        products: { productdata: [] },
       },
       { status: 200 }
     );
@@ -374,14 +386,19 @@ export async function PUT(req) {
     }
 
     const token = extractToken(req);
+    const guestCartId = getGuestCartIdFromRequest(req);
+
     if (token) {
-      const decoded = verifyToken(token);
-      const userId = decoded.userId;
-      cart = await Cart.findOne({ userId });
-    }
-    else {
-      guestId = req.headers.get("GuestCartId");
-      cart = await Cart.findOne({ guestId });
+      try {
+        const decoded = verifyToken(token);
+        cart = await Cart.findOne({ userId: decoded.userId });
+      } catch {
+        if (guestCartId) {
+          cart = await Cart.findOne({ guestId: guestCartId });
+        }
+      }
+    } else if (guestCartId) {
+      cart = await Cart.findOne({ guestId: guestCartId });
     }
 
 
@@ -472,14 +489,19 @@ export async function DELETE(req) {
     const { productId, clearAll } = await req.json();
 
     const token = extractToken(req);
+    const guestCartId = getGuestCartIdFromRequest(req);
+
     if (token) {
-      const decoded = verifyToken(token);
-      const userId = decoded.userId;
-      cart = await Cart.findOne({ userId });
-    }
-    else {
-      guestId = req.headers.get("GuestCartId");
-      cart = await Cart.findOne({ guestId });
+      try {
+        const decoded = verifyToken(token);
+        cart = await Cart.findOne({ userId: decoded.userId });
+      } catch {
+        if (guestCartId) {
+          cart = await Cart.findOne({ guestId: guestCartId });
+        }
+      }
+    } else if (guestCartId) {
+      cart = await Cart.findOne({ guestId: guestCartId });
     }
 
     //const cart = await Cart.findOne({ userId });

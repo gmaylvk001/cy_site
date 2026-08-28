@@ -6,11 +6,40 @@ import Filter from '@/models/ecom_filter_infos';
 import FilterGroup from '@/models/ecom_filter_group_infos';
 import ProductFilter from '@/models/ecom_productfilter_info';
 
-export async function GET() {
+export async function GET(req) {
   try {
     await dbConnect();
 
-    // 🔥 Run all queries together (faster)
+    const { searchParams } = new URL(req.url);
+    const lite = searchParams.get("lite") === "1";
+    const limit = parseInt(searchParams.get("limit") || "0", 10);
+
+    if (lite) {
+      const query = Product.find({
+        status: "Active",
+        quantity: { $gt: 0 },
+        stock_status: "In Stock",
+      })
+        .sort({ createdAt: -1 })
+        .select(
+          "name slug images price special_price offer_price quantity stock_status brand status createdAt"
+        )
+        .lean();
+
+      if (limit > 0) {
+        query.limit(limit);
+      }
+
+      const products = await query;
+      return NextResponse.json(products, {
+        status: 200,
+        headers: {
+          "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
+        },
+      });
+    }
+
+    // Run all queries together (full admin payload)
     const [
       products,
       wishlistedItems,

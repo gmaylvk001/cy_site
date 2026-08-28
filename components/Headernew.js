@@ -112,6 +112,7 @@ const Header = () => {
   const [cartData, setCartData] = useState(null);
   const cartDataRef = useRef(null);
   useEffect(() => { cartDataRef.current = cartData; }, [cartData]);
+  const hideTimeout = useRef(null);
 
   const setCartCountSynced = useCallback((count) => {
     // Update context + propagate to other tabs
@@ -905,40 +906,6 @@ const Header = () => {
       }
     };
     fetchOffers();
-  }, []);
-  const hideTimeout = useRef(null);
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch("/api/categories/get");
-        const data = await response.json();
-
-        // Keep only active categories
-        const activeCategories = data.filter(cat => cat.status === "Active");
-
-        const categoryMap = {};
-        activeCategories.forEach((cat) => {
-          cat.subcategories = [];
-          categoryMap[cat._id] = cat;
-        });
-
-        const nestedCategories = [];
-        activeCategories.forEach((cat) => {
-          if (cat.parentid === "none") {
-            nestedCategories.push(cat);
-          } else if (categoryMap[cat.parentid]) {
-            categoryMap[cat.parentid].subcategories.push(cat);
-          }
-        });
-
-        setCategories(nestedCategories);
-      } catch (err) {
-        console.error("Failed to fetch categories", err);
-      }
-    };
-
-    fetchCategories();
-    checkAuthStatus();
   }, []);
   const flattenTree = (cat, rootCategory, level = 0) => {
     let result = [];

@@ -147,29 +147,38 @@ function getDescendantCategoryIds(categoryId, treeMap, visited = new Set()) {
 }
 
 
-export async function GET() {
+export async function GET(req) {
   try {
     await dbConnect();
 
-    // 🔥 Fetch all categories once
+    const { searchParams } = new URL(req.url);
+    const includeBrands = searchParams.get("includeBrands") === "1";
+
+    // Fetch all categories once
     const categories = await Category.find().sort({ position: 1 }).lean();
 
-    // 🔥 Build tree in memory
+    if (!includeBrands) {
+      return NextResponse.json(categories, {
+        status: 200,
+        headers: {
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+        },
+      });
+    }
+
+    // Build tree in memory (only when brands are requested)
     const treeMap = buildCategoryTree(categories);
 
     const categoriesWithProducts = await Promise.all(
       categories.map(async (cat) => {
-
-        // 🔥 Now recursion is MEMORY ONLY (no DB)
         const categoryIds = getDescendantCategoryIds(cat._id, treeMap);
 
-        const brandIds = await Product.distinct(
-          "brand",
-          { category: { $in: categoryIds } }
-        );
+        const brandIds = await Product.distinct("brand", {
+          category: { $in: categoryIds },
+        });
 
-        const validBrandIds = brandIds.filter(id =>
-          id && mongoose.Types.ObjectId.isValid(id)
+        const validBrandIds = brandIds.filter(
+          (id) => id && mongoose.Types.ObjectId.isValid(id)
         );
 
         const brands = validBrandIds.length
@@ -183,7 +192,12 @@ export async function GET() {
       })
     );
 
-    return NextResponse.json(categoriesWithProducts, { status: 200 });
+    return NextResponse.json(categoriesWithProducts, {
+      status: 200,
+      headers: {
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+      },
+    });
 
   } catch (error) {
     console.error("❌ Error:", error);

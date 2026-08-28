@@ -216,12 +216,15 @@ export default function HomeComponent() {
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch("/api/product/get");
+        const res = await fetch("/api/product/get?lite=1&limit=20");
         const data = await res.json();
-        const Stockproducts_only = data.filter(
-          (product) => product.quantity > 0 && product.stock_status === "In Stock"
-        )
-        setProducts(Stockproducts_only.slice(0, 20)); // top 20 new arrivals
+        const stockProducts = Array.isArray(data)
+          ? data.filter(
+              (product) =>
+                product.quantity > 0 && product.stock_status === "In Stock"
+            )
+          : [];
+        setProducts(stockProducts.slice(0, 20));
       } catch (err) {
         console.error("Error fetching products:", err);
       } finally {

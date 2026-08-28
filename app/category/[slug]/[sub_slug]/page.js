@@ -12,10 +12,10 @@ async function getSubCategoryData(slug, subSlug) {
   try {
     const [subCategoryRes, parentCategoryRes] = await Promise.all([
       fetch(`${baseUrl}/api/categories/${slug}/${subSlug}`, {
-        cache: "no-store",
+        next: { revalidate: 300 },
       }),
       fetch(`${baseUrl}/api/categories/${slug}`, {
-        cache: "no-store",
+        next: { revalidate: 300 },
       }),
     ]);
 

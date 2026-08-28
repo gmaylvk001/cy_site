@@ -77,6 +77,10 @@ const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts
         }
           */
 
+        // ✅ If not logged in → use guestCartId
+        let guestCartId = localStorage.getItem("guestCartId") || uuidv4();
+        localStorage.setItem("guestCartId", guestCartId);
+
         if (token) {
           const response = await fetch("/api/auth/check", {
             method: "GET",
@@ -85,20 +89,16 @@ const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts
           const data = await response.json();
           isLoggedIn = data.loggedIn;
           userData = data.user;
-          updateHeaderdetails({ user: data.user });
-          setIsLoggedIn(true);
-          const role = data.role;
-          if(role == 'admin'){
-            setIsAdmin(true);
+
+          if (isLoggedIn) {
+            updateHeaderdetails({ user: data.user });
+            setIsLoggedIn(true);
+            const role = data.role;
+            if (role == "admin") {
+              setIsAdmin(true);
+            }
+            guestCartId = null;
           }
-        }
-
-        // ✅ If not logged in → use guestCartId
-        let guestCartId = null;
-
-        if (!isLoggedIn) {
-          guestCartId = localStorage.getItem("guestCartId") || uuidv4();
-          localStorage.setItem("guestCartId", guestCartId);
         }
 
         const proresponse = await fetch(`/api/product/get/${productId}`);
@@ -129,6 +129,7 @@ const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts
           headers: {
             "Content-Type": "application/json",
             ...(isLoggedIn && { Authorization: `Bearer ${token}` }),
+            ...(guestCartId && { guestCartId }),
           },
           body: JSON.stringify({
             productId,
@@ -197,6 +198,13 @@ const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts
         const responseData = await cartResponse.json();
         updateCartCount(responseData.cart.totalItems + additionalProducts.length);
 
+        try {
+          localStorage.setItem("cartData", JSON.stringify(responseData.cart));
+          localStorage.setItem("cartCount", String(responseData.cart.totalItems + additionalProducts.length));
+        } catch {
+          // ignore quota errors
+        }
+
         // ✅ Track events (skip if guest)
         if (isLoggedIn) {
           trackAddToCart({
@@ -228,7 +236,7 @@ const AddToCartButton = ({ productId, quantity = 1, warranty, additionalProducts
         setCartSuccess(true);
       } catch (error) {
         console.error('Add to cart error:', error);
-        setAuthError(error.message);
+        toast.error(error.message || "Failed to add to cart");
       } finally {
         setIsLoading(false);
       }
