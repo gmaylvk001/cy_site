@@ -1577,8 +1577,8 @@ const Header = () => {
                   src="/user/cw-logo.jpg"
                   alt="Logo"
                   width={83}
-                  height={40}   // 👈 must provide height
-                  priority      // 👈 use this if logo is above-the-fold
+                  height={40}
+                  fetchPriority="high"
                 />
 
               </Link>

@@ -697,8 +697,7 @@ export default function HomeComponent() {
                             <img
                               src={product.images[0].startsWith("http") ? product.images[0] : `/uploads/products/${product.images[0]}`}
                               alt={product.name}
-                              fill
-                              className="object-contain p-4"
+                              className="w-full h-full object-contain p-4"
                               loading="lazy"
                               fetchPriority="auto"
                             />
